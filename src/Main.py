@@ -5,7 +5,6 @@ from Analyzer import Analyzer
 
 
 def main():
-    # test commentary
     # example workflow
     Molecule = Structure()
     Molecule.get_structure("../.xyz-Inputdateien/Tryptophan.xyz")
