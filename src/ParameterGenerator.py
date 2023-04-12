@@ -1,14 +1,16 @@
 import os
 import shutil
 import subprocess
-#import importlib.util
+import importlib.util
 #from importlib.util import find_spec
 
 import numpy as np
 
 from Helper import generate_folder, guess_molecule_name
+from Converter import convert_xyz_to_smiles
 from rdkit import Chem
 from rdkit.Chem import rdMolTransforms
+from scipy import ndimage
 
 
 
@@ -50,31 +52,33 @@ class ParameterGenerator:
         if csh == None:
             print("\nERROR! csh is not installed on your work station.\n")
             exit()
-        #try:
-        #    os.environ["BOSSdir"]
-        #except:
-        #    print("\nERROR! BOSS is not found on your work station. $BOSSdir path is not set. DO NOT forget to export the BOSSdir path (export BOSSdir=/path/boss/intalled)\n")
-        #    exit()
-        #if importlib.util.find_spec('rdkit') == None:
-        #    print("\nERROR! RDKit is not installed on your work station.\n")
-        #    exit()
-
-        mol = Chem.MolFromXYZFile(infile)
+        try:
+            os.environ["BOSSdir"]
+        except:
+            print("\nERROR! BOSS is not found on your work station. $BOSSdir path is not set. DO NOT forget to export the BOSSdir path (export BOSSdir=/path/boss/intalled)\n")
+            exit()
+        if importlib.util.find_spec('rdkit') == None:
+            print("\nERROR! RDKit is not installed on your work station.\n")
+            exit()
+        
+        smiles = convert_xyz_to_smiles(self.infile)
+        mol = Chem.MolFromSmiles(smiles)
         properly_ordered_atoms_indices_list = self.properly_ordered_atoms_list(mol, molecule_name, abs_path_new_folder)
         #mol, newIndexToOriginalIndex = self.mol_with_proper_atom_order(mol, properly_ordered_atoms_indices_list)
 
     
     def properly_ordered_atoms_list(self, mol, molecule_name, workdir):
-         heavy_atoms_indices = [atom.GetIdx() for atom in mol.GetAtoms() if atom.GetSymbol() != 'H']
-         hydrogen_atoms_indices = [atom.GetIdx() for atom in mol.GetAtoms() if atom.GetSymbol() == "H"]
-         index_atom_closest_to_com = self.atom_index_closest_to_com(mol)
-         atoms_indices_with_proper_order = [index_atom_closest_to_com]
-         self.add_atoms_to_index_list(mol, atoms_indices_with_proper_order, heavy_atoms_indices)
-         self.add_atoms_to_index_list(mol, atom_indices_with_proper_order, hydrogen_atoms_indices)
-         return atom_indices_with_proper_order
+        heavy_atoms_indices = [atom.GetIdx() for atom in mol.GetAtoms() if atom.GetSymbol() != 'H']
+        hydrogen_atoms_indices = [atom.GetIdx() for atom in mol.GetAtoms() if atom.GetSymbol() == "H"]
+        index_atom_closest_to_com = self.atom_index_closest_to_com(mol)
+        atoms_indices_with_proper_order = [index_atom_closest_to_com]
+        self.add_atoms_to_index_list(mol, atoms_indices_with_proper_order, heavy_atoms_indices)
+        self.add_atoms_to_index_list(mol, atom_indices_with_proper_order, hydrogen_atoms_indices)
+        return atom_indices_with_proper_order
 
 
     def atom_index_closest_to_com(self, mol):
+        #masses = np.array([])
         conf = mol.GetConformer(0)
         com = rdMolTransforms.ComputeCentroid(conf)
         distances = []
@@ -87,20 +91,20 @@ class ParameterGenerator:
         return atom_closest_to_com[1].GetIdx()
 
 
-    def add_atoms_to_index_list(mol, atoms_indices_with_proper_order, heavy_atoms_indices):
+    def add_atoms_to_index_list(self, mol, atoms_indices_with_proper_order, heavy_atoms_indices):
         missing_atoms = []
         for heavy_atom_index in heavy_atoms_indices:
             heavy_atom = mol.GetAtomWithIdx(heavy_atom_index)
             neighbors_indices = [x.GetIdx() for x in heavy_atom.GetNeighbors()]
             if heavy_atom_index not in atoms_indices_with_proper_order:
-                if any([True for neighbor_index in neighbor_indices if neighbor_index in atoms_indices_with_proper_order]):
-                    atoms_indices_with_proper_order.append(heavy_atom_index)
+                if any([True for neighbor_index in neighbors_indices if neighbor_index in atoms_indices_with_proper_order]):
+                    atoms_indices_with_proper_order.append(heavy_atom.GetIdx())
                 else:
-                    missing_atoms.append(heavy_atom_index)
+                    missing_atoms.append(heavy_atom.GetIdx())
         if len(missing_atoms) == 0:
             return
         else:
-            add_atoms_to_index_list(mol, atoms_indices_with_proper_order, heavy_atoms_list)
+            self.add_atoms_to_index_list(mol, atoms_indices_with_proper_order, heavy_atoms_indices)
         
 
     def mol_with_proper_atom_order(self, mol, atoms_indices_list):
@@ -108,4 +112,4 @@ class ParameterGenerator:
 
 
 
-ParameterGenerator("~/SUPRA-conformer/inputfiles/Alanin.xyz", "test")
+ParameterGenerator("/home/dario/SUPRA-conformer/inputfiles/Alanin.xyz", "test")
