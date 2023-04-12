@@ -37,11 +37,15 @@ class Structure:
         tolerance = 0.08
         bond_order = 0
 
+        # get element symbols of both atoms
+        element1 = get_element(atom1)
+        element2 = get_element(atom2)
+
         # distance of atom1 and atom2
         distance = np.sqrt((coord1[0] - coord2[0])**2 + (coord1[1] - coord2[1])**2 + (coord1[2] - coord2[2])**2)
 
         # single bond length for element of atom1 with element of atom2
-        single_bond = covalence_radii[atom1][0] + covalence_radii[atom2][0]
+        single_bond = covalence_radii[element1][0] + covalence_radii[element2][0]
 
         # if atom1 or atom2 is terminal atom only checking for single bond necessary
         if terminal:
@@ -51,10 +55,10 @@ class Structure:
         # if atom1 and atom2 are chain atoms also checking for multiple bonds
         else:
             # double bond length for element of atom1 with element of atom2
-            double_bond = covalence_radii.get(atom1)[1] + covalence_radii.get(atom2)[1]
+            double_bond = covalence_radii.get(element1)[1] + covalence_radii.get(element2)[1]
 
             # triple bond length for element of atom1 with element of atom2
-            triple_bond = covalence_radii.get(atom1)[2] + covalence_radii.get(atom2)[2]
+            triple_bond = covalence_radii.get(element1)[2] + covalence_radii.get(element2)[2]
 
             # checking for triple bond
             if distance <= (triple_bond + tolerance):
@@ -135,9 +139,7 @@ class Structure:
                         terminal = True
 
                     # calculate bond order/connectivity
-                    bond_order = self.check_connectivity(get_element(atom1), self.coords[atom1],
-                                                         get_element(atom2), self.coords[atom2],
-                                                         terminal)
+                    bond_order = self.check_connectivity(atom1, self.coords[atom1], atom2, self.coords[atom2], terminal)
 
                     # if bond between atom of outer loop and atom of inner loop exists store label of inner loop at
                     # key/label of atom of outer loop in structure-dictionary
@@ -267,3 +269,37 @@ class Structure:
                 number_neighbors -= 1
             distance += 1
         return True
+
+
+    def create_mol_file(self):
+        non_h_atom_num = 0
+        non_h_bond_num = 0
+        for atom, bond_partners in self.structure.items():
+            if not get_element(atom) == "H":
+                non_h_atom_num += 1
+                for bond_partner in bond_partners:
+                    if not get_element(bond_partner) == "H":
+                        non_h_bond_num += 1
+        non_h_bond_num = non_h_bond_num // 2
+        atoms = list(self.coords.keys())
+        coords = list(self.coords.values())
+        with open("example.mol", "w") as outfile:
+            print(f"testing .mol-file creation", file=outfile, end="\n\n")
+            print(f" {non_h_atom_num} {non_h_bond_num}  0  0  0  0  0  0  0  0999 V2000", file=outfile)
+            for atom, coord in zip(atoms, coords):
+                if not get_element(atom) == "H":
+                    print(f"  {coord[0]:8.5f}   {coord[1]:8.5f}   {coord[2]:8.5f} {get_element(atom)}   0  0  0  0  0  0  0  0  0  0  0  0 ", file=outfile)
+            for i, (atom1, coord1) in enumerate(zip(atoms, coords)):
+                if get_element(atom1) == "H":
+                    continue
+                for j, (atom2, coord2) in enumerate(zip(atoms[i+1:], coords[i+1:])):
+                    if get_element(atom2) == "H":
+                        continue
+                    k = i + 1 +j
+                    terminal = False
+                    if get_element(atom1) in ["H", "F", "Cl", "Br", "I"] or get_element(atom2) in ["H", "F", "Cl", "Br", "I"]:
+                        terminal = True
+                    bond_order = self.check_connectivity(atom1, coord1, atom2, coord2, terminal)
+                    if bond_order:
+                        print(f" {i+1}  {k+1}  {bond_order}  0", file=outfile)
+            print(f"M END", file=outfile)
