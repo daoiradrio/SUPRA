@@ -11,6 +11,7 @@ from Converter import convert_xyz_to_smiles
 from rdkit import Chem
 from rdkit.Chem import rdMolTransforms
 from scipy import ndimage
+from PeriodicTable import atomic_masses_symbols
 
 
 
@@ -30,10 +31,12 @@ class Geometry:
 
 class ParameterGenerator:
     
-    def __init__(self, infile, folder, molecule_name = None):
+    def __init__(self, infile, folder):
         self.infile = os.path.abspath(infile)
         self.folder = folder
-        self.molecule_name = molecule_name
+        self.molecule_name = None
+        self.smiles = None
+        self.xyz_coordinates = None
 
         abs_path_new_folder = os.path.abspath(folder)
         if os.getcwd != abs_path_new_folder:
@@ -41,8 +44,7 @@ class ParameterGenerator:
                 shutil.rmtree(abs_path_new_folder, ignore_errors=True)
             os.makedirs(abs_path_new_folder)
 
-        if molecule_name == None:
-            molecule_name = os.path.splitext(os.path.basename(infile))[0]
+        molecule_name = os.path.splitext(os.path.basename(infile))[0]
 
         babel = shutil.which("obabel")
         if babel == None:
@@ -61,13 +63,13 @@ class ParameterGenerator:
             print("\nERROR! RDKit is not installed on your work station.\n")
             exit()
         
-        smiles = convert_xyz_to_smiles(self.infile)
-        mol = Chem.MolFromSmiles(smiles)
-        properly_ordered_atoms_indices_list = self.properly_ordered_atoms_list(mol, molecule_name, abs_path_new_folder)
+        self.smiles, self.xyz_coordinates = convert_xyz_to_smiles(self.infile)
+        mol = Chem.MolFromSmiles(self.smiles)
+        properly_ordered_atoms_indices_list = self.properly_ordered_atoms_list(mol, abs_path_new_folder)
         #mol, newIndexToOriginalIndex = self.mol_with_proper_atom_order(mol, properly_ordered_atoms_indices_list)
 
     
-    def properly_ordered_atoms_list(self, mol, molecule_name, workdir):
+    def properly_ordered_atoms_list(self, mol, workdir):
         heavy_atoms_indices = [atom.GetIdx() for atom in mol.GetAtoms() if atom.GetSymbol() != 'H']
         hydrogen_atoms_indices = [atom.GetIdx() for atom in mol.GetAtoms() if atom.GetSymbol() == "H"]
         index_atom_closest_to_com = self.atom_index_closest_to_com(mol)
@@ -78,14 +80,22 @@ class ParameterGenerator:
 
 
     def atom_index_closest_to_com(self, mol):
-        #masses = np.array([])
-        conf = mol.GetConformer(0)
-        com = rdMolTransforms.ComputeCentroid(conf)
+        #***
+        masses = [atomic_masses_symbols[atom.GetSymbol()] for atom in mol.GetAtoms()]
+        coords_and_masses = [np.array([coords[0], coords[1], coords[2], mass]) for coords, mass in zip(self.xyz_coordinates, masses)]
+        coords_and_masses = np.array(coords_and_masses)
+        com = np.average(coords_and_masses, axis=0, weights=coords_and_masses[:,3])
+        print()
+        print(coords_and_masses)
+        print()
+        print(com)
+        print()
+        # ***
         distances = []
         for atom in mol.GetAtoms():
             if atom.GetSymbol() == 'H':
                 continue
-            atom_position = conf.GetAtomPosition(atom.GetIdx())
+            atom_position = mol.GetConformer().GetAtomPosition(atom.GetIdx())
             distances.append([Geometry.distance([atom_position.x, atom_position.y, atom_position.z], com), atom])
         atom_closest_to_com = sorted(distances, key=lambda x: x[0])[0]
         return atom_closest_to_com[1].GetIdx()
@@ -112,4 +122,6 @@ class ParameterGenerator:
 
 
 
-ParameterGenerator("/home/dario/SUPRA-conformer/inputfiles/Alanin.xyz", "test")
+input_xyz = os.sys.argv[1]
+workdir = "test"
+ParameterGenerator(input_xyz, workdir)

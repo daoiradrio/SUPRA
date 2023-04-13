@@ -756,4 +756,4 @@ def convert_xyz_to_smiles(filename):
     m = Chem.MolFromSmiles(smiles)
     smiles = Chem.MolToSmiles(m, isomericSmiles=False)
     
-    return smiles
+    return smiles, xyz_coordinates
