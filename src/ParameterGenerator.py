@@ -66,7 +66,7 @@ class ParameterGenerator:
         self.smiles, self.xyz_coordinates = convert_xyz_to_smiles(self.infile)
         mol = Chem.MolFromSmiles(self.smiles)
         properly_ordered_atoms_indices_list = self.properly_ordered_atoms_list(mol, abs_path_new_folder)
-        #mol, newIndexToOriginalIndex = self.mol_with_proper_atom_order(mol, properly_ordered_atoms_indices_list)
+        mol, newIndexToOriginalIndex = self.mol_with_proper_atom_order(mol, properly_ordered_atoms_indices_list)
 
     
     def properly_ordered_atoms_list(self, mol, workdir):
@@ -75,8 +75,8 @@ class ParameterGenerator:
         index_atom_closest_to_com = self.atom_index_closest_to_com(mol)
         atoms_indices_with_proper_order = [index_atom_closest_to_com]
         self.add_atoms_to_index_list(mol, atoms_indices_with_proper_order, heavy_atoms_indices)
-        self.add_atoms_to_index_list(mol, atom_indices_with_proper_order, hydrogen_atoms_indices)
-        return atom_indices_with_proper_order
+        self.add_atoms_to_index_list(mol, atoms_indices_with_proper_order, hydrogen_atoms_indices)
+        return atoms_indices_with_proper_order
 
 
     def atom_index_closest_to_com(self, mol):
@@ -85,18 +85,13 @@ class ParameterGenerator:
         coords_and_masses = [np.array([coords[0], coords[1], coords[2], mass]) for coords, mass in zip(self.xyz_coordinates, masses)]
         coords_and_masses = np.array(coords_and_masses)
         com = np.average(coords_and_masses, axis=0, weights=coords_and_masses[:,3])
-        print()
-        print(coords_and_masses)
-        print()
-        print(com)
-        print()
+        com = com[:3]
         # ***
         distances = []
-        for atom in mol.GetAtoms():
+        for atom, atom_position in zip(mol.GetAtoms(), self.xyz_coordinates):
             if atom.GetSymbol() == 'H':
                 continue
-            atom_position = mol.GetConformer().GetAtomPosition(atom.GetIdx())
-            distances.append([Geometry.distance([atom_position.x, atom_position.y, atom_position.z], com), atom])
+            distances.append([Geometry.distance(atom_position, com), atom])
         atom_closest_to_com = sorted(distances, key=lambda x: x[0])[0]
         return atom_closest_to_com[1].GetIdx()
 
@@ -118,7 +113,32 @@ class ParameterGenerator:
         
 
     def mol_with_proper_atom_order(self, mol, atoms_indices_list):
-        pass
+        new_atoms_labels = {}
+        new_to_original_index = {}
+        new_molecule_block = ""
+        for i, index in enumerate(atoms_indices_list):
+            new_to_original_index[i] = index
+            atom = mol.GetAtomWithIdx(index)
+            atom_position = self.xyz_coordinates[index]
+            try:
+                print("Hier")
+                residue_info = atom.GetPDBResidueInfo()
+                residue_name = residue_info.GetResidueName()
+                atom_name = residue_info.GetName()
+            except:
+                print("Hmmm...")
+                element = atom.GetSymbol()
+                if not element in new_atoms_labels.keys():
+                    new_atoms_labels[element] = 1
+                else:
+                    new_atoms_labels[element] += 1
+                atom_name = f"{element}{new_atoms_labels[element]}"
+                residue_name = "MOL"
+            line = 'ATOM%7d%5s%4s%6d%12.3f%8.3f%8.3f  1.00  0.00%12s  \n' % (i, atom_name, residue_name, 1, atom_position[0], atom_position[1], atom_position[2], atom.GetSymbol())
+            new_molecule_block += line
+        print(new_molecule_block)
+        new_mol = Chem.MolFromPDBBlock(new_molecule_block, removeHs=False)
+        return new_mol, new_to_original_index
 
 
 
