@@ -79,18 +79,3 @@ def is_hb_acc(label: str) -> bool:
     if get_element(label) == "H":
         flag = True
     return flag
-
-
-def generate_folder(foldername: str) -> str:
-    abs_path_new_folder = os.path.abspath(foldername)
-    if os.getcwb != abs_path_new_folder:
-        if os.path.exists(abs_path_new_folder):
-            shutil.rmtree(abs_path_new_folder, ignore_errors=True)
-        os.makedirs(abs_path_new_folder)
-    return abs_path_new_folder
-
-
-def guess_molecule_name(infile: str, molecule_name: str) -> str:
-    if molecule_name == None:
-        molecule_name = os.path.splittext(os.path.basename(infile))[0]
-    return molecule_name

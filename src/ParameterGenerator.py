@@ -6,12 +6,23 @@ import importlib.util
 
 import numpy as np
 
-from Helper import generate_folder, guess_molecule_name
-from Converter import convert_xyz_to_smiles
 from rdkit import Chem
 from rdkit.Chem import rdMolTransforms
 from scipy import ndimage
 from PeriodicTable import atomic_masses_symbols
+
+
+
+def read_xyz_file(xyz_file: str) -> (list, list):
+    element_symbols = []
+    coords = []
+    with open(xyz_file, "r") as infile:
+        for line_number, line in enumerate(infile):
+            if line_number >= 2:
+                element_symbol, x, y, z = line.split()
+                element_symbols.append(element_symbol)
+                coords.append([float(x), float(y), float(z)])
+    return element_symbols, coords
 
 
 
@@ -35,17 +46,10 @@ class ParameterGenerator:
         self.infile = os.path.abspath(infile)
         self.folder = folder
         self.molecule_name = None
-        self.smiles = None
+        self.elements = None
         self.xyz_coordinates = None
-
-        abs_path_new_folder = os.path.abspath(folder)
-        if os.getcwd != abs_path_new_folder:
-            if os.path.exists(abs_path_new_folder):
-                shutil.rmtree(abs_path_new_folder, ignore_errors=True)
-            os.makedirs(abs_path_new_folder)
-
-        molecule_name = os.path.splitext(os.path.basename(infile))[0]
-
+        
+        # check for necessary executables
         babel = shutil.which("obabel")
         if babel == None:
             print("\nERROR! Open Babel is not installed on your work station.\n")
@@ -62,9 +66,24 @@ class ParameterGenerator:
         if importlib.util.find_spec('rdkit') == None:
             print("\nERROR! RDKit is not installed on your work station.\n")
             exit()
+
+        # create new working directory
+        abs_path_new_folder = os.path.abspath(folder)
+        if os.getcwd != abs_path_new_folder:
+            if os.path.exists(abs_path_new_folder):
+                shutil.rmtree(abs_path_new_folder, ignore_errors=True)
+            os.makedirs(abs_path_new_folder)
         
-        self.smiles, self.xyz_coordinates = convert_xyz_to_smiles(self.infile)
-        mol = Chem.MolFromSmiles(self.smiles)
+        # get molecule name from input file name
+        molecule_name = os.path.splitext(os.path.basename(infile))[0]
+        
+        # read input file
+        self.elements, self.xyz_coordinates = read_xyz_file(self.infile)
+        
+        #self.smiles, self.xyz_coordinates = convert_xyz_to_smiles(self.infile)
+        #mol = Chem.MolFromSmiles(self.smiles)
+        os.system(f"babel {self.infile} {self.molecule_name}.pdb")
+        mol = Chem.MolFromPDBFile(f"{self.molecule_name}.pdb")
         properly_ordered_atoms_indices_list = self.properly_ordered_atoms_list(mol, abs_path_new_folder)
         mol, newIndexToOriginalIndex = self.mol_with_proper_atom_order(mol, properly_ordered_atoms_indices_list)
 
@@ -121,12 +140,10 @@ class ParameterGenerator:
             atom = mol.GetAtomWithIdx(index)
             atom_position = self.xyz_coordinates[index]
             try:
-                print("Hier")
                 residue_info = atom.GetPDBResidueInfo()
                 residue_name = residue_info.GetResidueName()
                 atom_name = residue_info.GetName()
             except:
-                print("Hmmm...")
                 element = atom.GetSymbol()
                 if not element in new_atoms_labels.keys():
                     new_atoms_labels[element] = 1
@@ -136,7 +153,6 @@ class ParameterGenerator:
                 residue_name = "MOL"
             line = 'ATOM%7d%5s%4s%6d%12.3f%8.3f%8.3f  1.00  0.00%12s  \n' % (i, atom_name, residue_name, 1, atom_position[0], atom_position[1], atom_position[2], atom.GetSymbol())
             new_molecule_block += line
-        print(new_molecule_block)
         new_mol = Chem.MolFromPDBBlock(new_molecule_block, removeHs=False)
         return new_mol, new_to_original_index
 
