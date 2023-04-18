@@ -12,7 +12,7 @@ def main():
     #Generator = ConformerGenerator()
     #Generator.generate_conformers(Molecule)
     
-    filename = "/home/baum/SUPRA-conformer/inputfiles/Tyrosin.xyz"
+    filename = "/home/baum/SUPRA-conformer/inputfiles/Alanin.xyz"
     molecule = Structure(filename)
     confgen = ConformerGenerator()
     confgen.generate_conformers(molecule)

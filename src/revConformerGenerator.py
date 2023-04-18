@@ -16,7 +16,7 @@ class ConformerGenerator:
     def __init__(self):
         self.output_folder_name = "SUPRA_Output"
         self.workdir_name = "optdir"
-        self.opt_struc_name = "opt_struc"
+        self.opt_struc_name = "opt_struc.xyz"
         self.torsions = []
         self.central_torsions = []
         self.terminal_torsions = []
@@ -72,16 +72,17 @@ class ConformerGenerator:
             )
         if number_conformers:
             print(f"{number_conformers} conformers have been generated.")
-            if not os.path.exists(self.output_foldername):
-                os.makedirs(self.output_foldername)
+            if not os.path.exists(self.output_folder_name):
+                os.makedirs(self.output_folder_name)
             self.output_folder_name = os.path.abspath(self.output_folder_name)
         else:
             print(f"No conformers could be generated due to clashes in every calculated structure.")
         for i in range(number_conformers):
-            folder = os.path.abspath(os.path.join(self.workdir_name, i))
+            folder = os.path.abspath(f"{self.workdir_name}{i}")
             opt_struc = os.path.abspath(os.path.join(folder, self.opt_struc_name))
-            os.system(f"mv {opt_struc} {self.output_folder_name}")
-            os.system(f"")
+            new_conformer = os.path.join(self.output_folder_name, f"conformer{i}.xyz")
+            os.system(f"mv {opt_struc} {new_conformer}")
+            os.system(f"rm -rf {folder}")
 
 
     def _get_torsions(self, bonds: list, bond_partners: dict, bond_orders: dict) -> None:
@@ -375,7 +376,7 @@ class ConformerGenerator:
     # calculates all possible conformer structures and generates an output file for every conformer structure without
     # internal clash
     # the output file is an input file for a geometry optimization with ORCA
-    def _combinations(self, bond_partners: dict, new_coords: dict, counter: int, index: int = 0, optmode: str = "uff") -> int:
+    def _combinations(self, bond_partners: dict, new_coords: dict, counter: int, index: int = 0, optmode: str = "xtb") -> int:
         # base case, new torsion angle for every angle has been calculated
         if index == len(self.torsions):
             # sofern keine strukturinternen Clashes hinzufügen zur Liste erfolgreich erzeugter Konformerstrukturen
@@ -384,6 +385,7 @@ class ConformerGenerator:
                 workdir = f"{self.workdir_name}{counter}"
                 os.makedirs(workdir)
                 workdir = os.path.abspath(workdir)
+                opt_struc = os.path.join(workdir, self.opt_struc_name)
                 new_xyz_file = os.path.join(workdir, "struc.xyz")
                 os.system(f"touch {new_xyz_file}")
                 with open(new_xyz_file, "w") as optfile:
@@ -392,12 +394,13 @@ class ConformerGenerator:
                     for atom, (x, y, z) in new_coords.items():
                         print(f"{get_element(atom)}\t{x}\t{y}\t{z}", file=optfile)
                 if optmode == "xtb":
+                    opt_struc = os.path.join(workdir, self.opt_struc_name)
                     subprocess.run(args=["xtb", "--opt", "sloppy", new_xyz_file], cwd=workdir, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    subprocess.run(args=["mv", "xtbopt.xyz", opt_struc], cwd=workdir)
                 elif optmode == "uff":
                     # TODO: MAKE NUMBER OF OPTIMIZATION CYCLES DEPENDENT FROM SIZE OF MOLECULE (NUMBER OF ATOMS)
                     control_file = os.path.join(workdir, "control")
                     coord_file = os.path.join(workdir, "coord")
-                    opt_struc = os.path.join(workdir, "opt_struc")
                     os.system(f"touch {control_file}")
                     with open(control_file, "w") as control:
                         print("$symmetry c1", file=control)
@@ -414,6 +417,7 @@ class ConformerGenerator:
                     with open(coord_file, "w") as f:
                         subprocess.run(args=["x2t", new_xyz_file, ">", coord_file], cwd=workdir, stdout=f, stderr=subprocess.DEVNULL)
                     subprocess.run(args=["uff"], cwd=workdir, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    # TODO: HOW TO INCLUDE ENERGY IN SECOND LINE HERE
                     with open(opt_struc, "w") as f:
                         subprocess.run(args=["t2x", coord_file, ">", opt_struc], cwd=workdir, stdout=f, stderr=subprocess.DEVNULL)
                 return counter+1
