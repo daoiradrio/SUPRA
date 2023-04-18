@@ -13,6 +13,7 @@ from revStructure import Structure
 class ConformerGenerator:
 
     def __init__(self):
+        self.output_folder = "Output/"
         self.torsions = []
         self.central_torsions = []
         self.terminal_torsions = []
@@ -296,6 +297,8 @@ class ConformerGenerator:
     # zählen der jeweils zu rotierenden Atome auf beiden Seiten der Bindung, Hinzufügen zu torsion_atoms von der
     # Seite welche weniger Atome enthält
     def _generation_setup(self, atoms: list, bond_partners: dict) -> None:
+        if not os.path.exists(self.output_folder):
+            os.makedirs(self.output_folder)
         # Durchführung für jede gefundene und gefilterte bzw. ausgewählte Rotationsbindung
         for bond in self.torsions:
             torsion_atoms_left = []
@@ -368,14 +371,19 @@ class ConformerGenerator:
             # sofern keine strukturinternen Clashes hinzufügen zur Liste erfolgreich erzeugter Konformerstrukturen
             # check new structure for internal clashes
             if not self._clashes(bond_partners, new_coords): # wird so nicht mehr funktionieren
-                output_folder = "../Output/"
-                if not os.path.exists(output_folder):
-                    os.makedirs(output_folder)
-                with open(f"{output_folder}conformer{counter}.xyz", "w") as outfile:
+                #with open(f"{self.output_folder}conformer{counter}.xyz", "w") as outfile:
+                #    for atom, (x, y, z) in new_coords.items():
+                #        element = get_element(atom)
+                #        print(f"{element}\t{x:18.15f}\t{y:18.15f}\t{z:18.15f}", file=outfile)
+                #return counter+1
+                optdir = f"optdir{counter}"
+                os.mkdir(optdir)
+                with open("{optdir}/struc.xyz", "w") as xyz_file:
+                    number_of_atoms = len(new_coords.keys())
+                    print(number_of_atoms, file=xyz_file, end="\n\n")
                     for atom, (x, y, z) in new_coords.items():
-                        element = get_element(atom)
-                        print(f"{element}\t{x:18.15f}\t{y:18.15f}\t{z:18.15f}", file=outfile)
-                return counter+1
+                        print(f"{get_element(atom)}\t{x}\t{y}\t{z}", file=xyz_file)
+                os.system(f"xtb --opt sloppy {optdir}/struc.xyz > trash 2>&1")
             else:
                 return counter
         # es wurden noch nicht alle Torsionswinkel berechnet, Bindung index in torsions ist an der Reihe
