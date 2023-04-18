@@ -7,13 +7,16 @@ import numpy as np  # sqrt, power, linalg, dot, deg2grad, cross, cos, sin, array
 import os  # path, makedirs
 import queue  # Queue
 from revStructure import Structure
+import subprocess
 
 
 
 class ConformerGenerator:
 
     def __init__(self):
-        self.output_folder = "Output/"
+        self.output_folder_name = "SUPRA_Output"
+        self.workdir_name = "optdir"
+        self.opt_struc_name = "opt_struc"
         self.torsions = []
         self.central_torsions = []
         self.terminal_torsions = []
@@ -49,6 +52,7 @@ class ConformerGenerator:
                 break
             elif mode_input == "3":
                 self.torsions = self.central_torsions + self.terminal_torsions
+                break
             else:
                 print("Invalid input.")
         while True:
@@ -68,8 +72,16 @@ class ConformerGenerator:
             )
         if number_conformers:
             print(f"{number_conformers} conformers have been generated.")
+            if not os.path.exists(self.output_foldername):
+                os.makedirs(self.output_foldername)
+            self.output_folder_name = os.path.abspath(self.output_folder_name)
         else:
             print(f"No conformers could be generated due to clashes in every calculated structure.")
+        for i in range(number_conformers):
+            folder = os.path.abspath(os.path.join(self.workdir_name, i))
+            opt_struc = os.path.abspath(os.path.join(folder, self.opt_struc_name))
+            os.system(f"mv {opt_struc} {self.output_folder_name}")
+            os.system(f"")
 
 
     def _get_torsions(self, bonds: list, bond_partners: dict, bond_orders: dict) -> None:
@@ -297,8 +309,6 @@ class ConformerGenerator:
     # zählen der jeweils zu rotierenden Atome auf beiden Seiten der Bindung, Hinzufügen zu torsion_atoms von der
     # Seite welche weniger Atome enthält
     def _generation_setup(self, atoms: list, bond_partners: dict) -> None:
-        if not os.path.exists(self.output_folder):
-            os.makedirs(self.output_folder)
         # Durchführung für jede gefundene und gefilterte bzw. ausgewählte Rotationsbindung
         for bond in self.torsions:
             torsion_atoms_left = []
@@ -365,25 +375,48 @@ class ConformerGenerator:
     # calculates all possible conformer structures and generates an output file for every conformer structure without
     # internal clash
     # the output file is an input file for a geometry optimization with ORCA
-    def _combinations(self, bond_partners: dict, new_coords: dict, counter: int, index: int = 0) -> int:
+    def _combinations(self, bond_partners: dict, new_coords: dict, counter: int, index: int = 0, optmode: str = "uff") -> int:
         # base case, new torsion angle for every angle has been calculated
         if index == len(self.torsions):
             # sofern keine strukturinternen Clashes hinzufügen zur Liste erfolgreich erzeugter Konformerstrukturen
             # check new structure for internal clashes
             if not self._clashes(bond_partners, new_coords): # wird so nicht mehr funktionieren
-                #with open(f"{self.output_folder}conformer{counter}.xyz", "w") as outfile:
-                #    for atom, (x, y, z) in new_coords.items():
-                #        element = get_element(atom)
-                #        print(f"{element}\t{x:18.15f}\t{y:18.15f}\t{z:18.15f}", file=outfile)
-                #return counter+1
-                optdir = f"optdir{counter}"
-                os.mkdir(optdir)
-                with open("{optdir}/struc.xyz", "w") as xyz_file:
+                workdir = f"{self.workdir_name}{counter}"
+                os.makedirs(workdir)
+                workdir = os.path.abspath(workdir)
+                new_xyz_file = os.path.join(workdir, "struc.xyz")
+                os.system(f"touch {new_xyz_file}")
+                with open(new_xyz_file, "w") as optfile:
                     number_of_atoms = len(new_coords.keys())
-                    print(number_of_atoms, file=xyz_file, end="\n\n")
+                    print(number_of_atoms, file=optfile, end="\n\n")
                     for atom, (x, y, z) in new_coords.items():
-                        print(f"{get_element(atom)}\t{x}\t{y}\t{z}", file=xyz_file)
-                os.system(f"xtb --opt sloppy {optdir}/struc.xyz > trash 2>&1")
+                        print(f"{get_element(atom)}\t{x}\t{y}\t{z}", file=optfile)
+                if optmode == "xtb":
+                    subprocess.run(args=["xtb", "--opt", "sloppy", new_xyz_file], cwd=workdir, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                elif optmode == "uff":
+                    # TODO: MAKE NUMBER OF OPTIMIZATION CYCLES DEPENDENT FROM SIZE OF MOLECULE (NUMBER OF ATOMS)
+                    control_file = os.path.join(workdir, "control")
+                    coord_file = os.path.join(workdir, "coord")
+                    opt_struc = os.path.join(workdir, "opt_struc")
+                    os.system(f"touch {control_file}")
+                    with open(control_file, "w") as control:
+                        print("$symmetry c1", file=control)
+                        print("$uff", file=control)
+                        print("      1000         1          0 ! maxcycle,modus,nqeq", file=control)
+                        print("    111111                      ! iterm", file=control)
+                        print("  0.10D-07  0.10D-04            ! econv,gconv", file=control)
+                        print("      0.00  1.10                ! qtot,dfac", file=control)
+                        print("  0.10D+03  0.10D-04       0.30 ! epssteep,epssearch,dqmax", file=control)
+                        print("        25      0.10       0.00 ! mxls,dhls,ahls", file=control)
+                        print("      1.00      0.00       0.00 ! alpha,beta,gamma", file=control)
+                        print("         F         F          F ! transform,lnumhess,lmd", file=control)
+                        print("$end", file=control)
+                    with open(coord_file, "w") as f:
+                        subprocess.run(args=["x2t", new_xyz_file, ">", coord_file], cwd=workdir, stdout=f, stderr=subprocess.DEVNULL)
+                    subprocess.run(args=["uff"], cwd=workdir, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    with open(opt_struc, "w") as f:
+                        subprocess.run(args=["t2x", coord_file, ">", opt_struc], cwd=workdir, stdout=f, stderr=subprocess.DEVNULL)
+                return counter+1
             else:
                 return counter
         # es wurden noch nicht alle Torsionswinkel berechnet, Bindung index in torsions ist an der Reihe
