@@ -1,6 +1,4 @@
 import numpy as np
-import os
-import shutil
 
 
 
@@ -11,12 +9,31 @@ import shutil
 # single bonds: P. Pyykkö, M. Atsumi,Chemistry – A European Journal2009,15, 186–197
 # double bonds: P. Pyykkö, M. Atsumi,Chemistry – A European Journal2009,15, 12770–12779
 # triple bonds: P. Pyykkö, S. Riedel, M. Patzschke,Chemistry – A European Journal2005,11, 3511–3520
-covalence_radii = {"C": [0.75, 0.67, 0.60], "N": [0.71, 0.60, 0.54], "O": [0.66, 0.57, 0.53], "H": [0.32],
-                   "B": [0.85, 0.78, 0.73], "F": [0.64], "Cl": [0.99], "Br": [1.14], "I": [1.33]}
+covalence_radii = {
+    "C": [0.75, 0.67, 0.60], "N": [0.71, 0.60, 0.54], "O": [0.66, 0.57, 0.53], "H": [0.32], "B": [0.85, 0.78, 0.73],
+    "F": [0.64], "Cl": [0.99], "Br": [1.14], "I": [1.33]
+}
+covalence_radii_single = {
+    "C": 0.75, "N": 0.71, "O": 0.66, "H": 0.32, "B": 0.85, "F": 0.64, "Cl": 0.99, "Br": 1.14, "I": 1.33
+}
+covalence_radii_double = {
+    "C": 0.67, "N": 0.60, "O": 0.57, "B": 0.78
+}
+covalence_radii_triple = {
+    "C": 0.60, "N": 0.54, "O": 0.53, "B": 0.73
+}
 
 
 # maximum valences of chain atoms for regulation of loop cycles in building self.structure (Structure-class)
-valences = {"C": 4, "N": 3, "O": 2, "H": 1, "B": 3, "F": 1, "Cl": 1, "Br": 1, "I": 1}
+valences = {
+    "C": 4, "N": 3, "O": 2, "H": 1, "B": 3, "F": 1, "Cl": 1, "Br": 1, "I": 1
+}
+
+
+# combinations of angle increments
+increment_combinations = {
+    30: [30, 45], 45: [45, 60], 60: [60, 90], 90: [90, 120], 120: [120, 180], 180: [180]
+}
 
 
 #WBB-LÄNGEN FÜR VERSCHIEDENE ELEMENTE EINPFLEGEN (SERIÖSE QUELLE SUCHEN)
@@ -52,17 +69,13 @@ def rotation(vec2, vec1, angle: float, coords, rad: bool = False) -> np.array:
         coords = np.array(coords)
     if not rad:
         angle = np.deg2rad(angle)
-
     axis = vec2 - vec1
     axis = axis / np.sqrt(np.dot(axis, axis))
     coords = coords - vec1
-
     coords = np.dot(axis, np.dot(axis, coords)) \
              + np.cos(angle) * np.cross(np.cross(axis, coords), axis) \
              + np.sin(angle) * np.cross(axis, coords)
-
     coords = coords + vec1
-
     return coords
 
 
