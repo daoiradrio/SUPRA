@@ -4,8 +4,8 @@ import pandas as pd
 import numpy as np
 import multiprocessing as mp
 
-from revStructure import Structure
 from Helper import get_element, valences
+from SUPRA.SUPRAConformer import Structure
 from typing import Union
 from queue import Queue
 

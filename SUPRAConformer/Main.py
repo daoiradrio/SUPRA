@@ -1,7 +1,8 @@
-from revStructure import Structure
-from revConformerGenerator import ConformerGenerator
+#from revStructure import Structure
+#from revConformerGenerator import ConformerGenerator
 #from ConformerGenerator import ConformerGenerator
 #from Analyzer import Analyzer
+from utils import get_element
 
 
 
@@ -12,10 +13,11 @@ def main():
     #Generator = ConformerGenerator()
     #Generator.generate_conformers(Molecule)
     
-    filename = "/home/baum/SUPRA-conformer/inputfiles/Alanin.xyz"
-    molecule = Structure(filename)
-    confgen = ConformerGenerator()
-    confgen.generate_conformers(molecule)
+    #filename = "/home/baum/SUPRA-conformer/inputfiles/Alanin.xyz"
+    #molecule = Structure(filename)
+    #confgen = ConformerGenerator()
+    #confgen.generate_conformers(molecule)
+    return
 
 
 
