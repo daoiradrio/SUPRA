@@ -383,7 +383,7 @@ class Analyzer:
             coords1 = list(coords1.values())
 
         if type(coords2) == Structure:
-            coords2 = list(coords1.coords.values())
+            coords2 = list(coords2.coords.values())
         elif type(coords2) is dict:
             coords2 = list(coords2.values())
 
