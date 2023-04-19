@@ -1,1 +1,1 @@
-
+from revStructure import Structure
