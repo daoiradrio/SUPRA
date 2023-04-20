@@ -1,6 +1,7 @@
-from Structure import Structure
 import numpy as np
-from Helper import get_number, is_hb_don, is_hb_acc
+
+from ..revStructure import Structure
+from ..Helper import get_number, is_hb_don, is_hb_acc
 
 
 
@@ -12,19 +13,20 @@ class ClusterStructure(Structure):
         """
         *** INHERITED FROM STRUCTURE-CLASS ***
         
-        coordinates of all cluster atoms
-        coords = {E0:[x0, y0, z0], E1:[x1, y1, z1], ... }
-        self.coords = dict()
+        numer of atoms
+        self.number_of_atoms: int
+
+        coordinates of all atoms
+        self.coords = {A0:[x0, y0, z0], A1:[x1, y1, z1], ... }
         
-        connectivity of all atoms in input structure (undirected graph)
-        structure = {E0:[E1, E2, E3, ... ], E1:[E0, E4, ], ... }
-        self.structure = dict()
+        connectivity of all atoms (undirected graph)
+        self.bond_partners = {A0:[A1, A2, A3, ... ], A1:[A0, A4, ], ... }
         
-        # nonterminal single bonds, unfiltered rotatable bonds
-        # torsions = [[E0, E1], [E2, E3], ... ]
-        self.torsions = list()
+        all covalent bonds (no doubles with just switched atom order)
+        self.bonds = [[A0, A1], [A0, A2], [A1, A4], ... ]
         
-        self.torsion_atoms = list()
+        bond orders of all covalent bonds
+        self.bond_orders = {[A0, A1]: 1, [A1, A4]: 2, ... }
         """
 
         self.bendings = list()
@@ -50,8 +52,14 @@ class ClusterStructure(Structure):
 
         #DATENSTRUKTUR UM WBB (ATOMLABEL UND POSITION) ZU SPEICHERN UM ANHAND DESSEN KONFORMERE ERZEUGEN ZU KÖNNEN
 
-
+    
+    # find and store atoms that form hydrogen bonds (hbs), so hb donors or acceptors
     def find_hbs(self):
+        for atom in self.coords.keys():
+            if get_element(atom) == "H":
+                pass
+
+
         for atom in self.coords:
             if is_hb_don(atom):
                 self.hb_don.append(atom)

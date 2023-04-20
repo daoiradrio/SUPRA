@@ -5,7 +5,7 @@ import numpy as np
 import multiprocessing as mp
 
 from Helper import get_element, valences
-from SUPRA.SUPRAConformer import Structure
+from ..SUPRAConformer.revStructure import Structure
 from typing import Union
 from queue import Queue
 

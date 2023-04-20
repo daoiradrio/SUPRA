@@ -30,6 +30,17 @@ valences = {
 }
 
 
+atomic_masses_symbols = {
+    "H": 1.00797, "He": 4.00260,
+    "Li": 6.941, "Be": 9.01218, "B": 10.81, "C": 12.011, "N": 14.0067, "O": 15.9994, "F": 18.998403, "Ne": 0.179,
+}
+
+atomic_masses_numbers = {
+    1: 1.00797, 2: 4.00260,
+    3: 6.941, 4: 9.01218, 5: 10.81, 6: 12.011, 7: 14.0067, 8: 15.9994, 9: 18.998403, 10: 0.179,
+}
+
+
 # combinations of angle increments
 increment_combinations = {
     30: [30, 45], 45: [45, 60], 60: [60, 90], 90: [90, 120], 120: [120, 180], 180: [180]
@@ -58,31 +69,10 @@ def get_number(label: str) -> int:
         return int(label[-1])
 
 
-#--> ABFRAGE HINZUFÜGEN OB WINKEL BEREITS IN BOGENMAß, FALLS NICHT SELBST UMWANDELN
-#    WAHRSCHEINLICH ÜBER WERTEBEREICH MACHBAR <-- NÖ, ÜBERGABE PARAMETER rad als bool
-def rotation(vec2, vec1, angle: float, coords, rad: bool = False) -> np.array:
-    if type(vec2) == list:
-        vec2 = np.array(vec2)
-    if type(vec1) == list:
-        vec1 = np.array(vec1)
-    if type(coords) == list:
-        coords = np.array(coords)
-    if not rad:
-        angle = np.deg2rad(angle)
-    axis = vec2 - vec1
-    axis = axis / np.sqrt(np.dot(axis, axis))
-    coords = coords - vec1
-    coords = np.dot(axis, np.dot(axis, coords)) \
-             + np.cos(angle) * np.cross(np.cross(axis, coords), axis) \
-             + np.sin(angle) * np.cross(axis, coords)
-    coords = coords + vec1
-    return coords
-
-
 def is_hb_don(label: str) -> bool:
     flag = False
     element = get_element(label)
-    if element == "O" or element == "N":
+    if element in ["O", "N"]: # WELCHE ELEMENTE NOCH?? HALOGENE??
         flag = True
     return flag
 
