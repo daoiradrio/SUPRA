@@ -1,1 +1,2 @@
-from revStructure import Structure
+from SUPRAConformer.structure import Structure
+from utils.analyzer import Analyzer

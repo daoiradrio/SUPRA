@@ -1,6 +1,6 @@
-from helper import get_element, get_number, rotation, is_hb_don, is_hb_acc
-from clusterstructure import ClusterStructure
-from conformergenerator import ConformerGenerator
+from utils.helper import get_element, get_number, rotation, is_hb_don, is_hb_acc
+from SUPRACluster.clusterstructure import ClusterStructure
+from SUPRAConformer.conformergenerator import ConformerGenerator
 import numpy as np
 import os
 from copy import deepcopy

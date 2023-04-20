@@ -9,7 +9,7 @@ import numpy as np
 from rdkit import Chem
 from rdkit.Chem import rdMolTransforms
 from scipy import ndimage
-from PeriodicTable import atomic_masses_symbols
+from utils.helper import atomic_masses_symbols
 
 
 

@@ -1,5 +1,5 @@
 # covalence radii, max. valences, atom label to element symbol converter
-from helper import valences, covalence_radii_single, covalence_radii_double, covalence_radii_triple, get_element
+from utils.helper import valences, covalence_radii_single, covalence_radii_double, covalence_radii_triple, get_element
 import numpy as np # sqrt
 import os # path.exists
 

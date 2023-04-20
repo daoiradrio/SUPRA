@@ -1,12 +1,12 @@
 # covalence radii double bonds, atom label to element symbol converter, atom label to number converter,
 # rotation around arbitrary axis in 3D
-from helper import covalence_radii_single, covalence_radii_double, get_element, increment_combinations, valences
+from utils.helper import covalence_radii_single, covalence_radii_double, get_element, increment_combinations, valences
 import matplotlib.pyplot as plt  # plot molecule in 3D-diagram
 import threading  # selection menu and 3D-plot of molecule in parallel threads
 import numpy as np  # sqrt, power, linalg, dot, deg2grad, cross, cos, sin, array
 import os  # path, makedirs
 import queue  # Queue
-from structure import Structure
+from SUPRAConformer.structure import Structure
 import subprocess
 
 

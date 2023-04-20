@@ -1,7 +1,7 @@
 import numpy as np
 
-from ..revStructure import Structure
-from ..Helper import get_number, is_hb_don, is_hb_acc
+from SUPRAConformer.structure import Structure
+from utils.helper import get_number, is_hb_don, is_hb_acc
 
 
 
