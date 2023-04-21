@@ -107,6 +107,7 @@ class Analyzer:
     def filter_doubles(self, path: str):
         conformer1 = Structure()
         conformer2 = Structure()
+        path = os.path.abspath(path)
         liste = os.listdir(path)
         counter = len(liste)
         #n = len(liste)
@@ -118,10 +119,10 @@ class Analyzer:
                 #conformer2.get_structure(path + file2)
                 conformer2.get_structure(path + file2)
                 if self.doubles(conformer1, conformer2):
-                    os.remove(path + file1)
+                    #os.remove(path + file1)
                     counter -= 1
                     break
-        print("Individual conformers in " + path + ": " + str(counter))
+        print(f"Individual conformers in {path}: {counter}")
 
 
     # check if two Structure objects have equal structures (= doubles) base on RMSD, option loose makes

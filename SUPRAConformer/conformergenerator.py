@@ -376,7 +376,7 @@ class ConformerGenerator:
     # calculates all possible conformer structures and generates an output file for every conformer structure without
     # internal clash
     # the output file is an input file for a geometry optimization with ORCA
-    def _combinations(self, bond_partners: dict, new_coords: dict, counter: int, index: int = 0, optmode: str = "xtb") -> int:
+    def _combinations(self, bond_partners: dict, new_coords: dict, counter: int, index: int = 0, optmode: str = "uff") -> int:
         # base case, new torsion angle for every angle has been calculated
         if index == len(self.torsions):
             # sofern keine strukturinternen Clashes hinzufügen zur Liste erfolgreich erzeugter Konformerstrukturen
