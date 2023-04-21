@@ -113,13 +113,14 @@ class Analyzer:
         #n = len(liste)
         for index, file1 in enumerate(liste):
             #conformer1.get_structure(path + file1)
-            conformer1.get_structure(path + file1)
+            conformer1.get_structure(os.path.join(path, file1))
             #print(str((index + 1) * (100 / n)) + "%")
             for file2 in liste[index + 1:]:
                 #conformer2.get_structure(path + file2)
-                conformer2.get_structure(path + file2)
+                conformer2.get_structure(os.path.join(path, file2))
                 if self.doubles(conformer1, conformer2):
                     #os.remove(path + file1)
+                    os.remove(os.path.join(path, file1))
                     counter -= 1
                     break
         print(f"Individual conformers in {path}: {counter}")

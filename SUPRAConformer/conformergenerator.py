@@ -1,13 +1,14 @@
-# covalence radii double bonds, atom label to element symbol converter, atom label to number converter,
-# rotation around arbitrary axis in 3D
-from utils.helper import covalence_radii_single, covalence_radii_double, get_element, increment_combinations, valences
-import matplotlib.pyplot as plt  # plot molecule in 3D-diagram
-import threading  # selection menu and 3D-plot of molecule in parallel threads
-import numpy as np  # sqrt, power, linalg, dot, deg2grad, cross, cos, sin, array
-import os  # path, makedirs
-import queue  # Queue
-from SUPRAConformer.structure import Structure
+import os
+import queue
 import subprocess
+import threading
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+from SUPRAConformer.structure import Structure
+from utils.analyzer import Analyzer
+from utils.helper import covalence_radii_single, covalence_radii_double, get_element, increment_combinations, valences
 
 
 
@@ -17,6 +18,7 @@ class ConformerGenerator:
         self.output_folder_name = "SUPRA_Output"
         self.workdir_name = "optdir"
         self.opt_struc_name = "opt_struc.xyz"
+        self.analyzer = Analyzer()
         self.torsions = []
         self.central_torsions = []
         self.terminal_torsions = []
@@ -71,18 +73,27 @@ class ConformerGenerator:
                 bond_partners=structure.bond_partners, new_coords=structure.coords, counter=number_conformers
             )
         if number_conformers:
-            print(f"{number_conformers} conformers have been generated.")
             if not os.path.exists(self.output_folder_name):
                 os.makedirs(self.output_folder_name)
             self.output_folder_name = os.path.abspath(self.output_folder_name)
+            for i in range(number_conformers):
+                folder = os.path.abspath(f"{self.workdir_name}{i}")
+                opt_struc = os.path.abspath(os.path.join(folder, self.opt_struc_name))
+                new_conformer = Structure(opt_struc)
+                double_flag = False
+                for conformer_file in os.listdir(self.output_folder_name):
+                    conformer_file = os.path.abspath(os.path.join(self.output_folder_name, conformer_file))    
+                    conformer = Structure(conformer_file)
+                    if self.analyzer.doubles(new_conformer, conformer):
+                        double_flag = True
+                        break
+                if not double_flag:
+                    new_conformer_file = os.path.join(self.output_folder_name, f"conformer{i}.xyz")
+                    os.system(f"mv {opt_struc} {new_conformer_file}")
+                os.system(f"rm -rf {folder}")
+            print(f"{len(os.listdir(self.output_folder_name))} conformers have been generated.")
         else:
-            print(f"No conformers could be generated due to clashes in every calculated structure.")
-        for i in range(number_conformers):
-            folder = os.path.abspath(f"{self.workdir_name}{i}")
-            opt_struc = os.path.abspath(os.path.join(folder, self.opt_struc_name))
-            new_conformer = os.path.join(self.output_folder_name, f"conformer{i}.xyz")
-            os.system(f"mv {opt_struc} {new_conformer}")
-            os.system(f"rm -rf {folder}")
+            print(f"No conformers could be generated.")
 
 
     def _get_torsions(self, bonds: list, bond_partners: dict, bond_orders: dict) -> None:
