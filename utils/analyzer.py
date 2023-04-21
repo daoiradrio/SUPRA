@@ -135,11 +135,11 @@ class Analyzer:
                 # more demanding and less atoms to evaluate reduce this effort, doubly replacing by dummy atoms instead
                 # of once is x2 effort
                 # *** UNDER CONSTRUCTION ***
-                new_coords1 = {}
-                new_structure1 = {}
+                new_coords1 = molecule1.coords.copy()
+                new_structure1 = molecule1.bond_partners.copy()
                 for atom, bond_partners in molecule1.bond_partners.items():
                     if get_element(atom) == "C":
-                        H_count = [get_element(atom) for atom in molecule1.bond_partners].count("H")
+                        H_count = [get_element(bond_partner) for bond_partner in molecule1.bond_partners[atom]].count("H")
                         if H_count == 3:
                             sorted_bond_partners = sorted(
                                 bond_partners, key=lambda x: valences[get_element(x)], reverse=True
@@ -147,20 +147,18 @@ class Analyzer:
                             H1 = sorted_bond_partners[1]
                             H2 = sorted_bond_partners[2]
                             H3 = sorted_bond_partners[3]
-                            new_coords1 = molecule1.coords.copy()
                             del new_coords1[H1]
                             del new_coords1[H2]
                             del new_coords1[H3]
-                            new_structure1 = molecule1.bond_partners.copy()
                             del new_structure1[H1]
                             del new_structure1[H2]
                             del new_structure1[H3]
                             new_structure1[atom] = sorted_bond_partners[:1]
-                new_coords2 = {}
-                new_structure2 = {}
+                new_coords2 = molecule2.coords.copy()
+                new_structure2 = molecule2.bond_partners.copy()
                 for atom, bond_partners in molecule2.bond_partners.items():
                     if get_element(atom) == "C":
-                        H_count = [get_element(atom) for atom in molecule2.bond_partners].count("H")
+                        H_count = [get_element(bond_partner) for bond_partner in molecule2.bond_partners[atom]].count("H")
                         if H_count == 3:
                             sorted_bond_partners = sorted(
                                 bond_partners, key=lambda x: valences[get_element(x)], reverse=True
@@ -168,11 +166,9 @@ class Analyzer:
                             H1 = sorted_bond_partners[1]
                             H2 = sorted_bond_partners[2]
                             H3 = sorted_bond_partners[3]
-                            new_coords2 = molecule2.coords.copy()
                             del new_coords2[H1]
                             del new_coords2[H2]
                             del new_coords2[H3]
-                            new_structure2 = molecule2.bond_partners.copy()
                             del new_structure2[H1]
                             del new_structure2[H2]
                             del new_structure2[H3]
