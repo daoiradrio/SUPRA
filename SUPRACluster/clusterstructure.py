@@ -55,55 +55,49 @@ class ClusterStructure(Structure):
     
     # find and store atoms that form hydrogen bonds (hbs), so hb donors or acceptors
     def find_hbs(self):
-        for atom in self.coords.keys():
-            if get_element(atom) == "H":
-                pass
-
+        #for atom in self.coords.keys():
+        #    if get_element(atom) == "H":
+        #        pass
 
         for atom in self.coords:
             if is_hb_don(atom):
                 self.hb_don.append(atom)
                 self.hb_don_vec[get_number(atom)] = self.set_don_vec(atom)
-                for neighbor in self.structure[atom]:
+                for neighbor in self.bond_partners[atom]:
                     if is_hb_acc(neighbor):
                         self.hb_acc.append(neighbor)
-                        self.hb_acc_vec[get_number(neighbor)] = self.set_acc_vec(neighbor, self.structure[neighbor][0])
+                        self.hb_acc_vec[get_number(neighbor)] = self.set_acc_vec(neighbor, self.bond_partners[neighbor][0])
 
 
     def set_don_vec(self, don: str) -> list:
-        vecs = list()
-        don_coord = np.array(self.coords[don])
-        for neighbor in self.structure[don]:
-            neighbor_coord = np.array(self.coords[neighbor])
+        vecs = []
+        don_coord = self.coords[don]
 
+        for neighbor in self.bond_partners[don]:
+            neighbor_coord = self.coords[neighbor]
             new_vec = don_coord - neighbor_coord
-            len = np.sqrt(np.dot(new_vec, new_vec))
-            new_vec = new_vec / len
-
+            len_new_vec = np.sqrt(np.dot(new_vec, new_vec))
+            new_vec = new_vec / len_new_vec
             vecs.append(new_vec)
 
-        new_coord = np.array(self.coords[don])
-
+        new_coord = self.coords[don].copy()
         for vec in vecs:
             new_coord += vec
 
         new_hb = new_coord - don_coord
         new_hb_len = np.sqrt(np.dot(new_hb, new_hb))
-
         #HIER ELEMENTSPEZFISCHE LÄNGE VON WBB VERWENDEN --> QUELLE SUCHEN
         scaling_factor = self.hb_len / new_hb_len
-
         new_hb = new_hb * scaling_factor
 
-        return list(new_hb)
+        return new_hb
 
 
     def set_acc_vec(self, acc: str, neighbor: str) -> list:
-        vec2 = np.array(self.coords[acc])
-        vec1 = np.array(self.coords[neighbor])
-        direction = vec2 - vec1
-        len = np.sqrt(np.dot(direction, direction))
-        scaling_factor = self.hb_len / len
-        direction = direction * scaling_factor
-
-        return list(direction)
+        vec2 = self.coords[acc]
+        vec1 = self.coords[neighbor]
+        new_hb = vec2 - vec1
+        len_bond = np.sqrt(np.dot(new_hb, new_hb))
+        scaling_factor = self.hb_len / len_bond
+        new_hb = new_hb * scaling_factor
+        return new_hb

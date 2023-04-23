@@ -37,24 +37,28 @@ class ClusterGenerator:
         for don in monomer.hb_don:
             self.set_zmatrix(monomer, don)
 
-
+    
+    # case acceptor atom: atom1 = neighbor of acceptor, atom0 = acceptor
+    # case donator atom: atom1 = donator
     def set_zmatrix(self, monomer: ClusterStructure, atom1: str, atom0: str=None):
         new_zmatrix = list()
         atom0_pos = []
 
         # add first atom to z-matrix
+        # case acceptor
         if atom0:
             self.zmatrices[atom0] = new_zmatrix
             atoms_list = [atom for atom in monomer.coords if atom != atom0 and atom != atom1]
-            atom0_pos = np.array(monomer.coords[atom0])
+            atom0_pos = monomer.coords[atom0]
             new_zmatrix.append([atom0])
+        # case donator
         else:
             self.zmatrices[atom1] = new_zmatrix
             atoms_list = [atom for atom in monomer.coords if atom != atom1]
-            atom0_pos = np.array(monomer.coords[atom1]) + 1.1 * np.array(monomer.hb_don_vec[get_number(atom1)])
+            atom0_pos = monomer.coords[atom1] + 1.1 * monomer.hb_don_vec[get_number(atom1)]
 
         # add second atom to z-matrix
-        atom1_pos = np.array(monomer.coords[atom1])
+        atom1_pos = monomer.coords[atom1]
         vec10 = atom0_pos - atom1_pos
         distance10 = np.sqrt(np.dot(vec10, vec10))
         vec10 = vec10 / distance10
@@ -63,7 +67,7 @@ class ClusterGenerator:
         #ERST ÜBERPRÜFEN OB ÜBERHAUPT EIN DRITTES ATOM VORHANDEN IST
         # add third atom to z-matrix (first atom from atoms_list)
         atom2 = atoms_list[0]
-        atom2_pos = np.array(monomer.coords[atom2])
+        atom2_pos = monomer.coords[atom2]
         vec12 = atom2_pos - atom1_pos
         distance = np.sqrt(np.dot(vec12, vec12))
         vec12 = vec12 / distance
@@ -73,7 +77,7 @@ class ClusterGenerator:
         # if atoms_list contains 2 or more atoms add them to z-matrix
         for atom3 in atoms_list[1:]:
             # necessary initialization
-            atom3_pos = np.array(monomer.coords[atom3])
+            atom3_pos = monomer.coords[atom3]
 
             # distance between atom n and atom n-1
             vec23 = atom3_pos - atom2_pos
