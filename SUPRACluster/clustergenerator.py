@@ -1,4 +1,4 @@
-from utils.helper import get_element, get_number, rotation, is_hb_don, is_hb_acc
+from utils.helper import is_hb_don, is_hb_acc, rotation
 from SUPRACluster.clusterstructure import ClusterStructure
 from SUPRAConformer.conformergenerator import ConformerGenerator
 import numpy as np
@@ -22,25 +22,86 @@ class ClusterGenerator:
         self.zmatrices = dict()
         self.container = list()
         #HIER MUSS ANGEPASST WERDEN WENN VERSCHIEDENARTIGE MONOMERE VERBAUT WERDEN (self.monomer_structure)
-        self.monomer_structure = monomer.structure
-        self.n = len(list(monomer.coords))
+        self.monomer = monomer
         self.counter = 0
 
-        self.setup(monomer)
-
-
-    def setup(self, monomer: ClusterStructure):
-        monomer.torsions = []
         for acc in monomer.hb_acc:
-            acc_neighbor = monomer.structure[acc][0]
-            self.set_zmatrix(monomer, acc_neighbor, acc)
+            acc_neighbor = self.monomer.bond_partners[acc][0]
+            self.set_zmatrix(acc_neighbor, acc)
         for don in monomer.hb_don:
-            self.set_zmatrix(monomer, don)
+            self.set_zmatrix(don)
+
+
+    def set_zmatrix(self, atom1: str, atom0: str=None):
+        new_zmatrix = []
+        atoms_list = [atom for atom in self.monomer.coords.keys() if atom != atom0 and atom != atom1] 
+        # set first and second atom, case acceptor
+        if atom0:
+            self.zmatrices[atom0] = new_zmatrix
+            new_zmatrix.append([atom0])
+            vec01 = self.monomer.coords[atom1] - self.monomer.coords[atom0]
+            len_vec01 = np.linalg.norm(vec01)
+            vec01 = vec01 / len_vec01
+            new_zmatrix.append([atom1, len_vec01])
+        # set first and second atom, case donator (first atom must be a dummy atom in order to get angles right)
+        else:
+            self.zmatrices[atom1] = new_zmatrix
+            new_zmatrix.append(["DUMMY"])
+            vec01 = self.monomer.coords[atom1] + self.monomer.hb_don_vec[atom1]
+            vec01 = vec01 / np.linalg.norm(vec01)
+            new_zmatrix.append([atom1, 1.0]) #DISTANZ SO LASSEN?? MUSS JE NACH ELEMENTE KOMBINATION SOWIESO ANGEPASST WERDEN...
+        # set third atom
+        atom2 = atoms_list[0]
+        vec12 = self.monomer.coords[atom2] - self.monomer.coords[atom1]
+        len_vec12 = np.linalg.norm(vec12)
+        vec12 = vec12 / len_vec12
+        angle = np.arccos(np.dot(vec01, vec12))
+        new_zmatrix.append([atom2, len_vec12, angle])
+        # set remaining n-3 atoms
+        for atom3 in atoms_list[1:]:
+            vec23 = self.monomer.coords[atom3] - self.monomer.coords[atom2]
+            len_vec23 = np.linalg.norm(vec23)
+            vec23 = vec23 / len_vec23
+            angle = np.arccos(np.dot(vec12, vec23))
+            # math stack exchange
+            # b1 = vec01
+            # b2 = vec12
+            # b3 = vec23
+            #b1b2 = np.cross(vec01, vec12)
+            #b1b2 = np.linalg.norm(b1b2)
+            #b2b3 = np.cross(vec12, vec23)
+            #b2b3 = np.linalg.norm(b2b3)
+            #y = np.dot(np.cross(b1b2, vec12), b2b3)
+            #x = np.dot(b1b2, b2b3)
+            #dihedral1 = np.arctan2(y, x)
+            # ML dude
+            # b0 = vec01
+            # b1 = vec12
+            # b2 = vec23
+            b0b1 = np.cross(vec01, vec12)
+            b0b1 = b0b1 / np.linalg.norm(b0b1)
+            b1b2 = np.cross(vec12, vec23)
+            b1b2 = b1b2 / np.linalg.norm(b1b2)
+            cos = np.dot(b0b1, b1b2)
+            sin = np.dot(np.cross(b0b1, b1b2), vec12)
+            dihedral2 = np.arctan2(sin, cos)
+            # Wikipedia 1 und 2
+            # u1 = vec01
+            # u2 = vec12
+            # u3 = vec23
+            u1u2 = np.cross(vec01, vec12)
+            u1u2 = u1u2 / np.linalg.norm(u1u2)
+            u2u3 = np.cross(vec12, vec23)
+            u2u3 = u2u3 / np.linalg.norm(u2u3)
+            norm_u2 = len_vec12
+            dihedral3 = np.arctan2(np.dot(vec12, np.cross(u1u2, u2u3)), norm_u2 * np.dot(u1u2, u2u3))
+            dihedral4 = np.arctan2(norm_u2 * np.dot(vec01, u2u3), np.dot(u1u2, u2u3))
+            new_zmatrix.append([atom3, len_vec23, angle, dihedral2])
 
     
     # case acceptor atom: atom1 = neighbor of acceptor, atom0 = acceptor
     # case donator atom: atom1 = donator
-    def set_zmatrix(self, monomer: ClusterStructure, atom1: str, atom0: str=None):
+    def old_set_zmatrix(self, monomer: ClusterStructure, atom1: str, atom0: str=None):
         new_zmatrix = list()
         atom0_pos = []
 
@@ -107,10 +168,16 @@ class ClusterGenerator:
 
             # add atom with internal coordinates to z-matrix
             new_zmatrix.append([atom3, distance, angle, dihedral])
+    
+
+    # BETEILIGTE WBB ATOME MÜSSEN AUS ENTSPRECHENDEN DATENSTRUKTUREN ENTFERNT WERDEN
+    def add_monomer(self, cluster: ClusterStructure, atom_to_dock_at: str, docking_atom: str):
+        label_shift = len(cluster.coords.keys())
+        hb_vec = cluster.get_hb_vec(atom_to_dock_at)
 
 
     #STATT MONOMER STRUCTURE IN GENERATOR ZU SPEICHERN BEI FUNKTIONEN WIE HIER ÜBERGEBEN
-    def add_monomer(self, cluster: ClusterStructure, dock_atom: str, docking_atom: str):
+    def old_add_monomer(self, cluster: ClusterStructure, dock_atom: str, docking_atom: str):
         # *** start initialization block ***
 
         # shift is necessary for shifting number of each label of monomer atoms to new labelnumber

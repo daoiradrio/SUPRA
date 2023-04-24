@@ -55,49 +55,61 @@ class ClusterStructure(Structure):
     
     # find and store atoms that form hydrogen bonds (hbs), so hb donors or acceptors
     def find_hbs(self):
-        #for atom in self.coords.keys():
-        #    if get_element(atom) == "H":
-        #        pass
-
-        for atom in self.coords:
-            if is_hb_don(atom):
+        for atom in self.coords.keys():
+            if self.get_element(atom) in ["O", "N"]:
                 self.hb_don.append(atom)
-                self.hb_don_vec[get_number(atom)] = self.set_don_vec(atom)
+                self.hb_don_vec[atom] = self.get_don_vec(atom)
                 for neighbor in self.bond_partners[atom]:
-                    if is_hb_acc(neighbor):
+                    if self.get_element(neighbor) == "H":
                         self.hb_acc.append(neighbor)
-                        self.hb_acc_vec[get_number(neighbor)] = self.set_acc_vec(neighbor, self.bond_partners[neighbor][0])
+                        self.hb_acc_vec[neighbor] = self.get_acc_vec(neighbor, self.bond_partners[neighbor][0])
+    
+    
+    def get_hb_vec(self, atom: str) -> np.array:
+        if self.get_element(atom) == "H":
+            neighbor = self.bond_partners[atom][0]
+            vec2 = self.coords[atom]
+            vec1 = self.coords[neighbor]
+            new_hb = vec2 - vec1
+            len_new_hb = np.linalg.norm(new_hb)
+            #HIER ELEMENTSPEZFISCHE LÄNGE VON WBB VERWENDEN --> QUELLE SUCHEN
+            new_hb = new_hb * (self.hb_len / len_new_hb)
+        elif self.get_element(atom) in ["O", "N"]:
+            vecs = []
+            for neighbor in self.bond_partners[atom]:
+                new_vec = self.coords[atom] - self.coords[neighbor]
+                len_new_vec = np.linalg.norm(new_vec)
+                new_vec = new_vec / len_new_vec
+                vecs.append(new_vec)
+            new_coord = self.coords[atom].copy()
+            for vec in vecs:
+                new_coord += vec
+            new_hb = new_coord - self.coords[atom]
+            new_hb = new_hb / np.linalg.norm(new_hb)
+        return new_hb
 
-
-    def set_don_vec(self, don: str) -> list:
+    
+    def get_don_vec(self, don: str) -> list:
         vecs = []
-        don_coord = self.coords[don]
-
         for neighbor in self.bond_partners[don]:
-            neighbor_coord = self.coords[neighbor]
-            new_vec = don_coord - neighbor_coord
-            len_new_vec = np.sqrt(np.dot(new_vec, new_vec))
+            new_vec = self.coords[don] - self.coords[neighbor]
+            len_new_vec = np.linalg.norm(new_vec)
             new_vec = new_vec / len_new_vec
             vecs.append(new_vec)
-
         new_coord = self.coords[don].copy()
         for vec in vecs:
             new_coord += vec
-
-        new_hb = new_coord - don_coord
-        new_hb_len = np.sqrt(np.dot(new_hb, new_hb))
-        #HIER ELEMENTSPEZFISCHE LÄNGE VON WBB VERWENDEN --> QUELLE SUCHEN
-        scaling_factor = self.hb_len / new_hb_len
-        new_hb = new_hb * scaling_factor
-
+        new_hb = new_coord - self.coords[don]
+        new_hb = new_hb / np.linalg.norm(new_hb)
         return new_hb
 
 
-    def set_acc_vec(self, acc: str, neighbor: str) -> list:
+    # WOZU?? IST EINFACH NUR BINDUNGSLÄNGE E-H (E = ELEMENT)?? 
+    def get_acc_vec(self, acc: str, neighbor: str) -> list:
         vec2 = self.coords[acc]
         vec1 = self.coords[neighbor]
         new_hb = vec2 - vec1
-        len_bond = np.sqrt(np.dot(new_hb, new_hb))
-        scaling_factor = self.hb_len / len_bond
-        new_hb = new_hb * scaling_factor
+        len_new_hb = np.linalg.norm(new_hb)
+        #HIER ELEMENTSPEZFISCHE LÄNGE VON WBB VERWENDEN --> QUELLE SUCHEN
+        new_hb = new_hb * (self.hb_len / len_new_hb)
         return new_hb

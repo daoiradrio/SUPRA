@@ -52,6 +52,20 @@ increment_combinations = {
 
 
 
+def rotation(coord_rotation_atom: np.array, coord_axis_atom1: np.array, coord_axis_atom2: np.array, rotation_angle: float, deg: bool=False) -> np.array:
+    if deg:
+        rotation_angle = np.deg2rad(rotation_angle)
+    axis = coord_axis_atom2 - coord_axis_atom1
+    axis = axis / np.linalg.norm(axis)
+    coord_rotation_atom = coord_rotation_atom - coord_axis_atom1
+    coord_rotation_atom = coord_rotation_atom + coord_axis_atom1
+    coord_rotation_atom = np.dot(axis, np.dot(axis, coord_rotation_atom)) \
+             + np.cos(rotation_angle) * np.cross(np.cross(axis, coord_rotation_atom), axis) \
+             + np.sin(rotation_angle) * np.cross(axis, coord_rotation_atom)
+    coord_rotation_atom = coord_rotation_atom + coord_axis_atom1
+    return coord_rotation_atom
+
+
 # translating of an atom labels in element symbols
 def get_element(label: str) -> str:
     # if letter on second index: two letter element symbol, return first two chars of label

@@ -1,5 +1,5 @@
 # covalence radii, max. valences, atom label to element symbol converter
-from utils.helper import valences, covalence_radii_single, covalence_radii_double, covalence_radii_triple, get_element
+from utils.helper import valences, covalence_radii_single, covalence_radii_double, covalence_radii_triple
 import numpy as np # sqrt
 import os # path.exists
 
@@ -15,6 +15,16 @@ class Structure:
         self.bond_orders = {}
         if file:
             self.get_structure(file)
+
+
+    # translation of atom label into element symbol
+    def get_element(self, label: str) -> str:
+        # if letter on second index: two letter element symbol, return first two chars of label
+        if label[1].isalpha():
+            return (label[0] + label[1])
+        # if no letter on second index: one letter element symbol, return first char of label
+        else:
+            return label[0]
 
 
     # TODO: ÜBERPRÜFUNG HINZUFÜGEN (PFAD KORREKT, DATEI LESBAR, ETC.)
@@ -36,7 +46,7 @@ class Structure:
         atoms = list(self.coords.keys())
         for i, atom1 in enumerate(atoms):
             coords1 = self.coords[atom1]
-            max_valence = valences[get_element(atom1)]
+            max_valence = valences[self.get_element(atom1)]
             valence = 0
             for atom2 in atoms[i+1:]:
                 if valence == max_valence:
@@ -57,8 +67,8 @@ class Structure:
         # initialize variables
         tolerance = 0.08
         bond_order = 0
-        element1 = get_element(atom1)
-        element2 = get_element(atom2)
+        element1 = self.get_element(atom1)
+        element2 = self.get_element(atom2)
         # distance of atom1 and atom2
         distance = np.linalg.norm(coord1 - coord2)
         # in the following -1000 is returned if elements are not implemented yet
