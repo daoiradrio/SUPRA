@@ -63,30 +63,6 @@ class ClusterStructure(Structure):
                     if self.get_element(neighbor) == "H":
                         self.hb_acc.append(neighbor)
                         self.hb_acc_vec[neighbor] = self.get_acc_vec(neighbor, self.bond_partners[neighbor][0])
-    
-    
-    def get_hb_vec(self, atom: str) -> np.array:
-        if self.get_element(atom) == "H":
-            neighbor = self.bond_partners[atom][0]
-            vec2 = self.coords[atom]
-            vec1 = self.coords[neighbor]
-            new_hb = vec2 - vec1
-            len_new_hb = np.linalg.norm(new_hb)
-            #HIER ELEMENTSPEZFISCHE LÄNGE VON WBB VERWENDEN --> QUELLE SUCHEN
-            new_hb = new_hb * (self.hb_len / len_new_hb)
-        elif self.get_element(atom) in ["O", "N"]:
-            vecs = []
-            for neighbor in self.bond_partners[atom]:
-                new_vec = self.coords[atom] - self.coords[neighbor]
-                len_new_vec = np.linalg.norm(new_vec)
-                new_vec = new_vec / len_new_vec
-                vecs.append(new_vec)
-            new_coord = self.coords[atom].copy()
-            for vec in vecs:
-                new_coord += vec
-            new_hb = new_coord - self.coords[atom]
-            new_hb = new_hb / np.linalg.norm(new_hb)
-        return new_hb
 
     
     def get_don_vec(self, don: str) -> list:
@@ -104,12 +80,9 @@ class ClusterStructure(Structure):
         return new_hb
 
 
-    # WOZU?? IST EINFACH NUR BINDUNGSLÄNGE E-H (E = ELEMENT)?? 
     def get_acc_vec(self, acc: str, neighbor: str) -> list:
         vec2 = self.coords[acc]
         vec1 = self.coords[neighbor]
         new_hb = vec2 - vec1
-        len_new_hb = np.linalg.norm(new_hb)
-        #HIER ELEMENTSPEZFISCHE LÄNGE VON WBB VERWENDEN --> QUELLE SUCHEN
-        new_hb = new_hb * (self.hb_len / len_new_hb)
+        new_hb = np.linalg.norm(new_hb)
         return new_hb

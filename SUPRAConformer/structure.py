@@ -27,6 +27,13 @@ class Structure:
             return label[0]
 
 
+    def get_number(self, label: str) -> int:
+        if label[-2].isdigit():
+            return int(label[-2] + label[-1])
+        else:
+            return int(label[-1])
+
+
     # TODO: ÜBERPRÜFUNG HINZUFÜGEN (PFAD KORREKT, DATEI LESBAR, ETC.)
     # read atom coordinates from .xyz-file, calculate connectivity
     def get_structure(self, filename: str) -> None:

@@ -7,7 +7,7 @@ from copy import deepcopy
 
 
 
-# TO DO
+# TODO
 # - WOZU WIRD MONOMER_STRUCTURE GESPEICHERT?? WIRD NICHT OHNEHIN STETS EINE CLUSTERSTRUCTURE MIT ÜBERGEBEN
 #   WODURCH WEITERES SPEICHERN DER KONNEKTIVITÄT IM GENERATOR UNNÖTIG IST??
 #   --> WENN DAS ANGEPASST WIRD MUSS AUCH HANDLING DER Z-MATRIZEN ÜBERARBEITET WERDEN
@@ -171,9 +171,56 @@ class ClusterGenerator:
     
 
     # BETEILIGTE WBB ATOME MÜSSEN AUS ENTSPRECHENDEN DATENSTRUKTUREN ENTFERNT WERDEN
-    def add_monomer(self, cluster: ClusterStructure, atom_to_dock_at: str, docking_atom: str):
+    def add_monomer_at_acc(self):
+        pass
+    
+
+    # BETEILIGTE WBB ATOME MÜSSEN AUS ENTSPRECHENDEN DATENSTRUKTUREN ENTFERNT WERDEN
+    def add_monomer_at_don(self, cluster: ClusterStructure, atom_to_dock_at: str, docking_atom: str):
+        pos_atom0 = np.array([])
+        pos_atom1 = np.array([])
+        pos_atom2 = np.array([])
+        hb_vec = cluster.get_don_vec(atom_to_dock_at)
+        for atom_entry in self.zmatrices[docking_atom]:
+            label = atom_entry[0]
+            # place first atom of new monomer
+            if len(atom_entry) == 1:
+                pos_atom0 = cluster.coords[atom_to_dock_at] + hb_vec # HIER MUSS NOCH WBB LÄNGE EINGEHEN
+                new_coords = pos_atom0
+            # place second atom of new monomer
+            elif len(atom_entry) == 2:
+                distance = atom_entry[1]
+                pos_atom1 = pos_atom0 + distance * hb_vec
+                new_coords = pos_atom1
+                vec10 = pos_atom0 - pos_atom1 # PROLBEM, FÜR DIHEDRAL VEC01 BENÖTIGT?? REICHT MAL -1??
+                vec10 = vec10 / np.linalg.norm(vec10)
+            # place third atom of new monomer
+            elif len(atom_entry) == 3:
+                distance = atom_entry[1]
+                angle = atom_entry[2]
+                pos_atom2 = pos_atom1 + distance * vec10
+                norm_vec = np.cross(vec10, pos_atom2)
+                norm_vec = pos_atom1 + norm_vec / np.linalg.norm(norm_vec)
+                pos_atom2 = rotation(pos_atom2, pos_atom1, norm_vec, angle)
+                new_coords = pos_atom2
+            # place fourth, fifth, ..., n-th atom of new monomer
+            elif len(atom_entry) == 4:
+                distance = atom_entry[1]
+                angle = atom_entry[2]
+                dihedral = atom_entry[3]
+            # add new atom from monomer to cluster
+            self.update_cluster(cluster, label, new_coords)
+
+
+    def update_cluster(self, cluster: ClusterStructure, atom: str, atom_coord: np.array):
         label_shift = len(cluster.coords.keys())
-        hb_vec = cluster.get_hb_vec(atom_to_dock_at)
+        new_label = f"{cluster.get_element(atom)}{cluster.get_number(atom) + label_shift}"
+        new_bond_partners = []
+        for bond_partner in self.monomer.bond_partners[atom]:
+            new_bond_partner_label = f"{cluster.get_element(bond_partner)}{cluster.get_number(bond_partner) + label_shift}"
+            new_bond_partners.append(new_bond_partner_label)
+        cluster.coords[new_label] = atom_coord
+        cluster.bond_partners[new_label] = new_bond_partners
 
 
     #STATT MONOMER STRUCTURE IN GENERATOR ZU SPEICHERN BEI FUNKTIONEN WIE HIER ÜBERGEBEN
