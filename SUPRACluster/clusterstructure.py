@@ -58,11 +58,11 @@ class ClusterStructure(Structure):
         for atom in self.coords.keys():
             if self.get_element(atom) in ["O", "N"]:
                 self.hb_don.append(atom)
-                self.hb_don_vec[atom] = self.get_don_vec(atom)
+                #self.hb_don_vec[atom] = self.get_don_vec(atom)
                 for neighbor in self.bond_partners[atom]:
                     if self.get_element(neighbor) == "H":
                         self.hb_acc.append(neighbor)
-                        self.hb_acc_vec[neighbor] = self.get_acc_vec(neighbor)
+                        #self.hb_acc_vec[neighbor] = self.get_acc_vec(neighbor)
 
     
     def get_don_vec(self, don: str) -> np.array:

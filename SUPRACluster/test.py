@@ -24,5 +24,6 @@ filename = "../inputfiles/Alanin.xyz"
 struc = ClusterStructure()
 struc.get_structure(filename)
 struc.find_hbs()
+#new_coords = [don_vec for don_vec in struc.hb_don_vec.values()]
 new_coords = [acc_vec for acc_vec in struc.hb_acc_vec.values()]
 output(struc, new_coords)

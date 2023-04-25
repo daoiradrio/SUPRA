@@ -35,7 +35,6 @@ class ClusterGenerator:
         new_zmatrix = []
         # case acceptor: set first (hb_atom, just label) and second atom (label & distance)
         if self.monomer.get_element(hb_atom) == "H":
-            print("Case acceptor")
             self.zmatrices[hb_atom] = new_zmatrix
             new_zmatrix.append([hb_atom])
             atom2 = self.monomer.bond_partners[hb_atom][0]
@@ -44,24 +43,14 @@ class ClusterGenerator:
             vec12 = vec12 / len_vec12
             new_zmatrix.append([atom2, len_vec12])
             atoms = [atom for atom in self.monomer.coords.keys() if atom != hb_atom and atom != atom2]
-            # FOR TESTING #
-            vec21 = self.monomer.coords[hb_atom] - self.monomer.coords[atom2]
-            vec21 = vec21 / np.linalg.norm(vec21)
-            ###############
         # case donator: set second atom (hb_atom, label & distance), first atom (just label) is skipped
         elif self.monomer.get_element(hb_atom) in ["O", "N"]:
-            print("Case donator")
             self.zmatrices[hb_atom] = new_zmatrix
             atom2 = hb_atom
-            vec12 = self.monomer.coords[hb_atom] + self.monomer.hb_don_vec[hb_atom]
+            vec12 = self.monomer.get_don_vec(hb_atom) - self.monomer.coords[hb_atom]
             vec12 = vec12 / np.linalg.norm(vec12)
             new_zmatrix.append([hb_atom, 1.0]) #DISTANZ SO LASSEN?? MUSS JE NACH ELEMENTE KOMBINATION SOWIESO ANGEPASST WERDEN...
             atoms = [atom for atom in self.monomer.coords.keys() if atom != hb_atom] 
-            # FOR TESTING #
-            vec21 = self.monomer.coords[hb_atom] + self.monomer.hb_don_vec[hb_atom]
-            vec21 = self.monomer.coords[hb_atom] - vec21
-            vec21 = vec21 / np.linalg.norm(vec21)
-            ###############
         # safety option for hydrogen bond elements implemented in ClusterStructure but not in ClusterGenerator yet
         else:
             print("Element not implemented here yet")
@@ -71,40 +60,23 @@ class ClusterGenerator:
         vec23 = self.monomer.coords[atom3] - self.monomer.coords[atom2]
         len_vec23 = np.linalg.norm(vec23)
         vec23 = vec23 / len_vec23
-        angle = np.arccos(np.dot(vec12, vec23))
+        angle = np.arccos(np.dot(-vec12, vec23))
         new_zmatrix.append([atom3, len_vec23, angle])
-        # FOR TESTING #
-        angle1 = angle
-        angle2 = np.arccos(np.dot(vec21, vec23))
-        angle3 = np.arccos(np.dot(-vec12, vec23))
-        print(f"angle1: {np.rad2deg(angle1)}")
-        print(f"angle2: {np.rad2deg(angle2)}")
-        print(f"angle3: {np.rad2deg(angle3)}")
-        ###############
         # set remaining n-3 atoms
         for atom4 in atoms[1:]:
             vec34 = self.monomer.coords[atom4] - self.monomer.coords[atom3]
             len_vec34 = np.linalg.norm(vec34)
             vec34 = vec34 / len_vec34
-            angle = np.arccos(np.dot(vec23, vec34))
-            # Wikipedia 1 und 2
-            # u1 = vec12
-            # u2 = vec23
-            # u3 = vec34
+            angle = np.arccos(np.dot(-vec23, vec34))
+            # Wikipedia simplified formula for dihedral
+            # https://en.wikipedia.org/wiki/Dihedral_angle#:~:text=A%20dihedral%20angle%20is%20the,line%20as%20a%20common%20edge.
+            # u1 = vec12, u2 = vec23, u3 = vec34
             u1u2 = np.cross(vec12, vec23)
             u1u2 = u1u2 / np.linalg.norm(u1u2)
             u2u3 = np.cross(vec23, vec34)
             u2u3 = u2u3 / np.linalg.norm(u2u3)
-            norm_u2 = len_vec23
-            dihedral = np.arctan2(norm_u2 * np.dot(vec12, u2u3), np.dot(u1u2, u2u3))
-            # FOR TESTING #
-            u1u2_2 = np.cross(-vec21, vec23)
-            u1u2_2 = u1u2_2 / np.linalg.norm(u1u2_2)
-            dihedral_2 = np.arctan2(norm_u2 * np.dot(vec12, u2u3), np.dot(u1u2_2, u2u3))
-            print(f"dihedral1: {np.rad2deg(dihedral)}")
-            print(f"dihedral2: {np.rad2deg(dihedral_2)}")
-            print()
-            ###############
+            len_u2 = len_vec23
+            dihedral = np.arctan2(len_u2 * np.dot(vec12, u2u3), np.dot(u1u2, u2u3))
             new_zmatrix.append([atom4, len_vec34, angle, dihedral])
 
     
@@ -186,55 +158,63 @@ class ClusterGenerator:
 
     # BETEILIGTE WBB ATOME MÜSSEN AUS ENTSPRECHENDEN DATENSTRUKTUREN ENTFERNT WERDEN
     def add_monomer_at_don(self, cluster: ClusterStructure, atom_to_dock_at: str, docking_atom: str):
-        pos_atom0 = np.array([])
-        pos_atom1 = np.array([])
+        label_shift = len(cluster.coords.keys())
+        pos_atom1 = cluster.get_don_vec(atom_to_dock_at)
         pos_atom2 = np.array([])
-        hb_vec = cluster.get_don_vec(atom_to_dock_at)
+        pos_atom3 = np.array([])
+        hb_vec = pos_atom0 - self.monomer.coords[atom_to_dock_at]
+        hb_vec = hb_vec / np.linalg.norm(hb_vec)
         for atom_entry in self.zmatrices[docking_atom]:
             label = atom_entry[0]
+            new_label = f"{cluster.get_element(atom)}{cluster.get_number(atom) + label_shift}"
+            new_bond_partners = []
+            for bond_partner in self.monomer.bond_partners[atom]:
+                new_bond_partner_label = f"{cluster.get_element(bond_partner)}{cluster.get_number(bond_partner) + label_shift}"
+                new_bond_partners.append(new_bond_partner_label)
             # place first atom of new monomer 
             # using hydrogen bond length and hydrogen bond vector
             if len(atom_entry) == 1:
-                pos_atom0 = cluster.coords[atom_to_dock_at] + hb_vec # HIER MUSS NOCH WBB LÄNGE EINGEHEN
-                new_coords = pos_atom0
+                new_coords = pos_atom1
             # place second atom of new monomer 
             # using hydrogen bond vector and distance to first atom
             elif len(atom_entry) == 2:
                 distance = atom_entry[1]
-                pos_atom1 = pos_atom0 + distance * hb_vec
-                new_coords = pos_atom1
-                vec10 = pos_atom0 - pos_atom1 # PROLBEM, FÜR DIHEDRAL VEC01 BENÖTIGT?? REICHT MAL -1??
-                vec10 = vec10 / np.linalg.norm(vec10)
+                pos_atom2 = pos_atom1 + distance * hb_vec
+                new_coords = pos_atom2
+                vec12 = pos_atom2 - pos_atom1 # PROLBEM, FÜR DIHEDRAL VEC01 BENÖTIGT?? REICHT MAL -1??
+                vec12 = vec12 / np.linalg.norm(vec12)
             # place third atom of new monomer 
             # using vector between first and second atom, distance to second atom and angle between 1.-2.-3. atom
             elif len(atom_entry) == 3:
                 distance = atom_entry[1]
                 angle = atom_entry[2]
-                pos_atom2 = pos_atom1 + distance * vec10
-                norm_vec = np.cross(vec10, pos_atom2)
-                norm_vec = pos_atom1 + norm_vec / np.linalg.norm(norm_vec)
-                pos_atom2 = rotation(pos_atom2, pos_atom1, norm_vec, angle)
-                new_coords = pos_atom2
+                pos_atom3 = pos_atom2 - distance * vec12
+                vec23 = pos_atom3 - pos_atom2
+                vec23 = np.linalg.norm(vec23)
+                norm_vec = np.cross(-vec12, vec23)
+                norm_vec = pos_atom2 + norm_vec / np.linalg.norm(norm_vec)
+                pos_atom3 = rotation(pos_atom3, pos_atom1, norm_vec, angle)
+                new_coords = pos_atom3
+                vec23 = pos_atom3 - pos_atom2
+                vec23 = np.linalg.norm(vec23)
             # place fourth, fifth, ..., n-th atom of new monomer
             # using 
             elif len(atom_entry) == 4:
                 distance = atom_entry[1]
                 angle = atom_entry[2]
                 dihedral = atom_entry[3]
+                pos_atom4 = pos_atom3 - distance * vec23
 
-            # add new atom from monomer to cluster
-            self.update_cluster(cluster, label, new_coords)
+            cluster.coords[new_label] = new_coords
+            cluster.bond_partners[new_label] = new_bond_partners
 
-
-    def update_cluster(self, cluster: ClusterStructure, atom: str, atom_coord: np.array):
-        label_shift = len(cluster.coords.keys())
-        new_label = f"{cluster.get_element(atom)}{cluster.get_number(atom) + label_shift}"
-        new_bond_partners = []
-        for bond_partner in self.monomer.bond_partners[atom]:
-            new_bond_partner_label = f"{cluster.get_element(bond_partner)}{cluster.get_number(bond_partner) + label_shift}"
-            new_bond_partners.append(new_bond_partner_label)
-        cluster.coords[new_label] = atom_coord
-        cluster.bond_partners[new_label] = new_bond_partners
+    
+    def adjust_distance(self):
+        pass
+    def adjust_angle(self):
+        pass
+    def adjust_dihedral(self):
+        pass
 
 
     #STATT MONOMER STRUCTURE IN GENERATOR ZU SPEICHERN BEI FUNKTIONEN WIE HIER ÜBERGEBEN
@@ -527,6 +507,18 @@ class ClusterGenerator:
                                 #if not NewCluster.clashes():
                                 #    self.conformers(NewCluster, monomer, max_size)
                                 self.conformers(NewCluster, monomer, max_size)
+
+
+    def write_cluster_xyz(self, cluster_coords: dict) -> None:
+        with open("out.xyz", "w") as xyzfile:
+            n_atoms = len(cluster_coords.keys())
+            print(n_atoms, file=xyzfile, end="\n\n")
+            for atom, coords in cluster_coords.items():
+                element = self.monomer.get_element(atom)
+                x = coords[0]
+                y = coords[1]
+                z = coords[2]
+                print(f"{element}\t{x:.5f}\t{y:.5f}\t{z:.5f}", file=xyzfile)
 
 
     def output(self, coords, counter: int = None):
