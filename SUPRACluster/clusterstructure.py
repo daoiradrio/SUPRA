@@ -54,7 +54,7 @@ class ClusterStructure(Structure):
 
     
     # find and store atoms that form hydrogen bonds (hbs), so hb donors or acceptors
-    def find_hbs(self):
+    def find_hbs(self) -> None:
         for atom in self.coords.keys():
             if self.get_element(atom) in ["O", "N"]:
                 self.hb_don.append(atom)
@@ -62,27 +62,24 @@ class ClusterStructure(Structure):
                 for neighbor in self.bond_partners[atom]:
                     if self.get_element(neighbor) == "H":
                         self.hb_acc.append(neighbor)
-                        self.hb_acc_vec[neighbor] = self.get_acc_vec(neighbor, self.bond_partners[neighbor][0])
+                        self.hb_acc_vec[neighbor] = self.get_acc_vec(neighbor)
 
     
-    def get_don_vec(self, don: str) -> list:
+    def get_don_vec(self, don: str) -> np.array:
         vecs = []
         for neighbor in self.bond_partners[don]:
             new_vec = self.coords[don] - self.coords[neighbor]
-            len_new_vec = np.linalg.norm(new_vec)
-            new_vec = new_vec / len_new_vec
+            new_vec = new_vec / np.linalg.norm(new_vec)
             vecs.append(new_vec)
-        new_coord = self.coords[don].copy()
+        new_hb = self.coords[don].copy()
         for vec in vecs:
-            new_coord += vec
-        new_hb = new_coord - self.coords[don]
-        new_hb = new_hb / np.linalg.norm(new_hb)
+            new_hb += vec
         return new_hb
 
 
-    def get_acc_vec(self, acc: str, neighbor: str) -> list:
-        vec2 = self.coords[acc]
-        vec1 = self.coords[neighbor]
-        new_hb = vec2 - vec1
-        new_hb = np.linalg.norm(new_hb)
+    def get_acc_vec(self, acc: str) -> np.array:
+        neighbor = self.bond_partners[acc][0]
+        new_hb = self.coords[acc] - self.coords[neighbor]
+        new_hb = new_hb / np.linalg.norm(new_hb)
+        new_hb = self.coords[acc] + new_hb
         return new_hb
