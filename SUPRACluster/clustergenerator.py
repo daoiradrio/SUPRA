@@ -162,13 +162,13 @@ class ClusterGenerator:
         pos_atom1 = cluster.get_don_vec(atom_to_dock_at)
         pos_atom2 = np.array([])
         pos_atom3 = np.array([])
-        hb_vec = pos_atom0 - self.monomer.coords[atom_to_dock_at]
+        hb_vec = pos_atom1 - self.monomer.coords[atom_to_dock_at]
         hb_vec = hb_vec / np.linalg.norm(hb_vec)
         for atom_entry in self.zmatrices[docking_atom]:
             label = atom_entry[0]
-            new_label = f"{cluster.get_element(atom)}{cluster.get_number(atom) + label_shift}"
+            new_label = f"{cluster.get_element(label)}{cluster.get_number(label) + label_shift}"
             new_bond_partners = []
-            for bond_partner in self.monomer.bond_partners[atom]:
+            for bond_partner in self.monomer.bond_partners[label]:
                 new_bond_partner_label = f"{cluster.get_element(bond_partner)}{cluster.get_number(bond_partner) + label_shift}"
                 new_bond_partners.append(new_bond_partner_label)
             # place first atom of new monomer 
@@ -190,13 +190,16 @@ class ClusterGenerator:
                 angle = atom_entry[2]
                 pos_atom3 = pos_atom2 - distance * vec12
                 vec23 = pos_atom3 - pos_atom2
-                vec23 = np.linalg.norm(vec23)
-                norm_vec = np.cross(-vec12, vec23)
-                norm_vec = pos_atom2 + norm_vec / np.linalg.norm(norm_vec)
-                pos_atom3 = rotation(pos_atom3, pos_atom1, norm_vec, angle)
+                vec23 = vec23 / np.linalg.norm(vec23)
+                                                       # DAS ERGIBT NULLVEKTOR!
+                #norm_vec = np.cross(-vec12, vec23)    # BELIEBIGEN ANDEREN VEKTOR NEHMEN ODER SMART SO KONSTRUIEREN,
+                                                       # DASS MÖGLICHST KEINE CLASHES ENTSTEHEN?
+                norm_vec = np.cross(-vec12, pos_atom3) # FÜR DEN MOMENT ERSTMAL IRGENDWAS
+                norm_vec = pos_atom2 + norm_vec
+                pos_atom3 = rotation(pos_atom3, pos_atom2, norm_vec, angle)
                 new_coords = pos_atom3
                 vec23 = pos_atom3 - pos_atom2
-                vec23 = np.linalg.norm(vec23)
+                vec23 = vec23 / np.linalg.norm(vec23)
             # place fourth, fifth, ..., n-th atom of new monomer
             # using 
             elif len(atom_entry) == 4:
@@ -204,11 +207,18 @@ class ClusterGenerator:
                 angle = atom_entry[2]
                 dihedral = atom_entry[3]
                 pos_atom4 = pos_atom3 - distance * vec23
-
+                vec34 = pos_atom4 - pos_atom3
+                vec34 = vec34 / np.linalg.norm(vec34)
+                norm_vec = np.cross(-vec23, pos_atom4)
+                norm_vec = pos_atom3 + norm_vec
+                pos_atom4 = rotation(pos_atom4, pos_atom3, norm_vec, angle)
+                pos_atom4 = rotation(pos_atom4, pos_atom2, pos_atom3, dihedral)
+                new_coords = pos_atom4
             cluster.coords[new_label] = new_coords
             cluster.bond_partners[new_label] = new_bond_partners
+        self.write_cluster_xyz(cluster.coords)
 
-    
+     
     def adjust_distance(self):
         pass
     def adjust_angle(self):
@@ -518,7 +528,7 @@ class ClusterGenerator:
                 x = coords[0]
                 y = coords[1]
                 z = coords[2]
-                print(f"{element}\t{x:.5f}\t{y:.5f}\t{z:.5f}", file=xyzfile)
+                print(f"{element}   {x:.5f}   {y:.5f}   {z:.5f}", file=xyzfile)
 
 
     def output(self, coords, counter: int = None):

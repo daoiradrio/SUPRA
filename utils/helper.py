@@ -58,7 +58,6 @@ def rotation(coord_rotation_atom: np.array, coord_axis_atom1: np.array, coord_ax
     axis = coord_axis_atom2 - coord_axis_atom1
     axis = axis / np.linalg.norm(axis)
     coord_rotation_atom = coord_rotation_atom - coord_axis_atom1
-    coord_rotation_atom = coord_rotation_atom + coord_axis_atom1
     coord_rotation_atom = np.dot(axis, np.dot(axis, coord_rotation_atom)) \
              + np.cos(rotation_angle) * np.cross(np.cross(axis, coord_rotation_atom), axis) \
              + np.sin(rotation_angle) * np.cross(axis, coord_rotation_atom)
