@@ -31,11 +31,57 @@ class ClusterGenerator:
             self.set_zmatrix(don)
 
 
+    def new_set_zmatrix(self, hb_atom: str):
+        new_zmatrix = []
+        self.zmatrices[hb_atom] = new_zmatrix
+        if self.monomer.get_element(hb_atom) == "H":
+            atom1 = hb_atom
+            atom2 = self.monomer.bond_partners[hb_atom][0]
+            pos1 = self.monomer.coords[atom1]
+            pos2 = self.monomer.coords[atom2]
+            distance = np.linalg.norm(pos2 - pos1)
+            new_zmatrix.append([atom1])
+            new_zmatrix.append([atom2, distance])
+            atoms = [atom for atom in self.monomer.coords.keys() if atom != hb_atom and atom != atom2]
+        elif self.monomer.get_element(hb_atom) in ["O", "N"]:
+            atom2 = hb_atom
+            pos1 = self.monomer.get_don_vec(hb_atom)
+            pos2 = self.monomer.coords[atom2]
+            new_zmatrix.append([atom2, 1.0])
+            atoms = [atom for atom in self.monomer.coords.keys() if atom != hb_atom]
+        atom3 = atoms[0]
+        pos3 = self.monomer.coords[atom3]
+        distance = np.linalg.norm(pos3 - pos2)
+        angle = self.get_angle(pos1, pos2, pos3)
+        new_zmatrix.append([atom3, distance, angle])
+
+
+    def get_angle(p1: np.array, p2: np.array, p3: np.array) -> float:
+        v1 = p2 - p1
+        v2 = p3 - p2
+        v3 = v1 + v2
+        a = np.linalg.norm(v1)
+        b = np.linalg.norm(v2)
+        c = np.linalg.norm(v3)
+        a = max(a, b)
+        b = max(a, b)
+        if b >= c:
+            y = c - (a - b)
+        elif c >= b:
+            y = b - (a - c)
+        angle = 2 * np.arctan(
+                    np.sqrt(
+                        ((a - b) + c) * y / ((a + (b + c)) * ((a - c) + b))
+                    )
+                )
+        return angle
+
+
     def set_zmatrix(self, hb_atom: str):
         new_zmatrix = []
+        self.zmatrices[hb_atom] = new_zmatrix
         # case acceptor: set first (hb_atom, just label) and second atom (label & distance)
         if self.monomer.get_element(hb_atom) == "H":
-            self.zmatrices[hb_atom] = new_zmatrix
             new_zmatrix.append([hb_atom])
             atom2 = self.monomer.bond_partners[hb_atom][0]
             vec12 = self.monomer.coords[atom2] - self.monomer.coords[hb_atom]
@@ -45,7 +91,6 @@ class ClusterGenerator:
             atoms = [atom for atom in self.monomer.coords.keys() if atom != hb_atom and atom != atom2]
         # case donator: set second atom (hb_atom, label & distance), first atom (just label) is skipped
         elif self.monomer.get_element(hb_atom) in ["O", "N"]:
-            self.zmatrices[hb_atom] = new_zmatrix
             atom2 = hb_atom
             vec12 = self.monomer.get_don_vec(hb_atom) - self.monomer.coords[hb_atom]
             vec12 = vec12 / np.linalg.norm(vec12)
