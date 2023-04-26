@@ -79,17 +79,17 @@ class ConformerGenerator:
             for i in range(number_conformers):
                 folder = os.path.abspath(f"{self.workdir_name}{i}")
                 opt_struc = os.path.abspath(os.path.join(folder, self.opt_struc_name))
-                new_conformer = Structure(opt_struc)
-                double_flag = False
-                for conformer_file in os.listdir(self.output_folder_name):
-                    conformer_file = os.path.abspath(os.path.join(self.output_folder_name, conformer_file))    
-                    conformer = Structure(conformer_file)
-                    if self.analyzer.doubles(new_conformer, conformer):
-                        double_flag = True
-                        break
-                if not double_flag:
-                    new_conformer_file = os.path.join(self.output_folder_name, f"conformer{i}.xyz")
-                    os.system(f"mv {opt_struc} {new_conformer_file}")
+                #new_conformer = Structure(opt_struc)
+                #double_flag = False
+                #for conformer_file in os.listdir(self.output_folder_name):
+                #    conformer_file = os.path.abspath(os.path.join(self.output_folder_name, conformer_file))    
+                #    conformer = Structure(conformer_file)
+                #    if self.analyzer.doubles(new_conformer, conformer):
+                #        double_flag = True
+                #        break
+                #if not double_flag:
+                new_conformer_file = os.path.join(self.output_folder_name, f"conformer{i}.xyz")
+                os.system(f"mv {opt_struc} {new_conformer_file}")
                 os.system(f"rm -rf {folder}")
             print(f"{len(os.listdir(self.output_folder_name))} conformers have been generated.")
         else:

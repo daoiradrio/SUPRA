@@ -26,9 +26,9 @@ class ClusterGenerator:
         self.counter = 0
 
         for acc in monomer.hb_acc:
-            self.set_zmatrix(acc)
+            self.new_set_zmatrix(acc)
         for don in monomer.hb_don:
-            self.set_zmatrix(don)
+            self.new_set_zmatrix(don)
 
 
     def new_set_zmatrix(self, hb_atom: str):
@@ -54,9 +54,41 @@ class ClusterGenerator:
         distance = np.linalg.norm(pos3 - pos2)
         angle = self.get_angle(pos1, pos2, pos3)
         new_zmatrix.append([atom3, distance, angle])
+        for atom4 in atoms[1:]:
+            pos4 = self.monomer.coords[atom4]
+            distance = np.linalg.norm(pos4 - pos3)
+            angle = self.get_angle(pos2, pos3, pos4)
+            dihedral = self.get_dihedral(pos1, pos2, pos3, pos4)
 
 
-    def get_angle(p1: np.array, p2: np.array, p3: np.array) -> float:
+    def get_angle(self, p1: np.array, p2: np.array, p3: np.array):
+        print(p1, p2, p3)
+        v1 = p2 - p1 / np.linalg.norm(p2 - p1)
+        v2 = p3 - p2 / np.linalg.norm(p3 - p2)
+        cos = np.dot(v1, v2)
+        sin = np.linalg.norm(np.cross(v1, v2))
+        return np.arctan2(sin, cos)
+
+
+    def get_dihedral(self, p1: np.array, p2: np.array, p3: np.array, p4: np.array) -> None:
+        v1 = p2 - p1 / np.linalg.norm(p2 - p1)
+        v2 = p3 - p2 / np.linalg.norm(p3 - p2)
+        v3 = p4 - p3 / np.linalg.norm(p4 - p3)
+        n1 = np.cross(v2, v1)
+        n1 = n1 / np.linalg.norm(n1)
+        n2 = np.cross(v3, v1)
+        n2 = n2 / np.linalg.norm(n2)
+
+
+    def old_get_angle_math_stack_exchange(self, p1: np.array, p2: np.array, p3: np.array) -> float:
+        v1 = (p2 - p1) / np.linalg.norm(p2 - p1)
+        v2 = (p3 - p2) / np.linalg.norm(p3 - p2)
+        norm_a = np.linalg.norm(v1 - v2)
+        norm_b = np.linalg.norm(v1 + v2)
+        return np.arctan2(norm_a, norm_b)
+
+
+    def old_get_angle_see_ref_on_laptop(self, p1: np.array, p2: np.array, p3: np.array) -> float:
         v1 = p2 - p1
         v2 = p3 - p2
         v3 = v1 + v2
@@ -107,6 +139,12 @@ class ClusterGenerator:
         vec23 = vec23 / len_vec23
         angle = np.arccos(np.dot(-vec12, vec23))
         new_zmatrix.append([atom3, len_vec23, angle])
+        ####################################
+        print(hb_atom)
+        print(self.get_angle(self.monomer.coords[hb_atom], self.monomer.coords[atom2], self.monomer.coords[atom3]))
+        print(angle)
+        print()
+        ####################################
         # set remaining n-3 atoms
         for atom4 in atoms[1:]:
             vec34 = self.monomer.coords[atom4] - self.monomer.coords[atom3]

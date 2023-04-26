@@ -10,11 +10,11 @@ class Structure:
     def __init__(self, file: str = None):
         self.number_of_atoms = 0
         self.coords = {}
-        self.bonds = []
         self.bond_partners = {}
         self.bond_orders = {}
+        self.bonds = []
         if file:
-            self.get_structure(file)
+            self.new_get_structure(file)
 
 
     # translation of atom label into element symbol
@@ -34,6 +34,50 @@ class Structure:
             return int(label[-1])
 
 
+    def new_get_structure(self, filename: str):
+        if not filename:
+            filename = input("Path of the .xyz-File: ")
+        if not os.path.exists(filename):
+            print("STRUCTURE MODULE: File not found at given path.")
+            return
+        self.read_xyz(filename)
+        self.get_connectivity()
+
+
+    def read_xyz(self, filename: str):
+        self.coords = {}
+        with open(filename, "r") as input_file:
+            for i, line in enumerate(input_file):
+                if i == 0:
+                    self.number_of_atoms = int(line)
+                elif i >= 2:
+                    element, x, y, z = line.split()
+                    self.coords[f"{element}{i}"] = np.array([float(x), float(y), float(z)])
+
+
+    def get_connectivity(self):
+        atoms = list(self.coords.keys())
+        self.bond_partners = {atom: [] for atom in atoms}
+        self.bond_orders = {}
+        self.bonds = []
+        for i, atom1 in enumerate(atoms):
+            coords1 = self.coords[atom1]
+            max_valence = valences[self.get_element(atom1)]
+            valence = 0
+            for atom2 in atoms[i+1:]:
+                if valence == max_valence:
+                    break
+                else:
+                    coords2 = self.coords[atom2]
+                    bond_order = self._check_connectivity(atom1, coords1, atom2, coords2)
+                    if bond_order:
+                        self.bonds.append((atom1, atom2))
+                        self.bond_partners[atom1].append(atom2)
+                        self.bond_partners[atom2].append(atom1)
+                        self.bond_orders[(atom1, atom2)] = bond_order
+                        valence += 1
+
+
     # TODO: ÜBERPRÜFUNG HINZUFÜGEN (PFAD KORREKT, DATEI LESBAR, ETC.)
     # read atom coordinates from .xyz-file, calculate connectivity
     def get_structure(self, filename: str) -> None:
@@ -42,6 +86,10 @@ class Structure:
         if not os.path.exists(filename):
             print("STRUCTURE MODULE: File not found at given path.")
             return
+        self.coords = {}
+        self.bond_partners = {}
+        self.bond_orders = {}
+        self.bonds = []
         with open(filename, "r") as input_file:
             for i, line in enumerate(input_file):
                 if i == 0:

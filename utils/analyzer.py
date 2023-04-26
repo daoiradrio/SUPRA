@@ -1,5 +1,7 @@
 import os
 
+import time
+
 import pandas as pd
 import numpy as np
 import multiprocessing as mp
@@ -14,7 +16,95 @@ from queue import Queue
 class Analyzer:
 
     def __init__(self):
-        pass
+        self.container = []
+        self.total_time_match = 0.0
+        self.total_time_rmsd = 0.0
+        self.total_time_get_structure = 0.0
+
+
+    def revised_filter_doubles(self):
+        conformer1 = Structure()
+        conformer2 = Structure()
+        path = os.path.abspath(path)
+        conformers = os.listdir(path)
+
+        conformer1.get_structure(os.path.join(path, conformers.pop()))
+        self.container.append(conformer1)
+        while len(self.container) < 2:
+            conformer2.get_structure(os.path.join(path, conformers.pop()))
+            rmsd = self.rmsd_with_matching(conformer1, conformer2)
+
+        counter = len(liste)
+        for i, file1 in enumerate(conformers):
+            conformer1.get_structure(os.path.join(path, file1))
+            for file2 in conformers[i+1:]:
+                conformer2.get_structure(os.path.join(path, file2))
+                if self.doubles(conformer1, conformer2):
+                    #os.remove(os.path.join(path, file1))
+                    counter -= 1
+                    break
+        print(f"Individual conformers in {path}: {counter}")
+
+
+    def rmsd_with_matching(self, molecule1: Structure, molecule2: Structure, loose: bool = False) -> float:
+        try:
+            if loose:
+                # detect methyl groups, replace them by dummy atoms? delete Hs and let C atom serve as dummy?
+                # before or after matching?? -> before matching because assumption that matching is computationally
+                # more demanding and less atoms to evaluate reduce this effort, doubly replacing by dummy atoms instead
+                # of once is x2 effort
+                # *** UNDER CONSTRUCTION ***
+                new_coords1 = molecule1.coords.copy()
+                new_structure1 = molecule1.bond_partners.copy()
+                for atom, bond_partners in molecule1.bond_partners.items():
+                    if get_element(atom) == "C":
+                        H_count = [get_element(bond_partner) for bond_partner in molecule1.bond_partners[atom]].count("H")
+                        if H_count == 3:
+                            sorted_bond_partners = sorted(
+                                bond_partners, key=lambda x: valences[get_element(x)], reverse=True
+                            )
+                            H1 = sorted_bond_partners[1]
+                            H2 = sorted_bond_partners[2]
+                            H3 = sorted_bond_partners[3]
+                            del new_coords1[H1]
+                            del new_coords1[H2]
+                            del new_coords1[H3]
+                            del new_structure1[H1]
+                            del new_structure1[H2]
+                            del new_structure1[H3]
+                            new_structure1[atom] = sorted_bond_partners[:1]
+                new_coords2 = molecule2.coords.copy()
+                new_structure2 = molecule2.bond_partners.copy()
+                for atom, bond_partners in molecule2.bond_partners.items():
+                    if get_element(atom) == "C":
+                        H_count = [get_element(bond_partner) for bond_partner in molecule2.bond_partners[atom]].count("H")
+                        if H_count == 3:
+                            sorted_bond_partners = sorted(
+                                bond_partners, key=lambda x: valences[get_element(x)], reverse=True
+                            )
+                            H1 = sorted_bond_partners[1]
+                            H2 = sorted_bond_partners[2]
+                            H3 = sorted_bond_partners[3]
+                            del new_coords2[H1]
+                            del new_coords2[H2]
+                            del new_coords2[H3]
+                            del new_structure2[H1]
+                            del new_structure2[H2]
+                            del new_structure2[H3]
+                            new_structure2[atom] = sorted_bond_partners[:1]
+                # **************************
+                coords1, coords2 = self.match(
+                    coords1=new_coords1, structure1=new_structure1,
+                    coords2=new_coords2, structure2=new_structure2
+                )
+            else:
+                coords1, coords2 = self.match(
+                    coords1=molecule1.coords, structure1=molecule1.bond_partners,
+                    coords2=molecule2.coords, structure2=molecule2.bond_partners
+                )
+        except:
+            return -1.0
+        return self.rmsd(coords1, coords2) 
 
 
     def compare_structure_sets(self, path1: str, path2: str):
@@ -102,6 +192,30 @@ class Analyzer:
                 for conformer in conformers:
                     print(conformer, file=outfile)
             #print(folder + ": " + str(counter))
+    
+
+    def new_filter_doubles(self, path: str):
+        conformer1 = Structure()
+        conformer2 = Structure()
+        path = os.path.abspath(path)
+        liste = os.listdir(path)
+        counter = len(liste)
+        total_time_rmsd = 0.0
+        for index, file1 in enumerate(liste):
+            start = time.time()
+            conformer1.read_xyz(os.path.join(path, file1))
+            self.total_time_get_structure += (time.time() - start)
+            for file2 in liste[index + 1:]:
+                start = time.time()
+                conformer2.read_xyz(os.path.join(path, file2))
+                self.total_time_get_structure += (time.time() - start)
+                if self.rmsd(conformer1.coords, conformer2.coords) <= 0.1:
+                    os.remove(os.path.join(path, file1))
+                    counter -= 1
+                    break
+        print(f"Individual conformers in {path}: {counter}")
+        print(f"Total time RMSD: {self.total_time_rmsd}")
+        print(f"Total time get_structure: {self.total_time_get_structure}")
 
 
     def filter_doubles(self, path: str):
@@ -111,25 +225,37 @@ class Analyzer:
         liste = os.listdir(path)
         counter = len(liste)
         #n = len(liste)
+        total_time_match = 0.0
+        total_time_rmsd = 0.0
         for index, file1 in enumerate(liste):
             #conformer1.get_structure(path + file1)
+            start = time.time()
             conformer1.get_structure(os.path.join(path, file1))
+            self.total_time_get_structure += (time.time() - start)
             #print(str((index + 1) * (100 / n)) + "%")
             for file2 in liste[index + 1:]:
                 #conformer2.get_structure(path + file2)
+                start = time.time()
                 conformer2.get_structure(os.path.join(path, file2))
+                self.total_time_get_structure += (time.time() - start)
                 if self.doubles(conformer1, conformer2):
-                    #os.remove(path + file1)
                     os.remove(os.path.join(path, file1))
                     counter -= 1
                     break
         print(f"Individual conformers in {path}: {counter}")
+        #print(f"Total time Match: {self.total_time_match}")
+        print(f"Total time RMSD: {self.total_time_rmsd}")
+        print(f"Total time get_structure: {self.total_time_get_structure}")
 
 
     # check if two Structure objects have equal structures (= doubles) base on RMSD, option loose makes
     # methyl groups be ignored in this
     def doubles(self, molecule1: Structure, molecule2: Structure, loose: bool = False) -> bool:
         doubles = False
+        #################
+        time_match = 0.0
+        time_rmsd = 0.0
+        #################
         try:
             if loose:
                 # detect methyl groups, replace them by dummy atoms? delete Hs and let C atom serve as dummy?
@@ -181,14 +307,22 @@ class Analyzer:
                     coords2=new_coords2, structure2=new_structure2
                 )
             else:
+                start = time.time() 
                 coords1, coords2 = self.match(
                     coords1=molecule1.coords, structure1=molecule1.bond_partners,
                     coords2=molecule2.coords, structure2=molecule2.bond_partners
                 )
+                time_match = time_match + (time.time() - start)
         except:
             return doubles
+        start = time.time()
+        #coords1 = molecule1.coords.copy()
+        #coords2 = molecule2.coords.copy()
         if self.rmsd(coords1, coords2) <= 0.1:
+            time_rmsd = time_rmsd + (time.time() - start)
             doubles = True
+        self.total_time_match = self.total_time_match + time_match
+        self.total_time_rmsd = self.total_time_rmsd + time_rmsd
         return doubles
 
 
