@@ -209,7 +209,7 @@ class Analyzer:
                 start = time.time()
                 conformer2.read_xyz(os.path.join(path, file2))
                 self.total_time_get_structure += (time.time() - start)
-                if self.rmsd(conformer1.coords, conformer2.coords) <= 0.1:
+                if self.kabsch_and_rmsd(conformer1.coords, conformer2.coords) <= 0.1:
                     os.remove(os.path.join(path, file1))
                     counter -= 1
                     break
