@@ -14,11 +14,12 @@ class Structure:
         self.bond_orders = {}
         self.bonds = []
         if file:
-            self.new_get_structure(file)
+            self.get_structure(file)
 
 
     # translation of atom label into element symbol
-    def get_element(self, label: str) -> str:
+    @staticmethod
+    def get_element(label: str) -> str:
         # if letter on second index: two letter element symbol, return first two chars of label
         if label[1].isalpha():
             return (label[0] + label[1])
@@ -26,15 +27,16 @@ class Structure:
         else:
             return label[0]
 
-
-    def get_number(self, label: str) -> int:
+    
+    @staticmethod
+    def get_number(label: str) -> int:
         if label[-2].isdigit():
             return int(label[-2] + label[-1])
         else:
             return int(label[-1])
 
 
-    def new_get_structure(self, filename: str):
+    def get_structure(self, filename: str):
         if not filename:
             filename = input("Path of the .xyz-File: ")
         if not os.path.exists(filename):
@@ -80,7 +82,7 @@ class Structure:
 
     # TODO: ÜBERPRÜFUNG HINZUFÜGEN (PFAD KORREKT, DATEI LESBAR, ETC.)
     # read atom coordinates from .xyz-file, calculate connectivity
-    def get_structure(self, filename: str) -> None:
+    def old_get_structure(self, filename: str) -> None:
         if not filename:
             filename = input("Path of the .xyz-File: ")
         if not os.path.exists(filename):

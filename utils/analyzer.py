@@ -224,38 +224,21 @@ class Analyzer:
         path = os.path.abspath(path)
         liste = os.listdir(path)
         counter = len(liste)
-        #n = len(liste)
-        total_time_match = 0.0
-        total_time_rmsd = 0.0
         for index, file1 in enumerate(liste):
-            #conformer1.get_structure(path + file1)
-            start = time.time()
             conformer1.get_structure(os.path.join(path, file1))
-            self.total_time_get_structure += (time.time() - start)
-            #print(str((index + 1) * (100 / n)) + "%")
             for file2 in liste[index + 1:]:
-                #conformer2.get_structure(path + file2)
-                start = time.time()
                 conformer2.get_structure(os.path.join(path, file2))
-                self.total_time_get_structure += (time.time() - start)
                 if self.doubles(conformer1, conformer2):
                     os.remove(os.path.join(path, file1))
                     counter -= 1
                     break
         print(f"Individual conformers in {path}: {counter}")
-        #print(f"Total time Match: {self.total_time_match}")
-        print(f"Total time RMSD: {self.total_time_rmsd}")
-        print(f"Total time get_structure: {self.total_time_get_structure}")
 
 
     # check if two Structure objects have equal structures (= doubles) base on RMSD, option loose makes
     # methyl groups be ignored in this
     def doubles(self, molecule1: Structure, molecule2: Structure, loose: bool = False) -> bool:
         doubles = False
-        #################
-        time_match = 0.0
-        time_rmsd = 0.0
-        #################
         try:
             if loose:
                 # detect methyl groups, replace them by dummy atoms? delete Hs and let C atom serve as dummy?
@@ -315,14 +298,10 @@ class Analyzer:
                 time_match = time_match + (time.time() - start)
         except:
             return doubles
-        start = time.time()
         #coords1 = molecule1.coords.copy()
         #coords2 = molecule2.coords.copy()
         if self.rmsd(coords1, coords2) <= 0.1:
-            time_rmsd = time_rmsd + (time.time() - start)
             doubles = True
-        self.total_time_match = self.total_time_match + time_match
-        self.total_time_rmsd = self.total_time_rmsd + time_rmsd
         return doubles
 
 
@@ -504,10 +483,62 @@ class Analyzer:
         return spheres
 
 
+    @staticmethod
+    def kabsch(coords1, coords2):
+        if type(coords1) == dict:
+            coords1 = list(coords1.values())
+            coords1 = np.array(coords1)
+        if type(coords2) is dict:
+            coords2 = list(coords2.values())
+            coords2 = np.array(coords2)
+        center1 = np.mean(coords1, axis=0)
+        center2 = np.mean(coords2, axis=0)
+        coords1 -= center1
+        coords2 -= center2
+
+        # Kovarianzmatrix berechnen
+        H = np.matmul(coords1.T, coords2)
+
+        # Singulärwertzerlegung der Kovarianzmatrix berechnen
+        U, S, Vt = np.linalg.svd(H)
+
+        # Matrix zur Berechnung der Rotationsmatrix in Abhängigkeit der Determinante bestimmen
+        det = np.linalg.det(np.matmul(Vt.T, U.T))
+        if det >= 0:
+            det = 1.0
+        else:
+            det = -1.0
+        matrix = np.array([[1, 0, 0], [0, 1, 0], [0, 0, det]])
+
+        # Rotationsmatrix berechnen
+        R = np.matmul(np.matmul(Vt.T, matrix), U.T)
+
+        # anwenden der Rotationsmatrix auf Koordinatenset 2 um beide Sets möglichst zur Deckung zu bringen
+        for i, _ in enumerate(coords2):
+            coords2[i] = np.matmul(coords2[i], R)
+
+        return (coords1, coords2)
+    
+
+    @staticmethod
+    def rmsd(coords1, coords2):
+        if type(coords1) == dict:
+            coords1 = list(coords1.values())
+        if type(coords2) is dict:
+            coords2 = list(coords2.values())
+        n = len(coords1)
+        delta_sum = 0.0
+        for i in range(n):
+            delta_sum += (coords1[i][0] - coords2[i][0])**2 + \
+                         (coords1[i][1] - coords2[i][1])**2 + \
+                         (coords1[i][2] - coords2[i][2])**2
+        return np.sqrt(1.0/float(n) * delta_sum)
+
+
     # überprüfen, ob zwei Strukturen identisch (Doubles) oder verschieden sind
     #def rmsd(self, coords1: Union[Structure, dict, list], coords2: Union[Structure, dict, list]) -> float:
     @staticmethod
-    def rmsd(coords1: Union[Structure, dict, list], coords2: Union[Structure, dict, list]) -> float:
+    def kabsch_and_rmsd(coords1: Union[Structure, dict, list], coords2: Union[Structure, dict, list]) -> float:
         # ggf. umwandeln des Koordinatendateityps von Dictionary zu Liste für beide Koordinatensets
         if type(coords1) == Structure:
             coords1 = list(coords1.coords.values())
@@ -560,11 +591,11 @@ class Analyzer:
 
         # Anzahl der Punkte N, es gilt len(coords1)=len(coords2) (s.o.)
         N = len(coords1)
-        sum = 0
-        for index in range(N):
-            sum += (coords1[index][0] - coords2[index][0])**2 + \
-                   (coords1[index][1] - coords2[index][1])**2 + \
-                   (coords1[index][2] - coords2[index][2])**2
+        sum = 0.0
+        for i in range(N):
+            sum += (coords1[i][0] - coords2[i][0])**2 + \
+                   (coords1[i][1] - coords2[i][1])**2 + \
+                   (coords1[i][2] - coords2[i][2])**2
         rmsd = np.sqrt(1.0/float(N) * sum)
 
         return rmsd
