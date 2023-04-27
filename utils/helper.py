@@ -95,3 +95,39 @@ def is_hb_acc(label: str) -> bool:
     if get_element(label) == "H":
         flag = True
     return flag
+
+
+def geometric_center(coords: dict) -> np.array:
+    center = np.array([0.0, 0.0, 0.0])
+    for coord in coords.values():
+        center += coord
+    n = len(coords)
+    center = center / n
+    return center
+
+
+def mass_center(coords: dict) -> np.array:
+    sum_m = 0.0
+    com = np.array([0.0, 0.0, 0.0])
+    for atom, coord in coords.items():
+        element = get_element(atom)
+        m = atomic_masses_symbols[element]
+        com += m * coord
+        sum_m += m
+    com *= (1/m)
+    return com
+
+
+def inertia_tensor(coords: dict) -> np.array:
+    com = mass_center(coords)
+    I = np.zeros((3,3))
+    for i in range(3):
+        for j in range(3):
+            for atom, coord in coords.items():
+                r = coord - com
+                element = get_element(atom)
+                m = atomic_masses_symbols[element]
+                I[i][j] -= (m * r[i]*r[j])
+                if i == j:
+                    I[i][j] += (m * np.dot(r, r))
+    return I

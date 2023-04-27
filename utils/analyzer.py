@@ -10,6 +10,7 @@ from utils.helper import get_element, valences
 from SUPRAConformer.structure import Structure
 from typing import Union
 from queue import Queue
+from scipy.optimize import linear_sum_assignment
 
 
 
@@ -307,7 +308,7 @@ class Analyzer:
 
     # No. 1 are reference coordinates and structure
     # No. 2 coordinates will be reordered to match No. 1
-    def match(self, coords1: dict, structure1: dict, coords2: dict, structure2: dict) -> (list, list):
+    def match(self, coords1: dict, structure1: dict, coords2: dict, structure2: dict) -> tuple:
         # initialization
         pairs = {}
         matched_coords1 = []
@@ -380,7 +381,7 @@ class Analyzer:
 
 
     # TODO: this may be more efficient than current version? test on large systems!
-    def match_old(self, molecule1: Structure, molecule2: Structure) -> (list, list):
+    def match_old(self, molecule1: Structure, molecule2: Structure) -> tuple:
         list1 = list(molecule1.coords.keys())
         #list1 = sorted(list1, key=Helper.get_element)
         list2 = list(molecule2.coords.keys())
@@ -419,7 +420,7 @@ class Analyzer:
                         pairs[uneq_atom].remove(eq_atom)
             coords1.append(molecule1.coords[atom])
             coords2.append(molecule2.coords[pairs[atom][0]])
-        return coords1, coords2
+        return (coords1, coords2)
 
 
     def spheres(self, structure: dict, start: str) -> list:
@@ -483,8 +484,49 @@ class Analyzer:
         return spheres
 
 
+    def remove_doubles(path: str) -> None:
+        conformer1 = Structure()
+        conformer2 = Structure()
+        path = os.path.abspath(path)
+        liste = os.listdir(path)
+        counter = len(liste)
+        for index, file1 in enumerate(liste):
+            conformer1.read_xyz(os.path.join(path, file1))
+            for file2 in liste[index + 1:]:
+                conformer2.read_xyz(os.path.join(path, file2))
+                # VERBESSERUNGSPOTENTIAL BZGL. IMPLEMENTIERUNG AB HIER??
+                kabsch_coords1, kabsch_coords2 = Analyzer.kabsch(conformer1.coords, conformer2.coords)
+                n_atoms = len(conformer1.coords.keys())
+                cost = np.zeros((n_atoms, n_atoms))
+                for i, (atom1, coords1) in enumerate(zip(conformer1.coords.keys(), kabsch_coords1)):
+                    for j, (atom2, coords2) in enumerate(zip(conformer2.coords.keys(), kabsch_coords2)):
+                        cost[i][j] = self.rmsd_cost(atom1, coords1, atom2, coords2)
+                row, col = linear_sum_assignment(cost)
+                coords1 = []
+                coords2 = []
+                for i, j in zip(row, col):
+                    coords1.append(coords1[i])
+                    coords2.append(coords2[j])
+                if Analyzer.rmsd(coords1, coords2) <= 0.1:
+                    os.remove(os.path.join(path, file1))
+                    counter -= 1
+                    break
+        print(f"Individual conformers in {path}: {counter}")
+    
+
     @staticmethod
-    def kabsch(coords1, coords2):
+    def rmsd_cost(atom1: str, coord1: Union[list, np.array], atom2: str, coord2: Union[list, np.array]) -> float:
+        element1 = Structure.get_element(atom1)
+        element2 = Structure.get_element(atom2)
+        if element1 == element2:
+            element_term = 0.0
+        else:
+            element_term = 100.0
+        return (coord1[0] - coord2[0])**2 + (coord1[1] - coord2[1])**2 + (coord1[2] - coord2[2])**2 + element_term
+
+
+    @staticmethod
+    def kabsch(coords1: Union[dict, list, np.array], coords2: Union[dict, list, np.array]) -> tuple:
         if type(coords1) == dict:
             coords1 = list(coords1.values())
             coords1 = np.array(coords1)
@@ -521,7 +563,7 @@ class Analyzer:
     
 
     @staticmethod
-    def rmsd(coords1, coords2):
+    def rmsd(coords1: Union[dict, list, np.array], coords2: Union[dict, list, np.array]) -> float:
         if type(coords1) == dict:
             coords1 = list(coords1.values())
         if type(coords2) is dict:
