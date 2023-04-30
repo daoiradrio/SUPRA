@@ -429,7 +429,7 @@ class ConformerGenerator:
                     with open(control_file, "w") as control:
                         print("$symmetry c1", file=control)
                         print("$uff", file=control)
-                        print("      1000         1          0 ! maxcycle,modus,nqeq", file=control)
+                        print("      2500         1          0 ! maxcycle,modus,nqeq", file=control)
                         print("    111111                      ! iterm", file=control)
                         print("  0.10D-07  0.10D-04            ! econv,gconv", file=control)
                         print("      0.00  1.10                ! qtot,dfac", file=control)
