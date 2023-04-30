@@ -57,11 +57,24 @@ class ConformerGenerator:
                 break
             else:
                 print("Invalid input.")
-        while True:
+        start_calculation = False
+        while not start_calculation:
             increment_input = input(f"Type in an angle increment (30, 45, 60, 90, 120 or 180 in degrees): ")
             if increment_input in ["30", "45", "60", "90", "120", "180"]:
                 self.angle_increments = increment_combinations[int(increment_input)]
-                break
+                possible_number_of_conformers = 0
+                for angle in self.angle_increments:
+                    possible_number_of_conformers += int(np.power((360 / angle), len(self.torsions)))
+                    confirm = -1
+                while True:
+                    confirm = input(f"Up to {possible_number_of_conformers} will be generated. Start calculation (1) or restart selection (2)?: ")
+                    if confirm == "1":
+                        start_calculation = True
+                        break
+                    elif confirm == "2":
+                        break
+                    else:
+                        print("Invalid input.")
             else:
                 print("Invalid input.")
         ##########################

@@ -483,36 +483,34 @@ class Analyzer:
                     next_sphere_counter = 0
         return spheres
 
-
+    
+    @staticmethod
     def remove_doubles(path: str) -> None:
         conformer1 = Structure()
         conformer2 = Structure()
         path = os.path.abspath(path)
-        liste = os.listdir(path)
-        counter = len(liste)
-        for index, file1 in enumerate(liste):
+        conformers = os.listdir(path)
+        counter = len(conformers)
+        conformer1.read_xyz(os.path.join(path, conformers[0]))
+        atoms = [atom for atom in conformer1.coords.keys()]
+        n_atoms = len(atoms)
+        cost = np.zeros((n_atoms, n_atoms))
+        for index, file1 in enumerate(conformers):
             conformer1.read_xyz(os.path.join(path, file1))
-            for file2 in liste[index + 1:]:
+            for file2 in conformers[index + 1:]:
                 conformer2.read_xyz(os.path.join(path, file2))
                 # VERBESSERUNGSPOTENTIAL BZGL. IMPLEMENTIERUNG AB HIER??
                 kabsch_coords1, kabsch_coords2 = Analyzer.kabsch(conformer1.coords, conformer2.coords)
-                n_atoms = len(conformer1.coords.keys())
-                cost = np.zeros((n_atoms, n_atoms))
-                for i, (atom1, coords1) in enumerate(zip(conformer1.coords.keys(), kabsch_coords1)):
-                    for j, (atom2, coords2) in enumerate(zip(conformer2.coords.keys(), kabsch_coords2)):
-                        cost[i][j] = self.rmsd_cost(atom1, coords1, atom2, coords2)
+                for i in range(n_atoms):
+                    for j in range(n_atoms):
+                        cost[i][j] = Analyzer.rmsd_cost(atoms[i], kabsch_coords1[i], atoms[j], kabsch_coords2[j])
                 row, col = linear_sum_assignment(cost)
-                coords1 = []
-                coords2 = []
-                for i, j in zip(row, col):
-                    coords1.append(coords1[i])
-                    coords2.append(coords2[j])
-                if Analyzer.rmsd(coords1, coords2) <= 0.1:
+                if Analyzer.rmsd(kabsch_coords1[row], kabsch_coords2[col]) <= 0.1:
                     os.remove(os.path.join(path, file1))
                     counter -= 1
                     break
-        print(f"Individual conformers in {path}: {counter}")
-    
+        print(f"Individual conformers in {path}: {counter}") 
+
 
     @staticmethod
     def rmsd_cost(atom1: str, coord1: Union[list, np.array], atom2: str, coord2: Union[list, np.array]) -> float:
