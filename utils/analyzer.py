@@ -18,9 +18,15 @@ class Analyzer:
 
     def __init__(self):
         self.container = []
-        self.total_time_match = 0.0
-        self.total_time_rmsd = 0.0
-        self.total_time_get_structure = 0.0
+        self.time_for_for_total = 0.0
+        self.time_read_xyz = 0.0
+        self.time_kabsch = 0.0
+        self.time_build_cost_matrix = 0.0
+        self.time_hungarian = 0.0
+        self.time_rmsd = 0.0
+        self.time_remove = 0.0
+
+
 
 
     def revised_filter_doubles(self):
@@ -484,8 +490,8 @@ class Analyzer:
         return spheres
 
     
-    @staticmethod
-    def remove_doubles(path: str) -> None:
+    #@staticmethod
+    def remove_doubles(self, path: str) -> None:
         conformer1 = Structure()
         conformer2 = Structure()
         path = os.path.abspath(path)
@@ -495,25 +501,41 @@ class Analyzer:
         atoms = [atom for atom in conformer1.coords.keys()]
         n_atoms = len(atoms)
         cost = np.zeros((n_atoms, n_atoms))
+        self.time_for_for = time.time()
         for index, file1 in enumerate(conformers):
+            start = time.time()
             conformer1.read_xyz(os.path.join(path, file1))
+            self.time_read_xyz = self.time_read_xyz + (time.time() - start)
             for file2 in conformers[index + 1:]:
+                start = time.time()
                 conformer2.read_xyz(os.path.join(path, file2))
+                self.time_read_xyz = self.time_read_xyz + (time.time() - start)
                 # VERBESSERUNGSPOTENTIAL BZGL. IMPLEMENTIERUNG AB HIER??
-                kabsch_coords1, kabsch_coords2 = Analyzer.kabsch(conformer1.coords, conformer2.coords)
+                start = time.time()
+                kabsch_coords1, kabsch_coords2 = self.kabsch(conformer1.coords, conformer2.coords)
+                self.time_kabsch = self.time_kabsch + (time.time() - start)
+                start = time.time()
                 for i in range(n_atoms):
                     for j in range(n_atoms):
-                        cost[i][j] = Analyzer.rmsd_cost(atoms[i], kabsch_coords1[i], atoms[j], kabsch_coords2[j])
+                        cost[i][j] = self.rmsd_cost(atoms[i], kabsch_coords1[i], atoms[j], kabsch_coords2[j])
+                self.time_build_cost_matrix = self.time_build_cost_matrix + (time.time() - start)
+                start = time.time()
                 row, col = linear_sum_assignment(cost)
-                if Analyzer.rmsd(kabsch_coords1[row], kabsch_coords2[col]) <= 0.1:
+                self.time_hungarian = self.time_hungarian + (time.time() - start)
+                start = time.time()
+                if self.rmsd(kabsch_coords1[row], kabsch_coords2[col]) <= 0.1:
+                    self.time_rmsd = self.time_rmsd + (time.time() - start)
+                    start = time.time()
                     os.remove(os.path.join(path, file1))
+                    self.time_remove = self.time_remove + (time.time() - start)
                     counter -= 1
                     break
+        self.time_for_for = time.time() - self.time_for_for
         print(f"Individual conformers in {path}: {counter}") 
 
 
-    @staticmethod
-    def rmsd_cost(atom1: str, coord1: Union[list, np.array], atom2: str, coord2: Union[list, np.array]) -> float:
+    #@staticmethod
+    def rmsd_cost(self, atom1: str, coord1: Union[list, np.array], atom2: str, coord2: Union[list, np.array]) -> float:
         element1 = Structure.get_element(atom1)
         element2 = Structure.get_element(atom2)
         if element1 == element2:
@@ -523,8 +545,8 @@ class Analyzer:
         return (coord1[0] - coord2[0])**2 + (coord1[1] - coord2[1])**2 + (coord1[2] - coord2[2])**2 + element_term
 
 
-    @staticmethod
-    def kabsch(coords1: Union[dict, list, np.array], coords2: Union[dict, list, np.array]) -> tuple:
+    #@staticmethod
+    def kabsch(self, coords1: Union[dict, list, np.array], coords2: Union[dict, list, np.array]) -> tuple:
         if type(coords1) == dict:
             coords1 = list(coords1.values())
             coords1 = np.array(coords1)
@@ -560,8 +582,8 @@ class Analyzer:
         return (coords1, coords2)
     
 
-    @staticmethod
-    def rmsd(coords1: Union[dict, list, np.array], coords2: Union[dict, list, np.array]) -> float:
+    #@staticmethod
+    def rmsd(self, coords1: Union[dict, list, np.array], coords2: Union[dict, list, np.array]) -> float:
         if type(coords1) == dict:
             coords1 = list(coords1.values())
         if type(coords2) is dict:

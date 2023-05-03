@@ -1,4 +1,4 @@
-from utils.helper import is_hb_don, is_hb_acc, rotation
+from utils.helper import is_hb_don, is_hb_acc, rotation, get_element, get_number
 from SUPRACluster.clusterstructure import ClusterStructure
 from SUPRAConformer.conformergenerator import ConformerGenerator
 import numpy as np
@@ -27,31 +27,37 @@ class ClusterGenerator:
         self.max_cluster_size = 3 # VOM USER WÄHLEN LASSEN
     
 
-    def add_monomer(self, cluster: ClusterStructure, monomer: ClusterStructure, atom_to_dock_at: str, docking_atom: str):
-        label_shift = len(cluster.coords.keys())
-        if is_hb_don(atom_to_dock_at):
-            pos = cluster.get_don_vec(atom_to_dock_at)
-            coords_shift = pos - monomer.coords[docking_atom]
-            bond_partner = monomer.bond_partners[docking_atom][0]
-            v2 = (monomer.coords[bond_partner] + coords_shift) - pos
-            v2 = v2 / np.linalg.norm(v2)
-        elif is_hb_acc(atom_to_dock_at):
-            pos = cluster.get_acc_vec(atom_to_dock_at)
-            coords_shift = pos - monomer.coords[docking_atom]
-            v2 = monomer.get_don_vec(docking_atom) + coords_shift - pos
-            v2 = v2 / np.linalg.norm(v2)
-        v1 = cluster.coords[atom_to_dock_at] - pos
+    def add_monomer(self, cluster1: ClusterStructure, atom1: str, cluster2: ClusterStructure, atom2: str):
+        if is_hb_don(atom1):
+            if not is_hb_acc(atom2):
+                print("ERROR")
+                return
+            docking_cluster = cluster1
+            docking_atom = atom1
+            dock_cluster = cluster2
+            dock_atom = atom2
+        elif is_hb_don(atom2):
+            if not is_hb_acc(atom1):
+                print("ERROR")
+                return
+            docking_cluster = cluster2
+            docking_atom = atom2
+            dock_cluster = cluster1
+            dock_atom = atom1
+        label_shift = len(dock_cluster.coords.keys())
+        pos = dock_cluster.get_acc_vec(dock_atom)
+        coords_shift = pos - docking_cluster.coords[docking_atom]
+        v1 = dock_cluster.coords[dock_atom] - pos
         v1 = v1 / np.linalg.norm(v1)
+        v2 = docking_cluster.get_don_vec(docking_atom) + coords_shift - pos
+        v2 = v2 / np.linalg.norm(v2)
         angle = np.arccos(np.dot(v1, v2))
-        norm_vec = np.cross(v1, v2)
-        norm_vec = norm_vec / np.linalg.norm(norm_vec)
-        for atom, coords in monomer.coords.items():
-            new_label = f"{monomer.get_element(atom)}{monomer.get_number + label_shift}"
-            new_coords = monomer.coords[atom] + coords_shift
-            if is_hb_don(atom_to_dock_at):
-                angle = np.pi - angle
+        norm_vec = np.cross(v1, v2) + pos
+        for atom, coords in docking_cluster.coords.items():
+            new_label = f"{get_element(atom)}{get_number(atom) + label_shift}"
+            new_coords = coords + coords_shift
             new_coords = rotation(new_coords, pos, norm_vec, angle)
-            cluster.coords[new_label] = new_coords
+            dock_cluster.coords[new_label] = new_coords
 
 
     def new_set_zmatrix(self, hb_atom: str):
