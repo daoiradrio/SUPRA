@@ -29,15 +29,28 @@ class ClusterGenerator:
 
     def add_monomer(self, cluster: ClusterStructure, monomer: ClusterStructure, atom_to_dock_at: str, docking_atom: str):
         label_shift = len(cluster.coords.keys())
-        pos = np.array([])
         if is_hb_don(atom_to_dock_at):
             pos = cluster.get_don_vec(atom_to_dock_at)
+            coords_shift = pos - monomer.coords[docking_atom]
+            bond_partner = monomer.bond_partners[docking_atom][0]
+            v2 = (monomer.coords[bond_partner] + coords_shift) - pos
+            v2 = v2 / np.linalg.norm(v2)
         elif is_hb_acc(atom_to_dock_at):
             pos = cluster.get_acc_vec(atom_to_dock_at)
-        coords_shift = pos - monomer.coords[docking_atom] 
+            coords_shift = pos - monomer.coords[docking_atom]
+            v2 = monomer.get_don_vec(docking_atom) + coords_shift - pos
+            v2 = v2 / np.linalg.norm(v2)
+        v1 = cluster.coords[atom_to_dock_at] - pos
+        v1 = v1 / np.linalg.norm(v1)
+        angle = np.arccos(np.dot(v1, v2))
+        norm_vec = np.cross(v1, v2)
+        norm_vec = norm_vec / np.linalg.norm(norm_vec)
         for atom, coords in monomer.coords.items():
-            new_label = f"{monomer.get_element(atom)}{monomer.get_number(atom) + label_shift}"
-            new_coords = coords + coords_shift
+            new_label = f"{monomer.get_element(atom)}{monomer.get_number + label_shift}"
+            new_coords = monomer.coords[atom] + coords_shift
+            if is_hb_don(atom_to_dock_at):
+                angle = np.pi - angle
+            new_coords = rotation(new_coords, pos, norm_vec, angle)
             cluster.coords[new_label] = new_coords
 
 
