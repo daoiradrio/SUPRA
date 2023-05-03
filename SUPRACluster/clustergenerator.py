@@ -17,18 +17,28 @@ from copy import deepcopy
 class ClusterGenerator:
 
     #SO KEINE FLEXIBILTÄT BZGL. CLUSTERN AUS VERSCHIEDENARTIGEN MONOMEREN (S.O. TO DO)
+    #HIER MUSS ANGEPASST WERDEN WENN VERSCHIEDENARTIGE MONOMERE VERBAUT WERDEN (self.monomer_structure)
     def __init__(self, monomer: ClusterStructure):
         self.hb_len = 1.1
         self.zmatrices = dict()
         self.container = list()
-        #HIER MUSS ANGEPASST WERDEN WENN VERSCHIEDENARTIGE MONOMERE VERBAUT WERDEN (self.monomer_structure)
         self.monomer = monomer
         self.counter = 0
+        self.max_cluster_size = 3 # VOM USER WÄHLEN LASSEN
+    
 
-        for acc in monomer.hb_acc:
-            self.new_set_zmatrix(acc)
-        for don in monomer.hb_don:
-            self.new_set_zmatrix(don)
+    def add_monomer(self, cluster: ClusterStructure, monomer: ClusterStructure, atom_to_dock_at: str, docking_atom: str):
+        label_shift = len(cluster.coords.keys())
+        pos = np.array([])
+        if is_hb_don(atom_to_dock_at):
+            pos = cluster.get_don_vec(atom_to_dock_at)
+        elif is_hb_acc(atom_to_dock_at):
+            pos = cluster.get_acc_vec(atom_to_dock_at)
+        coords_shift = pos - monomer.coords[docking_atom] 
+        for atom, coords in monomer.coords.items():
+            new_label = f"{monomer.get_element(atom)}{monomer.get_number(atom) + label_shift}"
+            new_coords = coords + coords_shift
+            cluster.coords[new_label] = new_coords
 
 
     def new_set_zmatrix(self, hb_atom: str):

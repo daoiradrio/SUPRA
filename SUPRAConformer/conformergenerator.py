@@ -441,9 +441,13 @@ class ConformerGenerator:
                     with open(coord_file, "w") as f:
                         subprocess.run(args=["x2t", new_xyz_file, ">", coord_file], cwd=workdir, stdout=f, stderr=subprocess.DEVNULL)
                     subprocess.run(args=["uff"], cwd=workdir, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    # TODO: HOW TO INCLUDE ENERGY IN SECOND LINE HERE
-                    with open(opt_struc, "w") as f:
-                        subprocess.run(args=["t2x", coord_file, ">", opt_struc], cwd=workdir, stdout=f, stderr=subprocess.DEVNULL)
+                    if os.path.isfile(os.path.join(workdir, "not.uffconverged")):
+                        subprocess.run(args=["xtb", "--opt", "--gfnff", new_xyz_file], cwd=workdir, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        os.system(f"mv {os.path.join(workdir, 'xtbopt.xyz')} {opt_struc}")
+                    else:
+                        #TODO: HOW TO INCLUDE ENERGY IN SECOND LINE HERE
+                        with open(opt_struc, "w") as f:
+                            subprocess.run(args=["t2x", coord_file, ">", opt_struc], cwd=workdir, stdout=f, stderr=subprocess.DEVNULL)
                 return counter+1
             else:
                 return counter
