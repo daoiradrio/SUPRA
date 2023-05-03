@@ -52,7 +52,7 @@ class ClusterGenerator:
         v2 = docking_cluster.get_don_vec(docking_atom) + coords_shift - pos
         v2 = v2 / np.linalg.norm(v2)
         angle = np.arccos(np.dot(v1, v2))
-        norm_vec = np.cross(v1, v2) + pos
+        norm_vec = np.cross(v2, v1) + pos
         for atom, coords in docking_cluster.coords.items():
             new_label = f"{get_element(atom)}{get_number(atom) + label_shift}"
             new_coords = coords + coords_shift

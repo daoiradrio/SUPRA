@@ -25,8 +25,10 @@ class Analyzer:
         self.time_hungarian = 0.0
         self.time_rmsd = 0.0
         self.time_remove = 0.0
-
-
+        self.time_get_element = 0.0
+        self.time_if_else_elements_match = 0.0
+        self.time_cost_function = 0.0
+        self.time_call_cost_function = 0.0
 
 
     def revised_filter_doubles(self):
@@ -514,11 +516,15 @@ class Analyzer:
                 start = time.time()
                 kabsch_coords1, kabsch_coords2 = self.kabsch(conformer1.coords, conformer2.coords)
                 self.time_kabsch = self.time_kabsch + (time.time() - start)
-                start = time.time()
+                start1 = time.time()
                 for i in range(n_atoms):
-                    for j in range(n_atoms):
-                        cost[i][j] = self.rmsd_cost(atoms[i], kabsch_coords1[i], atoms[j], kabsch_coords2[j])
-                self.time_build_cost_matrix = self.time_build_cost_matrix + (time.time() - start)
+                    for j in range(i+1):
+                        start2 = time.time()
+                        cost_value = self.rmsd_cost(atoms[i], kabsch_coords1[i], atoms[j], kabsch_coords2[j])
+                        self.time_call_cost_function = self.time_call_cost_function + (time.time() - start2)
+                        cost[i][j] = cost_value
+                        cost[j][i] = cost_value
+                self.time_build_cost_matrix = self.time_build_cost_matrix + (time.time() - start1)
                 start = time.time()
                 row, col = linear_sum_assignment(cost)
                 self.time_hungarian = self.time_hungarian + (time.time() - start)
@@ -535,14 +541,22 @@ class Analyzer:
 
 
     #@staticmethod
-    def rmsd_cost(self, atom1: str, coord1: Union[list, np.array], atom2: str, coord2: Union[list, np.array]) -> float:
+    def rmsd_cost(self, atom1: str, coord1: np.array, atom2: str, coord2: np.array) -> float:
+        start = time.time()
         element1 = Structure.get_element(atom1)
         element2 = Structure.get_element(atom2)
+        self.time_get_element = self.time_get_element + (time.time() - start)
+        start = time.time()
         if element1 == element2:
             element_term = 0.0
         else:
             element_term = 100.0
-        return (coord1[0] - coord2[0])**2 + (coord1[1] - coord2[1])**2 + (coord1[2] - coord2[2])**2 + element_term
+        self.time_if_else_elements_match = self.time_if_else_elements_match + (time.time() - start)
+        start = time.time()
+        cost = np.linalg.norm(coord1-coord2)**2 + element_term
+        #cost = (coord1[0] - coord2[0])**2 + (coord1[1] - coord2[1])**2 + (coord1[2] - coord2[2])**2 + element_term
+        self.time_cost_function = self.time_cost_function + (time.time() - start)
+        return cost
 
 
     #@staticmethod
