@@ -1,7 +1,7 @@
 import numpy as np
 
 from SUPRAConformer.structure import Structure
-from utils.helper import get_number, is_hb_don, is_hb_acc
+from utils.helper import is_hb_don, is_hb_acc
 
 
 
@@ -29,21 +29,16 @@ class ClusterStructure(Structure):
         self.bond_orders = {[A0, A1]: 1, [A1, A4]: 2, ... }
         """
 
-        self.bendings = list()
-        self.bending_atoms = list()
-
         # number of monomers that the cluster consists of
         self.monomers = 1
 
         # hydrogen bond donators which are free to bind to a hydrogen bond acceptor
         #SHOW GENERAL STRUCTURES
         self.hb_don = list()
-        self.hb_don_vec = dict()
 
         # hydrogen bond acceptors which are free to bind to a hydrogen bond donator
         #SHOW GENERAL STRUCTURES
         self.hb_acc = list()
-        self.hb_acc_vec = dict()
 
         # NOCH (WO)ANDERS UNTERBRINGEN UND AUF ANDERE ELEMENTE ANPASSEN
         self.hb_len = 1.1

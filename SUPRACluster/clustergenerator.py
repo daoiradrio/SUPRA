@@ -57,6 +57,7 @@ class ClusterGenerator:
             new_label = f"{get_element(atom)}{get_number(atom) + label_shift}"
             new_coords = coords + coords_shift
             new_coords = rotation(new_coords, pos, norm_vec, angle)
+            new_coords = rotation(new_coords, pos, dock_cluster.coords[dock_atom], np.deg2rad(180.0))
             dock_cluster.coords[new_label] = new_coords
 
 
