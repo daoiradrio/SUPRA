@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 import multiprocessing as mp
 
-from utils.helper import get_element, valences
+from utils.helper import get_element
 from SUPRAConformer.structure import Structure
 from typing import Union
 from queue import Queue
@@ -18,7 +18,7 @@ class Analyzer:
 
     def __init__(self):
         self.container = []
-        self.time_for_for_total = 0.0
+        self.time_for_for_for_for = 0.0
         self.time_read_xyz = 0.0
         self.time_kabsch = 0.0
         self.time_build_cost_matrix = 0.0
@@ -27,8 +27,8 @@ class Analyzer:
         self.time_remove = 0.0
         self.time_get_element = 0.0
         self.time_if_else_elements_match = 0.0
-        self.time_cost_function = 0.0
         self.time_call_cost_function = 0.0
+        self.time_assign_cost_values = 0.0
 
 
     def revised_filter_doubles(self):
@@ -503,7 +503,7 @@ class Analyzer:
         atoms = [atom for atom in conformer1.coords.keys()]
         n_atoms = len(atoms)
         cost = np.zeros((n_atoms, n_atoms))
-        self.time_for_for = time.time()
+        self.time_for_for_for_for = time.time()
         for index, file1 in enumerate(conformers):
             start = time.time()
             conformer1.read_xyz(os.path.join(path, file1))
@@ -519,11 +519,24 @@ class Analyzer:
                 start1 = time.time()
                 for i in range(n_atoms):
                     for j in range(i+1):
-                        start2 = time.time()
-                        cost_value = self.rmsd_cost(atoms[i], kabsch_coords1[i], atoms[j], kabsch_coords2[j])
-                        self.time_call_cost_function = self.time_call_cost_function + (time.time() - start2)
+                        start = time.time()
+                        element_i = get_element(atoms[i])
+                        element_j = get_element(atoms[j])
+                        self.time_get_element = self.time_get_element + (time.time() - start)
+                        start = time.time()
+                        if element_i == element_j:
+                            element_term = 0.0
+                        else:
+                            element_term = 100.0
+                        self.time_if_else_elements_match = self.time_if_else_elements_match + (time.time() - start)
+                        start = time.time()
+                        diff_vec = kabsch_coords1[i] - kabsch_coords2[j]
+                        cost_value = np.dot(diff_vec, diff_vec) + element_term
+                        self.time_call_cost_function  = self.time_call_cost_function + (time.time() - start)
+                        start = time.time()
                         cost[i][j] = cost_value
                         cost[j][i] = cost_value
+                        self.time_assign_cost_values = self.time_assign_cost_values + (time.time() - start)
                 self.time_build_cost_matrix = self.time_build_cost_matrix + (time.time() - start1)
                 start = time.time()
                 row, col = linear_sum_assignment(cost)
@@ -536,27 +549,8 @@ class Analyzer:
                     self.time_remove = self.time_remove + (time.time() - start)
                     counter -= 1
                     break
-        self.time_for_for = time.time() - self.time_for_for
+        self.time_for_for_for_for = time.time() - self.time_for_for_for_for
         print(f"Individual conformers in {path}: {counter}") 
-
-
-    #@staticmethod
-    def rmsd_cost(self, atom1: str, coord1: np.array, atom2: str, coord2: np.array) -> float:
-        start = time.time()
-        element1 = Structure.get_element(atom1)
-        element2 = Structure.get_element(atom2)
-        self.time_get_element = self.time_get_element + (time.time() - start)
-        start = time.time()
-        if element1 == element2:
-            element_term = 0.0
-        else:
-            element_term = 100.0
-        self.time_if_else_elements_match = self.time_if_else_elements_match + (time.time() - start)
-        start = time.time()
-        cost = np.linalg.norm(coord1-coord2)**2 + element_term
-        #cost = (coord1[0] - coord2[0])**2 + (coord1[1] - coord2[1])**2 + (coord1[2] - coord2[2])**2 + element_term
-        self.time_cost_function = self.time_cost_function + (time.time() - start)
-        return cost
 
 
     #@staticmethod

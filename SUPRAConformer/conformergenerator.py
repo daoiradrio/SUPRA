@@ -65,7 +65,7 @@ class ConformerGenerator:
                 possible_number_of_conformers = 0
                 for angle in self.angle_increments:
                     possible_number_of_conformers += int(np.power((360 / angle), len(self.torsions)))
-                    confirm = -1
+                confirm = -1
                 while True:
                     confirm = input(f"Up to {possible_number_of_conformers} will be generated. Start calculation (1) or restart selection (2)?: ")
                     if confirm == "1":
@@ -197,23 +197,28 @@ class ConformerGenerator:
     # delete peptide bonds from list of rotatable bonds (torsions)
     def _find_peptidebonds(self, coords: dict, bond_partners: dict) -> None:
         peptidebonds = []
+        double_bond = covalence_radii_double["C"] + covalence_radii_double["O"] + 0.08
         # loop over every rotatable bond
         for bond in self.central_torsions:
             atom1 = bond[0]
             atom2 = bond[1]
             element1 = get_element(atom1)
-            # check for characteristic C=O + C-NHR bonding environment
+            element2 = get_element(atom2)
+            # check for characteristic C=O + C-NRR' bonding environment
             # first check: C and N included in bond?
-            if sorted([atom1, atom2]) == ["C", "N"]:
+            if sorted([element1, element2]) == ["C", "N"]:
                 # second check: C with bonding partner O?
-                for atom3 in bond_partners[atom1]:
+                if element1 == "C":
+                    C = atom1
+                else:
+                    C = atom2
+                for atom3 in bond_partners[C]:
                     element3 = get_element(atom3)
                     if element3 == "O":
                         # third check: double bond between C and O?
-                        p1 = coords[atom1]
+                        p1 = coords[C]
                         p2 = coords[atom3]
                         distance = np.linalg.norm(p1 - p2)
-                        double_bond = covalence_radii_double[element1] + covalence_radii_double[element3] + 0.08
                         if distance <= double_bond:
                             # found peptide bond, remove bond from list of rotatable bonds
                             peptidebonds.append(bond)
