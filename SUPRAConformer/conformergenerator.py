@@ -461,14 +461,14 @@ class ConformerGenerator:
             # Punkte initialisieren, welche die Rotationsachse definieren
             axis_vec1 = new_coords[self.torsions[index][0]]
             axis_vec2 = new_coords[self.torsions[index][1]]
+            axis = axis_vec2 - axis_vec1
+            axis = axis / np.linalg.norm(axis)
             # jeden möglichen Torsionswinkel für Bindung durchgehen
             for angle in self.angles:
                 angle = np.deg2rad(angle)
                 new_coords_copy = new_coords.copy()
                 for atom in self.torsion_atoms[index]:
                     coords = new_coords[atom]
-                    axis = axis_vec2 - axis_vec1
-                    axis = axis / np.linalg.norm(axis)
                     coords = coords - axis_vec1
                     coords = np.dot(axis, np.dot(axis, coords)) \
                              + np.cos(angle) * np.cross(np.cross(axis, coords), axis) \
