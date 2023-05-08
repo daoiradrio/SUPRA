@@ -2,7 +2,6 @@ import os
 
 import time
 
-import pandas as pd
 import numpy as np
 import multiprocessing as mp
 
@@ -669,50 +668,3 @@ class Analyzer:
         rmsd = np.sqrt(1.0/float(N) * sum)
 
         return rmsd
-
-
-    def analyze_boltzmann(self, path: str, limit: float):
-        energies = pd.read_csv(path, header=None, delim_whitespace=True)
-        energies = energies.values.tolist()
-        min_energy = min(energies)
-
-        Z = 0.0
-        for energy in energies:
-            Z += self.boltzmann(energy[0] - min_energy)
-
-        counter = 0
-        for index, energy in enumerate(energies):
-            norm_energy = energy[0] - min_energy
-            pop = self.boltzmann(norm_energy) / Z
-            if pop > limit:
-                counter += 1
-        print(path + ": " + str(counter))
-
-
-    def boltzmann_structures(self, path_conformers: str, path_energies: str, limit: float) -> list:
-        conformers = pd.read_csv(path_conformers, header=None, delim_whitespace=True)
-        conformers = conformers.values.tolist()
-
-        energies = pd.read_csv(path_energies, header=None, delim_whitespace=True)
-        energies = energies.values.tolist()
-        min_energy = min(energies)[0]
-
-        Z = 0.0
-        for energy in energies:
-            Z += self.boltzmann(energy[0] - min_energy)
-
-        conformerlist = []
-        for index, energy in enumerate(energies):
-            norm_energy = energy[0] - min_energy
-            pop = self.boltzmann(norm_energy) / Z
-            if pop > limit:
-               conformerlist.append(conformers[index][0])
-
-        return conformerlist
-
-
-    def boltzmann(self, energy: float) -> float:
-        factor = 627.509474
-        E = factor * energy
-        R = 0.00198720425864083
-        return np.exp(-(E / (R * 273.15)))
