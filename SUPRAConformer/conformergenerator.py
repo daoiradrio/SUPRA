@@ -38,48 +38,8 @@ class ConformerGenerator:
         self._get_torsions(structure.bonds, structure.bond_partners, structure.bond_orders)
         self._find_cycles(structure.bond_partners)
         self._find_peptidebonds(structure.coords, structure.bond_partners)
-        ### UNDER CONSTRUCTION ###
-        #selection = self._selection_menu(structure)
-        # stattdessen derzeit das:
-        while True:
-            mode_input = input(
-                "Consider rotatable all bonds to terminal groups like "
-                "-CH3, -NH2, -OH (1) "
-                "or ignore them (2) "
-                "or ignore just ignore bonds to methyl groups (3)? "
-            )
-            if mode_input == "1":
-                self.torsions = self.central_torsions + self.terminal_torsions + self.methyl_torsions
-                break
-            elif mode_input == "2":
-                self.torsions = self.central_torsions
-                break
-            elif mode_input == "3":
-                self.torsions = self.central_torsions + self.terminal_torsions
-                break
-            else:
-                print("Invalid input.")
-        start_calculation = False
-        while not start_calculation:
-            increment_input = input(f"Type in an angle increment (30, 45, 60, 90, 120 or 180 in degrees): ")
-            if increment_input in ["30", "45", "60", "90", "120", "180"]:
-                self.angle_increments = increment_combinations[int(increment_input)]
-                possible_number_of_conformers = 0
-                for angle in self.angle_increments:
-                    possible_number_of_conformers += int(np.power((360 / angle), len(self.torsions)))
-                confirm = -1
-                while True:
-                    confirm = input(f"Up to {possible_number_of_conformers} will be generated. Start calculation (1) or restart selection (2)?: ")
-                    if confirm == "1":
-                        start_calculation = True
-                        break
-                    elif confirm == "2":
-                        break
-                    else:
-                        print("Invalid input.")
-            else:
-                print("Invalid input.")
-        ##########################
+        self._selection_menu()
+        print("Performing generation of conformer structures...")
         self._generation_setup(list(structure.coords.keys()), structure.bond_partners)
         number_conformers = 0
         for increment in self.angle_increments:
@@ -94,19 +54,10 @@ class ConformerGenerator:
             for i in range(number_conformers):
                 folder = os.path.abspath(f"{self.workdir_name}{i}")
                 opt_struc = os.path.abspath(os.path.join(folder, self.opt_struc_name))
-                #new_conformer = Structure(opt_struc)
-                #double_flag = False
-                #for conformer_file in os.listdir(self.output_folder_name):
-                #    conformer_file = os.path.abspath(os.path.join(self.output_folder_name, conformer_file))    
-                #    conformer = Structure(conformer_file)
-                #    if self.analyzer.doubles(new_conformer, conformer):
-                #        double_flag = True
-                #        break
-                #if not double_flag:
                 new_conformer_file = os.path.join(self.output_folder_name, f"conformer{i}.xyz")
                 os.system(f"mv {opt_struc} {new_conformer_file}")
                 os.system(f"rm -rf {folder}")
-            print(f"{len(os.listdir(self.output_folder_name))} conformers have been generated.")
+            #print(f"{len(os.listdir(self.output_folder_name))} conformers have been generated.")
         else:
             print(f"No conformers could be generated.")
 
@@ -234,6 +185,51 @@ class ConformerGenerator:
                     for bond in peptidebonds:
                         self.central_torsions.remove(bond)
                     break
+                else:
+                    print("Invalid input.")
+    
+
+    def _selection_menu(self):
+        start_calculation = False
+        while not start_calculation:
+            while True:
+                mode_input = input(
+                    "Consider rotatable all bonds to terminal groups like "
+                    "-CH3, -NH2, -OH (1) "
+                    "or ignore them (2) "
+                    "or ignore just ignore bonds to methyl groups (3)? "
+                )
+                if mode_input == "1":
+                    self.torsions = self.central_torsions + self.terminal_torsions + self.methyl_torsions
+                    break
+                elif mode_input == "2":
+                    self.torsions = self.central_torsions
+                    break
+                elif mode_input == "3":
+                    self.torsions = self.central_torsions + self.terminal_torsions
+                    break
+                else:
+                    print("Invalid input.")
+            confirm_increment = False
+            while not confirm_increment:
+                increment_input = input(f"Type in an angle increment (30, 45, 60, 90, 120 or 180 in degrees): ")
+                if increment_input in ["30", "45", "60", "90", "120", "180"]:
+                    self.angle_increments = increment_combinations[int(increment_input)]
+                    possible_number_of_conformers = 0
+                    for angle in self.angle_increments:
+                        possible_number_of_conformers += int(np.power((360 / angle), len(self.torsions)))
+                    confirm = -1
+                    while True:
+                        confirm = input(f"Up to {possible_number_of_conformers} will be generated. Start calculation (1) or restart selection (2)?: ")
+                        if confirm == "1":
+                            confirm_increment = True
+                            start_calculation = True
+                            break
+                        elif confirm == "2":
+                            confirm_increment = True
+                            break
+                        else:
+                            print("Invalid input.")
                 else:
                     print("Invalid input.")
 
@@ -497,12 +493,12 @@ class ConformerGenerator:
                     distance = np.linalg.norm(coords1 - coords2)
                     min_distance = covalence_radii_single[element1] + covalence_radii_single[element2] + 0.08
                     if distance < min_distance:
-                        if self.__distant(bond_partners, atom1, atom2):
+                        if self._distant(bond_partners, atom1, atom2):
                             return True
         return False
 
 
-    def __distant(self, bond_partners: dict, atom1: str, atom2: str) -> bool:
+    def _distant(self, bond_partners: dict, atom1: str, atom2: str) -> bool:
         neighbors = queue.Queue()
         distance = 1
         for neighbor in bond_partners[atom1]:

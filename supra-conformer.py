@@ -1,4 +1,4 @@
-#!/home/dario/mambaforge/envs/supra/bin/python3
+#!/usr/bin/supra-python3
 
 
 
@@ -11,7 +11,7 @@ from utils.analyzer import Analyzer
 
 def main():
     if len(os.sys.argv) != 2:
-        print("USAGE: supra.py /path/to/file")
+        print("\nUSAGE: supra-conformer /path/to/file\n")
         return
     else:
         filepath = os.sys.argv[1]
@@ -20,8 +20,11 @@ def main():
     gen = ConformerGenerator()
     an = Analyzer()
 
+    print()
     mol.get_structure(filepath)
     gen.generate_conformers(mol)
+    an.remove_doubles("SUPRA_Output/")
+    print()
 
 
 if __name__ == "__main__":
