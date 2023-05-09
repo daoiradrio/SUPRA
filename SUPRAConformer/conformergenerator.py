@@ -453,12 +453,6 @@ class ConformerGenerator:
                             subprocess.run(args=["t2x", coord_file, ">", opt_struc], cwd=workdir, stdout=f, stderr=subprocess.DEVNULL)
                 return counter+1
             else:
-                with open(f"clash_structures/clash_structure{self.clash_structure_counter}.xyz", "w") as out:
-                    number_of_atoms = len(new_coords.keys())
-                    print(number_of_atoms, file=out, end="\n\n")
-                    for atom, (x, y, z) in new_coords.items():
-                        print(f"{get_element(atom)}   {x:.8f}   {y:.8f}   {z:.8f}", file=out)
-                self.clash_structure_counter += 1
                 return counter
         # es wurden noch nicht alle Torsionswinkel berechnet, Bindung index in torsions ist an der Reihe
         else:

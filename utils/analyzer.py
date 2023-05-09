@@ -481,7 +481,7 @@ class Analyzer:
 
     
     #@staticmethod
-    def remove_doubles(self, path: str) -> None:
+    def remove_doubles(self, path: str, rmsd_threshold: float=0.1) -> None:
         print("Performing removal of duplicate structures...")
         conformer1 = Structure()
         conformer2 = Structure()
@@ -511,7 +511,7 @@ class Analyzer:
                         cost[i][j] = cost_value
                         cost[j][i] = cost_value
                 row, col = linear_sum_assignment(cost)
-                if self.rmsd(kabsch_coords1[row], kabsch_coords2[col]) <= 0.1:
+                if self.rmsd(kabsch_coords1[row], kabsch_coords2[col]) <= rmsd_threshold:
                     os.remove(os.path.join(path, file1))
                     counter -= 1
                     break
