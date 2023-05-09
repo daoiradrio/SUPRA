@@ -8,5 +8,5 @@
 6. ```ln -s /path/to/SUPRA/supra-conformer.py ~/bin/supra-conformer```
 7. ```ln -s /path/to/SUPRA/supra-refine.py ~/bin/supra-refine```
 8. Add ```export PYTHONPATH=/path/to/SUPRA``` to ```~/.bashrc``` 
-9. Get ```TURBOMOLE```, add ```export TURBODIR=$HOME/bin/TURBOMOLE``` and ```source $TURBODIR/Config_turbo_env``` to ```~/.bashrc```
+9. Put ```TURBOMOLE``` in ```~/bin```, add ```export TURBODIR=$HOME/bin/TURBOMOLE``` and ```source $TURBODIR/Config_turbo_env``` to ```~/.bashrc```
 10. Put```xtb``` binary in ```~/bin```
