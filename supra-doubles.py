@@ -11,6 +11,7 @@ def main():
     an = Analyzer()
 
     if len(os.sys.argv) == 3:
+        # SCHLÄGT AUCH AUF EINGABE VON KOMMAZAHLEN AN WEGEN DES PUNKTS!
         if os.sys.argv[2].isnumeric():
             rmsd_threshold = float(os.sys.argv[2])
             strucs_path = os.sys.argv[1]
