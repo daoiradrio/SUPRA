@@ -9,17 +9,15 @@ from utils.analyzer import Analyzer
 
 def main():
     an = Analyzer()
-
     if len(os.sys.argv) == 3:
-        # SCHLÄGT AUCH AUF EINGABE VON KOMMAZAHLEN AN WEGEN DES PUNKTS!
-        if os.sys.argv[2].isnumeric():
+        try:
             rmsd_threshold = float(os.sys.argv[2])
             strucs_path = os.sys.argv[1]
             os.path.abspath(strucs_path)
             print()
             an.remove_doubles(strucs_path, rmsd_threshold)
             print()
-        else:
+        except:
             print()
             print("USAGE: supra-doubles /path/to/structures/directory")
             print("OPTIONAL: supra-doubles /path/to/structures/directory [RMSD-Threshold]")
