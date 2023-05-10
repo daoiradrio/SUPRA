@@ -3,24 +3,25 @@
 
 
 import os
+import argparse
 from SUPRAConformer.optimizer import Optimizer
 from utils.analyzer import Analyzer
 
 
 
 def main():
-    if len(os.sys.argv) != 2:
-        print("\nUSAGE: supra-refine /path/to/structures/directory\n")
-        return
-    else:
-        strucs_path = os.sys.argv[1]
-        os.path.abspath(strucs_path)
-
     opt = Optimizer()
     an = Analyzer()
+    parser = argparse.ArgumentParser()
 
+    parser.add_argument("-path", type=str, required=True)
+    args = parser.parse_args()
+    strucs_path = os.path.abspath(args.path)
+
+    print()
     opt.refine_ff_opts(strucs_path)
     an.remove_doubles(strucs_path)
+    print()
 
 
 

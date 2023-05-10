@@ -3,6 +3,7 @@
 
 
 import os
+import argparse
 from SUPRAConformer.structure import Structure
 from SUPRAConformer.conformergenerator import ConformerGenerator
 from utils.analyzer import Analyzer
@@ -10,18 +11,16 @@ from utils.analyzer import Analyzer
 
 
 def main():
-    if len(os.sys.argv) != 2:
-        print("\nUSAGE: supra-conformer /path/to/file\n")
-        return
-    else:
-        filepath = os.sys.argv[1]
-
     mol = Structure()
     gen = ConformerGenerator()
     an = Analyzer()
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("-path", type=str, required=True)
+    args = parser.parse_args()
 
     print()
-    mol.get_structure(filepath)
+    mol.get_structure(os.path.abspath(args.path))
     gen.generate_conformers(mol)
     an.remove_doubles("SUPRA_Output/")
     print()

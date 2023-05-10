@@ -105,7 +105,6 @@ class Analyzer:
             conformer1.read_xyz(os.path.join(path, conformers[0]))
             atoms = [atom for atom in conformer1.coords.keys()]
 
-        print(atoms)
         n_atoms = len(atoms)
         cost = np.zeros((n_atoms, n_atoms))
 
