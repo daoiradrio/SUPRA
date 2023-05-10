@@ -5,7 +5,7 @@ import time
 import numpy as np
 import multiprocessing as mp
 
-from utils.helper import get_element
+from utils.helper import get_element, valences
 from SUPRAConformer.structure import Structure
 from typing import Union
 from queue import Queue
@@ -16,92 +16,8 @@ from scipy.optimize import linear_sum_assignment
 class Analyzer:
 
     def __init__(self):
-        pass
-
-
-    def revised_filter_doubles(self):
-        conformer1 = Structure()
-        conformer2 = Structure()
-        path = os.path.abspath(path)
-        conformers = os.listdir(path)
-
-        conformer1.get_structure(os.path.join(path, conformers.pop()))
-        self.container.append(conformer1)
-        while len(self.container) < 2:
-            conformer2.get_structure(os.path.join(path, conformers.pop()))
-            rmsd = self.rmsd_with_matching(conformer1, conformer2)
-
-        counter = len(liste)
-        for i, file1 in enumerate(conformers):
-            conformer1.get_structure(os.path.join(path, file1))
-            for file2 in conformers[i+1:]:
-                conformer2.get_structure(os.path.join(path, file2))
-                if self.doubles(conformer1, conformer2):
-                    #os.remove(os.path.join(path, file1))
-                    counter -= 1
-                    break
-        print(f"Individual conformers in {path}: {counter}")
-
-
-    def rmsd_with_matching(self, molecule1: Structure, molecule2: Structure, loose: bool = False) -> float:
-        try:
-            if loose:
-                # detect methyl groups, replace them by dummy atoms? delete Hs and let C atom serve as dummy?
-                # before or after matching?? -> before matching because assumption that matching is computationally
-                # more demanding and less atoms to evaluate reduce this effort, doubly replacing by dummy atoms instead
-                # of once is x2 effort
-                # *** UNDER CONSTRUCTION ***
-                new_coords1 = molecule1.coords.copy()
-                new_structure1 = molecule1.bond_partners.copy()
-                for atom, bond_partners in molecule1.bond_partners.items():
-                    if get_element(atom) == "C":
-                        H_count = [get_element(bond_partner) for bond_partner in molecule1.bond_partners[atom]].count("H")
-                        if H_count == 3:
-                            sorted_bond_partners = sorted(
-                                bond_partners, key=lambda x: valences[get_element(x)], reverse=True
-                            )
-                            H1 = sorted_bond_partners[1]
-                            H2 = sorted_bond_partners[2]
-                            H3 = sorted_bond_partners[3]
-                            del new_coords1[H1]
-                            del new_coords1[H2]
-                            del new_coords1[H3]
-                            del new_structure1[H1]
-                            del new_structure1[H2]
-                            del new_structure1[H3]
-                            new_structure1[atom] = sorted_bond_partners[:1]
-                new_coords2 = molecule2.coords.copy()
-                new_structure2 = molecule2.bond_partners.copy()
-                for atom, bond_partners in molecule2.bond_partners.items():
-                    if get_element(atom) == "C":
-                        H_count = [get_element(bond_partner) for bond_partner in molecule2.bond_partners[atom]].count("H")
-                        if H_count == 3:
-                            sorted_bond_partners = sorted(
-                                bond_partners, key=lambda x: valences[get_element(x)], reverse=True
-                            )
-                            H1 = sorted_bond_partners[1]
-                            H2 = sorted_bond_partners[2]
-                            H3 = sorted_bond_partners[3]
-                            del new_coords2[H1]
-                            del new_coords2[H2]
-                            del new_coords2[H3]
-                            del new_structure2[H1]
-                            del new_structure2[H2]
-                            del new_structure2[H3]
-                            new_structure2[atom] = sorted_bond_partners[:1]
-                # **************************
-                coords1, coords2 = self.match(
-                    coords1=new_coords1, structure1=new_structure1,
-                    coords2=new_coords2, structure2=new_structure2
-                )
-            else:
-                coords1, coords2 = self.match(
-                    coords1=molecule1.coords, structure1=molecule1.bond_partners,
-                    coords2=molecule2.coords, structure2=molecule2.bond_partners
-                )
-        except:
-            return -1.0
-        return self.rmsd(coords1, coords2) 
+        self.connectivity = {}
+        self.ignored_terminal_group_atoms = []
 
 
     def compare_structure_sets(self, path1: str, path2: str):
@@ -190,117 +106,6 @@ class Analyzer:
                     print(conformer, file=outfile)
             #print(folder + ": " + str(counter))
     
-
-    def new_filter_doubles(self, path: str):
-        conformer1 = Structure()
-        conformer2 = Structure()
-        path = os.path.abspath(path)
-        liste = os.listdir(path)
-        counter = len(liste)
-        total_time_rmsd = 0.0
-        for index, file1 in enumerate(liste):
-            start = time.time()
-            conformer1.read_xyz(os.path.join(path, file1))
-            self.total_time_get_structure += (time.time() - start)
-            for file2 in liste[index + 1:]:
-                start = time.time()
-                conformer2.read_xyz(os.path.join(path, file2))
-                self.total_time_get_structure += (time.time() - start)
-                if self.kabsch_and_rmsd(conformer1.coords, conformer2.coords) <= 0.1:
-                    os.remove(os.path.join(path, file1))
-                    counter -= 1
-                    break
-        print(f"Individual conformers in {path}: {counter}")
-        print(f"Total time RMSD: {self.total_time_rmsd}")
-        print(f"Total time get_structure: {self.total_time_get_structure}")
-
-
-    def filter_doubles(self, path: str):
-        conformer1 = Structure()
-        conformer2 = Structure()
-        path = os.path.abspath(path)
-        liste = os.listdir(path)
-        counter = len(liste)
-        for index, file1 in enumerate(liste):
-            conformer1.get_structure(os.path.join(path, file1))
-            for file2 in liste[index + 1:]:
-                conformer2.get_structure(os.path.join(path, file2))
-                if self.doubles(conformer1, conformer2):
-                    os.remove(os.path.join(path, file1))
-                    counter -= 1
-                    break
-        print(f"Individual conformers in {path}: {counter}")
-
-
-    # check if two Structure objects have equal structures (= doubles) base on RMSD, option loose makes
-    # methyl groups be ignored in this
-    def doubles(self, molecule1: Structure, molecule2: Structure, loose: bool = False) -> bool:
-        doubles = False
-        try:
-            if loose:
-                # detect methyl groups, replace them by dummy atoms? delete Hs and let C atom serve as dummy?
-                # before or after matching?? -> before matching because assumption that matching is computationally
-                # more demanding and less atoms to evaluate reduce this effort, doubly replacing by dummy atoms instead
-                # of once is x2 effort
-                # *** UNDER CONSTRUCTION ***
-                new_coords1 = molecule1.coords.copy()
-                new_structure1 = molecule1.bond_partners.copy()
-                for atom, bond_partners in molecule1.bond_partners.items():
-                    if get_element(atom) == "C":
-                        H_count = [get_element(bond_partner) for bond_partner in molecule1.bond_partners[atom]].count("H")
-                        if H_count == 3:
-                            sorted_bond_partners = sorted(
-                                bond_partners, key=lambda x: valences[get_element(x)], reverse=True
-                            )
-                            H1 = sorted_bond_partners[1]
-                            H2 = sorted_bond_partners[2]
-                            H3 = sorted_bond_partners[3]
-                            del new_coords1[H1]
-                            del new_coords1[H2]
-                            del new_coords1[H3]
-                            del new_structure1[H1]
-                            del new_structure1[H2]
-                            del new_structure1[H3]
-                            new_structure1[atom] = sorted_bond_partners[:1]
-                new_coords2 = molecule2.coords.copy()
-                new_structure2 = molecule2.bond_partners.copy()
-                for atom, bond_partners in molecule2.bond_partners.items():
-                    if get_element(atom) == "C":
-                        H_count = [get_element(bond_partner) for bond_partner in molecule2.bond_partners[atom]].count("H")
-                        if H_count == 3:
-                            sorted_bond_partners = sorted(
-                                bond_partners, key=lambda x: valences[get_element(x)], reverse=True
-                            )
-                            H1 = sorted_bond_partners[1]
-                            H2 = sorted_bond_partners[2]
-                            H3 = sorted_bond_partners[3]
-                            del new_coords2[H1]
-                            del new_coords2[H2]
-                            del new_coords2[H3]
-                            del new_structure2[H1]
-                            del new_structure2[H2]
-                            del new_structure2[H3]
-                            new_structure2[atom] = sorted_bond_partners[:1]
-                # **************************
-                coords1, coords2 = self.match(
-                    coords1=new_coords1, structure1=new_structure1,
-                    coords2=new_coords2, structure2=new_structure2
-                )
-            else:
-                start = time.time() 
-                coords1, coords2 = self.match(
-                    coords1=molecule1.coords, structure1=molecule1.bond_partners,
-                    coords2=molecule2.coords, structure2=molecule2.bond_partners
-                )
-                time_match = time_match + (time.time() - start)
-        except:
-            return doubles
-        #coords1 = molecule1.coords.copy()
-        #coords2 = molecule2.coords.copy()
-        if self.rmsd(coords1, coords2) <= 0.1:
-            doubles = True
-        return doubles
-
 
     # No. 1 are reference coordinates and structure
     # No. 2 coordinates will be reordered to match No. 1
@@ -480,30 +285,40 @@ class Analyzer:
         return spheres
 
     
-    #@staticmethod
-    def remove_doubles(self, path: str, rmsd_threshold: float=0.1) -> None:
+    def remove_doubles(self, path: str, rmsd_threshold: float=0.1, loose: bool=False) -> None:
         print("Performing removal of duplicate structures...")
+
         conformer1 = Structure()
         conformer2 = Structure()
         path = os.path.abspath(path)
         conformers = os.listdir(path)
         counter = len(conformers)
-        conformer1.read_xyz(os.path.join(path, conformers[0]))
+        if loose:
+            conformer1.get_structure(os.path.join(path, conformers[0]))
+            self.connectivity = conformer1.bond_partners
+            self.set_terminal_group_atoms()
+        else:
+            conformer1.read_xyz(os.path.join(path, conformers[0]))
         atoms = [atom for atom in conformer1.coords.keys()]
         n_atoms = len(atoms)
         cost = np.zeros((n_atoms, n_atoms))
+
         for index, file1 in enumerate(conformers):
             conformer1.read_xyz(os.path.join(path, file1))
             for file2 in conformers[index + 1:]:
                 conformer2.read_xyz(os.path.join(path, file2))
                 # VERBESSERUNGSPOTENTIAL BZGL. IMPLEMENTIERUNG AB HIER??
                 kabsch_coords1, kabsch_coords2 = self.kabsch(conformer1.coords, conformer2.coords)
-                for i in range(n_atoms):
+                if loose:
+                    for atom in self.ignored_terminal_group_atoms:
+                        del kabsch_coords1[atom]
+                        del kabsch_coords2[atom]
+                for i in range(n_atoms-1):
                     for j in range(i+1):
                         element_i = get_element(atoms[i])
                         element_j = get_element(atoms[j])
                         if element_i == element_j:
-                            element_term = 0.0
+                            element_term = 0.0 
                         else:
                             element_term = 100.0
                         diff_vec = kabsch_coords1[i] - kabsch_coords2[j]
@@ -515,10 +330,21 @@ class Analyzer:
                     os.remove(os.path.join(path, file1))
                     counter -= 1
                     break
-        print(f"Individual conformers in {path}: {counter}") 
+                    
+        print(f"Individual conformers in {path}: {counter}")
 
 
-    #@staticmethod
+    def set_terminal_group_atoms(self) -> None:
+        for atom, bond_partners in self.connectivity.items():
+            terminal_count = [get_element(bond_partner) for bond_partner in bond_partners].count(["H", "F", "Cl", "Br", "I"])
+            if terminal_count == 3:
+                sorted_bond_partners = sorted(self.connectivity, key=lambda x: valences[get_element(x)], reverse=True)
+                self.ignored_terminal_group_atoms.append(atom)
+                self.ignored_terminal_group_atoms.append(sorted_bond_partners[1])
+                self.ignored_terminal_group_atoms.append(sorted_bond_partners[2])
+                self.ignored_terminal_group_atoms.append(sorted_bond_partners[3])
+
+
     def kabsch(self, coords1: Union[dict, list, np.array], coords2: Union[dict, list, np.array]) -> tuple:
         if type(coords1) == dict:
             coords1 = list(coords1.values())
@@ -555,7 +381,6 @@ class Analyzer:
         return (coords1, coords2)
     
 
-    #@staticmethod
     def rmsd(self, coords1: Union[dict, list, np.array], coords2: Union[dict, list, np.array]) -> float:
         if type(coords1) == dict:
             coords1 = list(coords1.values())
