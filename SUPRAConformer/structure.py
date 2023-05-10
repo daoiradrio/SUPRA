@@ -54,7 +54,7 @@ class Structure:
                     self.number_of_atoms = int(line)
                 elif i >= 2:
                     element, x, y, z = line.split()
-                    self.coords[f"{element}{i}"] = np.array([float(x), float(y), float(z)])
+                    self.coords[f"{element}{i-2}"] = np.array([float(x), float(y), float(z)])
 
 
     def get_connectivity(self):

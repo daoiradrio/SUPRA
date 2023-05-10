@@ -18,6 +18,7 @@ class Analyzer:
     def __init__(self):
         self.connectivity = {}
         self.ignored_terminal_group_atoms = []
+        self.ignored_methyl_group_atoms = []
 
 
     def compare_structure_sets(self, path1: str, path2: str):
@@ -78,7 +79,7 @@ class Analyzer:
     #    return conformers
 
     
-    def remove_doubles(self, path: str, rmsd_threshold: float=0.1, loose: bool=False) -> None:
+    def remove_doubles(self, path: str, rmsd_threshold: float=None, ignore: str=None) -> None:
         print("Performing removal of duplicate structures...")
 
         conformer1 = Structure()
@@ -86,26 +87,45 @@ class Analyzer:
         path = os.path.abspath(path)
         conformers = os.listdir(path)
         counter = len(conformers)
-        if loose:
+
+        if not rmsd_threshold:
+            rmsd_threshold = 0.1
+
+        if ignore=="methyl":
+            conformer1.get_structure(os.path.join(path, conformers[0]))
+            self.connectivity = conformer1.bond_partners
+            self.set_methyl_group_atoms()
+            atoms = [atom for atom in conformer1.coords.keys() if not atom in self.ignored_methyl_group_atoms]
+        elif ignore=="all":
             conformer1.get_structure(os.path.join(path, conformers[0]))
             self.connectivity = conformer1.bond_partners
             self.set_terminal_group_atoms()
+            atoms = [atom for atom in conformer1.coords.keys() if not atom in self.ignored_terminal_group_atoms]
         else:
             conformer1.read_xyz(os.path.join(path, conformers[0]))
-        atoms = [atom for atom in conformer1.coords.keys()]
+            atoms = [atom for atom in conformer1.coords.keys()]
+
+        print(atoms)
         n_atoms = len(atoms)
         cost = np.zeros((n_atoms, n_atoms))
 
         for index, file1 in enumerate(conformers):
             conformer1.read_xyz(os.path.join(path, file1))
+            if ignore == "methyl":
+                for atom in self.ignored_methyl_group_atoms:
+                    del conformer1.coords[atom]
+            elif ignore == "all": 
+                for atom in self.ignored_methyl_group_atoms:
+                    del conformer1.coords[atom]
             for file2 in conformers[index + 1:]:
                 conformer2.read_xyz(os.path.join(path, file2))
-                # VERBESSERUNGSPOTENTIAL BZGL. IMPLEMENTIERUNG AB HIER??
+                if ignore == "methyl": 
+                    for atom in self.ignored_methyl_group_atoms:
+                        del conformer2.coords[atom]
+                elif ignore == "all": 
+                    for atom in self.ignored_methyl_group_atoms:
+                        del conformer2.coords[atom]
                 kabsch_coords1, kabsch_coords2 = self.kabsch(conformer1.coords, conformer2.coords)
-                if loose:
-                    for atom in self.ignored_terminal_group_atoms:
-                        del kabsch_coords1[atom]
-                        del kabsch_coords2[atom]
                 for i in range(n_atoms):
                     for j in range(i+1):
                         element_i = get_element(atoms[i])
@@ -120,22 +140,46 @@ class Analyzer:
                         cost[j][i] = cost_value
                 row, col = linear_sum_assignment(cost)
                 if self.rmsd(kabsch_coords1[row], kabsch_coords2[col]) <= rmsd_threshold:
-                    os.remove(os.path.join(path, file1))
+                    #os.remove(os.path.join(path, file1))
                     counter -= 1
                     break
                     
         print(f"Individual conformers in {path}: {counter}")
+    
+
+    def set_methyl_group_atoms(self) -> None:
+        for atom, bond_partners in self.connectivity.items():
+            if get_element(atom) == "C":
+                terminal_count = 0
+                bond_partners = [get_element(bond_partner) for bond_partner in bond_partners]
+                terminal_count += bond_partners.count("H")
+                terminal_count += bond_partners.count("F")
+                terminal_count += bond_partners.count("Cl")
+                terminal_count += bond_partners.count("Br")
+                terminal_count += bond_partners.count("I")
+                if terminal_count == valences[get_element(atom)]-1:
+                    sorted_bond_partners = sorted(self.connectivity[atom], key=lambda x: valences[get_element(x)], reverse=True)
+                    self.ignored_methyl_group_atoms.append(atom)
+                    self.ignored_methyl_group_atoms.append(sorted_bond_partners[1])
+                    self.ignored_methyl_group_atoms.append(sorted_bond_partners[2])
+                    self.ignored_methyl_group_atoms.append(sorted_bond_partners[3])
 
 
     def set_terminal_group_atoms(self) -> None:
         for atom, bond_partners in self.connectivity.items():
-            terminal_count = [get_element(bond_partner) for bond_partner in bond_partners].count(["H", "F", "Cl", "Br", "I"])
-            if terminal_count == 3:
-                sorted_bond_partners = sorted(self.connectivity, key=lambda x: valences[get_element(x)], reverse=True)
-                self.ignored_terminal_group_atoms.append(atom)
-                self.ignored_terminal_group_atoms.append(sorted_bond_partners[1])
-                self.ignored_terminal_group_atoms.append(sorted_bond_partners[2])
-                self.ignored_terminal_group_atoms.append(sorted_bond_partners[3])
+            if not get_element(atom) in ["H", "F", "Cl", "Br", "I"]:
+                terminal_count = 0
+                bond_partners = [get_element(bond_partner) for bond_partner in bond_partners]
+                terminal_count += bond_partners.count("H")
+                terminal_count += bond_partners.count("F")
+                terminal_count += bond_partners.count("Cl")
+                terminal_count += bond_partners.count("Br")
+                terminal_count += bond_partners.count("I")
+                if terminal_count == valences[get_element(atom)]-1:
+                    sorted_bond_partners = sorted(self.connectivity[atom], key=lambda x: valences[get_element(x)], reverse=True)
+                    self.ignored_terminal_group_atoms.append(atom)
+                    for terminal_atom in sorted_bond_partners[1:]:
+                        self.ignored_terminal_group_atoms.append(terminal_atom)
 
 
     def kabsch(self, coords1: Union[dict, list, np.array], coords2: Union[dict, list, np.array]) -> tuple:
