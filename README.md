@@ -10,3 +10,10 @@
 8. Add ```export PYTHONPATH=/path/to/SUPRA``` to ```~/.bashrc``` 
 9. Put ```TURBOMOLE``` in ```~/bin```, add ```export TURBODIR=$HOME/bin/TURBOMOLE``` and ```source $TURBODIR/Config_turbo_env``` to ```~/.bashrc```
 10. Put```xtb``` binary in ```~/bin```
+
+***(Partly) automatic installation***
+1. Clone SUPRA repository
+2. Install miniforge: https://github.com/conda-forge/miniforge
+3. ```./install.sh```
+4. Put ```TURBOMOLE``` in ```~/bin```, add ```export TURBODIR=$HOME/bin/TURBOMOLE``` and ```source $TURBODIR/Config_turbo_env``` to ```~/.bashrc```
+5. Put```xtb``` binary in ```~/bin```
