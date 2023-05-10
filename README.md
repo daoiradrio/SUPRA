@@ -1,6 +1,6 @@
 # SUPRA
 
-***Installation***
+***Manual installation***
 1. Clone SUPRA repository
 2. Install miniforge: https://github.com/conda-forge/miniforge
 3. ```conda env create -f supra.yml```, if environment isn't automatically activated: ```conda activate supra```
@@ -10,10 +10,14 @@
 8. Add ```export PYTHONPATH=/path/to/SUPRA``` to ```~/.bashrc``` 
 9. Put ```TURBOMOLE``` in ```~/bin```, add ```export TURBODIR=$HOME/bin/TURBOMOLE``` and ```source $TURBODIR/Config_turbo_env``` to ```~/.bashrc```
 10. Put```xtb``` binary in ```~/bin```
+11. ```source ~/.bashrc```
+12. ```conda activate supra```
 
 ***(Partly) automatic installation***
 1. Clone SUPRA repository
 2. Install miniforge: https://github.com/conda-forge/miniforge
 3. ```./install.sh```
 4. Put ```TURBOMOLE``` in ```~/bin```
-5. Put```xtb``` binary in ```~/bin```
+5. Put ```xtb``` binary in ```~/bin```
+6. ```source ~/.bashrc```
+7. ```conda activate supra```
