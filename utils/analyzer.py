@@ -138,6 +138,16 @@ class Analyzer:
                         cost[i][j] = cost_value
                         cost[j][i] = cost_value
                 row, col = linear_sum_assignment(cost)
+                print("Anfang Hungarian")
+                print()
+                print(kabsch_coords1)
+                print()
+                print(row)
+                print()
+                print(col)
+                print()
+                print("Ende Hungarian")
+                print()
                 if self.rmsd(kabsch_coords1[row], kabsch_coords2[col]) <= rmsd_threshold:
                     #os.remove(os.path.join(path, file1))
                     counter -= 1
@@ -195,12 +205,27 @@ class Analyzer:
 
         # Kovarianzmatrix berechnen
         H = np.matmul(coords1.T, coords2)
+        #print("H:")
+        #print(H)
+        #print()
 
         # Singulärwertzerlegung der Kovarianzmatrix berechnen
         U, S, Vt = np.linalg.svd(H)
+        #print("U:")
+        #print(U)
+        #print()
+        #print("S:")
+        #print(S)
+        #print()
+        #print("Vt:")
+        #print(Vt)
+        #print()
 
         # Matrix zur Berechnung der Rotationsmatrix in Abhängigkeit der Determinante bestimmen
         det = np.linalg.det(np.matmul(Vt.T, U.T))
+        #print("det:")
+        #print(det)
+        #print()
         if det >= 0:
             det = 1.0
         else:
@@ -210,9 +235,21 @@ class Analyzer:
         # Rotationsmatrix berechnen
         R = np.matmul(np.matmul(Vt.T, matrix), U.T)
 
+        #print("R:")
+        #print(R)
+        #print()
+
+        #print("coords2 vorher:")
+        #print(coords2)
+        #print()
+
         # anwenden der Rotationsmatrix auf Koordinatenset 2 um beide Sets möglichst zur Deckung zu bringen
         for i, _ in enumerate(coords2):
             coords2[i] = np.matmul(coords2[i], R)
+
+        #print("coords2 nachher:")
+        #print(coords2)
+        #print()
 
         return (coords1, coords2)
     
