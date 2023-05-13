@@ -21,3 +21,7 @@
 5. Put ```xtb``` binary in ```~/bin```
 6. ```source ~/.bashrc```
 7. ```conda activate supra```
+
+***Usage***
+SUPRA offers interfaces with different functionality. These are explained in the following.
+1. ```supra-conformer```
