@@ -1,6 +1,6 @@
 # SUPRA
 
-***Manual installation***
+## Manual installation
 1. Clone SUPRA repository
 2. Install miniforge: https://github.com/conda-forge/miniforge
 3. ```conda env create -f supra.yml```, if environment isn't automatically activated: ```conda activate supra```
@@ -13,7 +13,7 @@
 11. ```source ~/.bashrc```
 12. ```conda activate supra```
 
-***(Partly) automatic installation***
+## (Partly) automatic installation
 1. Clone SUPRA repository
 2. Install miniforge: https://github.com/conda-forge/miniforge
 3. ```./install.sh```
@@ -22,7 +22,12 @@
 6. ```source ~/.bashrc```
 7. ```conda activate supra```
 
-***Usage***
+## Usage
 SUPRA offers interfaces with different functionality. These are explained in the following.
-1. The ```supra-conformer``` module expects the path of a .xyz input file containing an optimized molecule structure, e.g. ```supra-conformer -path SUPRA/inputfiles/Alanin.xyz```. The generation of conformer structures starts after a mode (ignoring bonds to terminal bonds or not) and angle increment has been chosen. The generated conformer structures are placed in a directory ```SUPRA_Ouput``` that is placed in the same directory where ```supra-conformer``` has been called.
-2. 
+### 1. ```supra-conformer```
+The ```supra-conformer``` module expects the path of a .xyz input file containing an optimized molecule structure, e.g. ```supra-conformer -path SUPRA/inputfiles/Alanin.xyz```. The generation of conformer structures starts after a mode (ignoring bonds to terminal bonds or not) and angle increment has been chosen. All structures are optimized with the Universal Force Field and if necessary converged with GFN2-FF. Possible duplicate structures are removed and the final conformer structures are placed in a directory ```SUPRA_Ouput``` that is placed in the same directory where ```supra-conformer``` has been called.
+### 2. ```supra-refine```
+The ```supra-refine``` module expects the path of a directory containing conformer structures. These can be generated with SUPRA, but don't have to be. It reoptimizes all structures using xTB and removes possible duplicate structures. The final reoptimized conformer structures are placed in the input directory.
+### 3. ```supra-doubles```
+The ```supra-doubles``` module expects the path of a directory containing conformer structures. Again, these can be generated with SUPRA, but don't have to be. The module is used to remove duplicate structures without any optimization.
+
