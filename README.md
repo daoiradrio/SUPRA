@@ -24,4 +24,5 @@
 
 ***Usage***
 SUPRA offers interfaces with different functionality. These are explained in the following.
-1. ```supra-conformer```
+1. The ```supra-conformer``` module expects the path of a .xyz input file containing an optimized molecule structure, e.g. ```supra-conformer -path SUPRA/inputfiles/Alanin.xyz```. The generation of conformer structures starts after a mode (ignoring bonds to terminal bonds or not) and angle increment has been chosen. The generated conformer structures are placed in a directory ```SUPRA_Ouput``` that is placed in the same directory where ```supra-conformer``` has been called.
+2. 
