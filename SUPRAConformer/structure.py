@@ -67,17 +67,16 @@ class Structure:
             max_valence = valences[self.get_element(atom1)]
             valence = 0
             for atom2 in atoms[i+1:]:
-                if valence == max_valence:
-                    break
-                else:
-                    coords2 = self.coords[atom2]
-                    bond_order = self._check_connectivity(atom1, coords1, atom2, coords2)
-                    if bond_order:
-                        self.bonds.append((atom1, atom2))
-                        self.bond_partners[atom1].append(atom2)
-                        self.bond_partners[atom2].append(atom1)
-                        self.bond_orders[(atom1, atom2)] = bond_order
-                        valence += 1
+                #if valence == max_valence:
+                #    break
+                coords2 = self.coords[atom2]
+                bond_order = self._check_connectivity(atom1, coords1, atom2, coords2)
+                if bond_order:
+                    self.bonds.append((atom1, atom2))
+                    self.bond_partners[atom1].append(atom2)
+                    self.bond_partners[atom2].append(atom1)
+                    self.bond_orders[(atom1, atom2)] = bond_order
+                    valence += 1
 
 
     # TODO: ÜBERPRÜFUNG HINZUFÜGEN (PFAD KORREKT, DATEI LESBAR, ETC.)
