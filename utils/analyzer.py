@@ -138,16 +138,6 @@ class Analyzer:
                         cost[i][j] = cost_value
                         cost[j][i] = cost_value
                 row, col = linear_sum_assignment(cost)
-                print("Anfang Hungarian")
-                print()
-                print(kabsch_coords1)
-                print()
-                print(row)
-                print()
-                print(col)
-                print()
-                print("Ende Hungarian")
-                print()
                 if self.rmsd(kabsch_coords1[row], kabsch_coords2[col]) <= rmsd_threshold:
                     #os.remove(os.path.join(path, file1))
                     counter -= 1
