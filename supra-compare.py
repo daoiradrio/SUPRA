@@ -18,8 +18,13 @@ def main():
     parser.add_argument("-ignore", type=str, required=False)
     args = parser.parse_args()
 
+    if args.rmsd:
+        rmsd = args.rmsd
+    else:
+        rmsd = 0.1
+
     print()
-    an.compare_structure_sets(args.path1, args.path2)
+    an.compare_structure_sets(path1=args.path1, path2=args.path2, rmsd_threshold=rmsd, ignore=args.ignore)
     print()
 
 

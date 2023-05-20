@@ -17,8 +17,13 @@ def main():
     parser.add_argument("-ignore", type=str, required=False)
     args = parser.parse_args()
 
+    if args.rmsd:
+        rmsd = args.rmsd
+    else:
+        rmsd = 0.1
+
     print()
-    an.remove_doubles(path=os.path.abspath(args.path), rmsd_threshold=args.rmsd, ignore=args.ignore)
+    an.remove_doubles(path=os.path.abspath(args.path), rmsd_threshold=rmsd, ignore=args.ignore)
     print()
 
 

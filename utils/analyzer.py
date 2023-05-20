@@ -21,25 +21,82 @@ class Analyzer:
         self.ignored_methyl_group_atoms = []
 
 
-    def compare_structure_sets(self, path1: str, path2: str):
-        Molecule1 = Structure()
-        Molecule2 = Structure()
-        list1 = os.listdir(path1)
-        list2 = os.listdir(path2)
-        doubles = 0
-        for i, conformer1 in enumerate(list1):
-            print("Progress {:.1f}%".format(i/len(list1) * 100))
-            Molecule1.get_structure(path1 + conformer1)
-            for conformer2 in list2:
-                Molecule2.get_structure(path2 + conformer2)
-                if self.doubles(Molecule1, Molecule2):
-                    doubles += 1
+    def compare_structure_sets(self, path1: str, path2: str, rmsd_threshold: float=0.1, ignore: str=None):
+        path1 = os.path.abspath(path1)
+        path2 = os.path.abspath(path2)
+        conformers1 = os.listdir(path1)
+        conformers2 = os.listdir(path2)
+        if len(conformers1) > len(conformers2):
+            conformers1, conformers2 = conformers2, conformers1
+            path1, path2 = path2, path1
+
+        conformer1 = Structure()
+        conformer2 = Structure()
+
+        if ignore=="methyl":
+            conformer1.get_structure(os.path.join(path1, conformers1[0]))
+            self.connectivity = conformer1.bond_partners
+            self.set_methyl_group_atoms()
+            atoms = [atom for atom in conformer1.coords.keys() if not atom in self.ignored_methyl_group_atoms]
+        elif ignore=="all":
+            conformer1.get_structure(os.path.join(path1, conformers1[0]))
+            self.connectivity = conformer1.bond_partners
+            self.set_terminal_group_atoms()
+            atoms = [atom for atom in conformer1.coords.keys() if not atom in self.ignored_terminal_group_atoms]
+        else:
+            conformer1.read_xyz(os.path.join(path1, conformers1[0]))
+            atoms = [atom for atom in conformer1.coords.keys()]
+
+        n_atoms = len(atoms)
+        cost = np.zeros((n_atoms, n_atoms))
+
+        counter = 0
+        m = round(len(conformers1)/50)
+        print("Comparing structures...")
+        print("[", end="", flush="True")
+        for i, file1 in enumerate(conformers1):
+            if (i % m) == 0:
+                print("=", end="", flush=True)
+            conformer1.read_xyz(os.path.join(path1, file1))
+            if ignore == "methyl":
+                for atom in self.ignored_methyl_group_atoms:
+                    del conformer1.coords[atom]
+            elif ignore == "all":
+                for atom in self.ignored_methyl_group_atoms:
+                    del conformer1.coords[atom]
+            for file2 in conformers2:
+                conformer2.read_xyz(os.path.join(path2, file2))
+                if ignore == "methyl":
+                    for atom in self.ignored_methyl_group_atoms:
+                        del conformer2.coords[atom]
+                elif ignore == "all":
+                    for atom in self.ignored_methyl_group_atoms:
+                        del conformer2.coords[atom]
+                kabsch_coords1, kabsch_coords2 = self.kabsch(conformer1.coords, conformer2.coords)
+                for i in range(n_atoms):
+                    for j in range(i+1):
+                        element_i = get_element(atoms[i])
+                        element_j = get_element(atoms[j])
+                        if element_i == element_j:
+                            element_term = 0.0
+                        else:
+                            element_term = 100.0
+                        diff_vec = kabsch_coords1[i] - kabsch_coords2[j]
+                        cost_value = np.dot(diff_vec, diff_vec) + element_term
+                        cost[i][j] = cost_value
+                        cost[j][i] = cost_value
+                row, col = linear_sum_assignment(cost)
+                if self.rmsd(kabsch_coords1[row], kabsch_coords2[col]) <= rmsd_threshold:
+                    counter += 1
                     break
-        print("Progress 100.0%")
+        print("]")
         print()
-        print("Number of structures in " + path1 + " (path 1): " + str(len(list1)))
-        print("Number of structures in " + path2 + " (path 2): " + str(len(list2)))
-        print("Number of structures of path 1 in path 2: " + str(doubles))
+        print(f"Path 1: {path1}")
+        print(f"Path 2: {path2}")
+        print()
+        print(f"Number of structures in Path 1: {len(conformers1)}")
+        print(f"Number of structures in Path 2: {len(conformers2)}")
+        print(f"Number of structures of Path 1 in Path 2: {counter}")
 
     
     # TODO: ÜBERARBEITEN, AUF NEUESTEN STAND BRINGEN
@@ -79,7 +136,7 @@ class Analyzer:
     #    return conformers
 
     
-    def remove_doubles(self, path: str, rmsd_threshold: float=None, ignore: str=None) -> None:
+    def remove_doubles(self, path: str, rmsd_threshold: float=0.1, ignore: str=None) -> None:
         print("Performing removal of duplicate structures...")
 
         conformer1 = Structure()
@@ -87,9 +144,7 @@ class Analyzer:
         path = os.path.abspath(path)
         conformers = os.listdir(path)
         counter = len(conformers)
-
-        if not rmsd_threshold:
-            rmsd_threshold = 0.1
+        m = round(counter/50)
 
         if ignore=="methyl":
             conformer1.get_structure(os.path.join(path, conformers[0]))
@@ -108,7 +163,10 @@ class Analyzer:
         n_atoms = len(atoms)
         cost = np.zeros((n_atoms, n_atoms))
 
-        for index, file1 in enumerate(conformers):
+        print("[", end="", flush=True)
+        for index, file1 in enumerate(os.listdir(path)):
+            if (index % m) == 0:
+                print("=", end="", flush=True)
             conformer1.read_xyz(os.path.join(path, file1))
             if ignore == "methyl":
                 for atom in self.ignored_methyl_group_atoms:
@@ -116,7 +174,7 @@ class Analyzer:
             elif ignore == "all": 
                 for atom in self.ignored_methyl_group_atoms:
                     del conformer1.coords[atom]
-            for file2 in conformers[index + 1:]:
+            for file2 in os.listdir(path)[index + 1:]:
                 conformer2.read_xyz(os.path.join(path, file2))
                 if ignore == "methyl": 
                     for atom in self.ignored_methyl_group_atoms:
@@ -141,7 +199,8 @@ class Analyzer:
                 if self.rmsd(kabsch_coords1[row], kabsch_coords2[col]) <= rmsd_threshold:
                     os.remove(os.path.join(path, file1))
                     counter -= 1
-                    break
+                    #break
+        print("]")
                     
         print(f"Individual conformers in {path}: {counter}")
     
