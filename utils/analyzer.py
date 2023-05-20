@@ -143,8 +143,9 @@ class Analyzer:
         conformer2 = Structure()
         path = os.path.abspath(path)
         conformers = os.listdir(path)
-        counter = len(conformers)
-        m = round(counter/50)
+        m = len(conformers)/50
+        n = 1
+        counter = 0
 
         if ignore=="methyl":
             conformer1.get_structure(os.path.join(path, conformers[0]))
@@ -162,11 +163,13 @@ class Analyzer:
 
         n_atoms = len(atoms)
         cost = np.zeros((n_atoms, n_atoms))
-
-        print("[", end="", flush=True)
+        
+        print(f"{'_'*50}")
+        print("|", end="", flush=True)
         for index, file1 in enumerate(os.listdir(path)):
-            if (index % m) == 0:
-                print("=", end="", flush=True)
+            if index > m*n:
+                print("#", end="", flush=True)
+                n += 1
             conformer1.read_xyz(os.path.join(path, file1))
             if ignore == "methyl":
                 for atom in self.ignored_methyl_group_atoms:
@@ -174,6 +177,7 @@ class Analyzer:
             elif ignore == "all": 
                 for atom in self.ignored_methyl_group_atoms:
                     del conformer1.coords[atom]
+            double = False
             for file2 in os.listdir(path)[index + 1:]:
                 conformer2.read_xyz(os.path.join(path, file2))
                 if ignore == "methyl": 
@@ -197,12 +201,12 @@ class Analyzer:
                         cost[j][i] = cost_value
                 row, col = linear_sum_assignment(cost)
                 if self.rmsd(kabsch_coords1[row], kabsch_coords2[col]) <= rmsd_threshold:
-                    os.remove(os.path.join(path, file1))
-                    counter -= 1
+                    #os.remove(os.path.join(path, file1))
+                    counter += 1
                     #break
-        print("]")
+        print("\n")
                     
-        print(f"Individual conformers in {path}: {counter}")
+        print(f"Individual conformers in {path}: {len(conformers)-counter}")
     
 
     def set_methyl_group_atoms(self) -> None:
