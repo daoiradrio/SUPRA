@@ -145,7 +145,6 @@ class Analyzer:
         conformers = os.listdir(path)
         m = len(conformers)/50
         n = 1
-        counter = 0
 
         if ignore=="methyl":
             conformer1.get_structure(os.path.join(path, conformers[0]))
@@ -201,12 +200,10 @@ class Analyzer:
                         cost[j][i] = cost_value
                 row, col = linear_sum_assignment(cost)
                 if self.rmsd(kabsch_coords1[row], kabsch_coords2[col]) <= rmsd_threshold:
-                    #os.remove(os.path.join(path, file1))
-                    counter += 1
-                    #break
+                    os.remove(os.path.join(path, file1))
         print("\n")
                     
-        print(f"Individual conformers in {path}: {len(conformers)-counter}")
+        print(f"Individual conformers in {path}: {len(os.listdir(path))}")
     
 
     def set_methyl_group_atoms(self) -> None:
