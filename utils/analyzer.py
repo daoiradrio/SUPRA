@@ -161,8 +161,8 @@ class Analyzer:
             conformer1.read_xyz(os.path.join(path, conformers[0]))
             atoms = [atom for atom in conformer1.coords.keys()]
 
-        n_atoms = len(atoms)
-        cost = np.zeros((n_atoms, n_atoms))
+        #n_atoms = len(atoms)
+        #cost = np.zeros((n_atoms, n_atoms))
         
         #print(f"{'_'*50}")
         #iprint("|", end="", flush=True)
@@ -249,7 +249,9 @@ class Analyzer:
     ) -> bool:
         elements1 = [get_element(atom) for atom in coords1.keys()]
         elements2 = [get_element(atom) for atom in coords2.keys()]
-        kabsch_coords1, kabsch_coords2 = self.kabsch(conformer1.coords, conformer2.coords)
+        n_atoms = len(elements1)
+        cost = np.zeros((n_atoms, n_atoms))
+        kabsch_coords1, kabsch_coords2 = self.kabsch(coords1, coords2)
         for i in range(n_atoms):
             for j in range(i+1):
                 if elements1[i] == elements2[j]:
