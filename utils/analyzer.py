@@ -177,6 +177,7 @@ class Analyzer:
             elif ignore == "all": 
                 for atom in self.ignored_methyl_group_atoms:
                     del conformer1.coords[atom]
+            elements1 = list(conformer1.coords.keys())
             for file2 in conformers[index + 1:]:
                 conformer2.read_xyz(os.path.join(path, file2))
                 if ignore == "methyl": 
@@ -185,14 +186,11 @@ class Analyzer:
                 elif ignore == "all": 
                     for atom in self.ignored_methyl_group_atoms:
                         del conformer2.coords[atom]
+                elements2 = list(conformer2.coords.keys())
                 kabsch_coords1, kabsch_coords2 = self.kabsch(conformer1.coords, conformer2.coords)
                 for i in range(n_atoms):
                     for j in range(i+1):
-                        #element_i = get_element(atoms[i])
-                        #element_j = get_element(atoms[j])
-                        element_i = get_element(kabsch_coords1.keys()[i])
-                        element_j = get_element(kabsch_coords2.keys()[j])
-                        if element_i == element_j:
+                        if elements1[i] == elements2[j]:
                             element_term = 0.0 
                         else:
                             element_term = 100.0

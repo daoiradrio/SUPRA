@@ -56,7 +56,7 @@ class ConformerGenerator:
                 opt_struc = os.path.abspath(os.path.join(folder, self.opt_struc_name))
                 new_conformer_file = os.path.join(self.output_folder_name, f"conformer{i}.xyz")
                 os.system(f"mv {opt_struc} {new_conformer_file}")
-                os.system(f"rm -rf {folder}")
+                #os.system(f"rm -rf {folder}")
             #print(f"{len(os.listdir(self.output_folder_name))} conformers have been generated.")
         else:
             print(f"No conformers could be generated.")
