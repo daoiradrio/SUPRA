@@ -177,7 +177,7 @@ class Analyzer:
             elif ignore == "all": 
                 for atom in self.ignored_methyl_group_atoms:
                     del conformer1.coords[atom]
-            elements1 = list(conformer1.coords.keys())
+            #elements1 = list(conformer1.coords.keys())
             for file2 in conformers[index + 1:]:
                 conformer2.read_xyz(os.path.join(path, file2))
                 if ignore == "methyl": 
@@ -186,20 +186,21 @@ class Analyzer:
                 elif ignore == "all": 
                     for atom in self.ignored_methyl_group_atoms:
                         del conformer2.coords[atom]
-                elements2 = list(conformer2.coords.keys())
-                kabsch_coords1, kabsch_coords2 = self.kabsch(conformer1.coords, conformer2.coords)
-                for i in range(n_atoms):
-                    for j in range(i+1):
-                        if elements1[i] == elements2[j]:
-                            element_term = 0.0 
-                        else:
-                            element_term = 100.0
-                        diff_vec = kabsch_coords1[i] - kabsch_coords2[j]
-                        cost_value = np.dot(diff_vec, diff_vec) + element_term
-                        cost[i][j] = cost_value
-                        cost[j][i] = cost_value
-                row, col = linear_sum_assignment(cost)
-                if self.rmsd(kabsch_coords1[row], kabsch_coords2[col]) <= rmsd_threshold:
+                #elements2 = list(conformer2.coords.keys())
+                #kabsch_coords1, kabsch_coords2 = self.kabsch(conformer1.coords, conformer2.coords)
+                #for i in range(n_atoms):
+                #    for j in range(i+1):
+                #        if elements1[i] == elements2[j]:
+                #            element_term = 0.0
+                #        else:
+                #            element_term = 100.0
+                #        diff_vec = kabsch_coords1[i] - kabsch_coords2[j]
+                #        cost_value = np.dot(diff_vec, diff_vec) + element_term
+                #        cost[i][j] = cost_value
+                #        cost[j][i] = cost_value
+                #row, col = linear_sum_assignment(cost)
+                #if (self.rmsd(kabsch_coords1[row], kabsch_coords2[col]) <= rmsd_threshold):
+                if self.doubles(conformer1.coords, conformer2.coords, rmsd_threshold):
                     #os.remove(os.path.join(path, file1))
                     counter -= 1
                     break
@@ -243,8 +244,24 @@ class Analyzer:
                         self.ignored_terminal_group_atoms.append(terminal_atom)
     
 
-    def doubles(self):
-        pass
+    def doubles(
+        self, coords1: dict, coords2: dict, rmsd_threshold: float
+    ) -> bool:
+        elements1 = [get_element(atom) for atom in coords1.keys()]
+        elements2 = [get_element(atom) for atom in coords2.keys()]
+        kabsch_coords1, kabsch_coords2 = self.kabsch(conformer1.coords, conformer2.coords)
+        for i in range(n_atoms):
+            for j in range(i+1):
+                if elements1[i] == elements2[j]:
+                    element_term = 0.0
+                else:
+                    element_term = 100.0
+                diff_vec = kabsch_coords1[i] - kabsch_coords2[j]
+                cost_value = np.dot(diff_vec, diff_vec) + element_term
+                cost[i][j] = cost_value
+                cost[j][i] = cost_value
+        row, col = linear_sum_assignment(cost)
+        return (self.rmsd(kabsch_coords1[row], kabsch_coords2[col]) <= rmsd_threshold)
 
 
     def kabsch(self, coords1: Union[dict, list, np.array], coords2: Union[dict, list, np.array]) -> tuple:
