@@ -13,29 +13,33 @@ class Optimizer:
         pass
 
     
-    def optimize_structure_xtb():
-        pass
-    
-
-    # THIS SHOULD THEN CALL optimize_structure_xtb FOR IN A LOOP FOR EVERY STRUCTURE
-    def refine_structures_xtb():
-        pass
-
-
-    def refine_ff_opts(self, path_to_strucs: str, chrg: int=None) -> None:
-        strucs_list = os.listdir(path_to_strucs)
-        workdir = os.path.join(os.path.abspath(path_to_strucs), self.workdir_name)
+    def optimize_structure_xtb(struc_file: str, chrg: int=None, n: int=None):
         xtb_args = ["xtb", "--opt", "normal"]
         if chrg:
             xtb_args.append("--chrg")
-            xtb_args.append(str(chrg))
+            xtb.args.append(str(chrg))
+        os.system(
+            f"mkdir {self.workdir_name} ; mv {struc_file} {self.workdir_name}"
+        )
+        struc_path = os.path.join(
+            os.path.abspath(self.workdir_name),
+            struc_file
+        )
+        subprocess.run(
+            args=["xtb", "--opt", "normal"]+[struc_path], 
+            cwd=new_workdir, 
+            stdout=subprocess.DEVNULL, 
+            stderr=subprocess.DEVNULL
+        )
+        xtb_struc_file = os.path.join(self.workdir_name, "xtbopt.xyz")
+        opt_struc_file = f"../conformer{n}.xyz"
+        os.system(f"mv {xtb_struc_file} {opt_struc_file}")
+        os.system(f"rm -rf {self.workdir_name}")
+
+
+    def refine_structures_xtb():
+        strucs_list = os.listdir(path_to_strucs)
         print("Performing refining optimizations...")
         for i, struc in enumerate(strucs_list):
-            new_workdir = f"{workdir}{i}"
-            os.system(f"mkdir {new_workdir} ; mv {os.path.join(path_to_strucs, struc)} {new_workdir}")
-            struc_path = os.path.join(os.path.abspath(new_workdir), struc)
-            subprocess.run(args=xtb_args+[struc_path], cwd=new_workdir, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            xtb_struc_file = os.path.join(new_workdir, "xtbopt.xyz")
-            opt_struc_file = os.path.join(path_to_strucs, f"conformer{i}.xyz")
-            os.system(f"mv {xtb_struc_file} {opt_struc_file}")
-            os.system(f"rm -rf {new_workdir}")
+            self.optimize_structure_xtb(struc, chrg, i)
+        print("Refining optimizations done.")

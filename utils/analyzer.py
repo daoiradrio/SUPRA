@@ -143,8 +143,8 @@ class Analyzer:
         conformer2 = Structure()
         path = os.path.abspath(path)
         conformers = os.listdir(path)
-        m = len(conformers)/50
-        n = 1
+        #m = len(conformers)/50
+        #n = 1
         counter = len(conformers)
 
         if ignore=="methyl":
@@ -205,7 +205,8 @@ class Analyzer:
                     counter -= 1
                     break
         #print("\n")
-                    
+        
+        print("Removal of double structures done.")
         print(f"Individual conformers in {path}: {counter}")
     
 
