@@ -24,7 +24,7 @@ def main():
         chrg = None
 
     print()
-    opt.refine_ff_opts(strucs_path, chrg)
+    opt.refine_structures_xtb(strucs_path, chrg)
     an.remove_doubles(strucs_path)
     print()
 
