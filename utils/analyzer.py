@@ -188,8 +188,10 @@ class Analyzer:
                 kabsch_coords1, kabsch_coords2 = self.kabsch(conformer1.coords, conformer2.coords)
                 for i in range(n_atoms):
                     for j in range(i+1):
-                        element_i = get_element(atoms[i])
-                        element_j = get_element(atoms[j])
+                        #element_i = get_element(atoms[i])
+                        #element_j = get_element(atoms[j])
+                        element_i = get_element(kabsch_coords1.keys()[i])
+                        element_j = get_element(kabsch_coords2.keys()[j])
                         if element_i == element_j:
                             element_term = 0.0 
                         else:
@@ -200,7 +202,7 @@ class Analyzer:
                         cost[j][i] = cost_value
                 row, col = linear_sum_assignment(cost)
                 if self.rmsd(kabsch_coords1[row], kabsch_coords2[col]) <= rmsd_threshold:
-                    os.remove(os.path.join(path, file1))
+                    #os.remove(os.path.join(path, file1))
                     counter -= 1
                     break
         #print("\n")
@@ -241,6 +243,10 @@ class Analyzer:
                     self.ignored_terminal_group_atoms.append(atom)
                     for terminal_atom in sorted_bond_partners[1:]:
                         self.ignored_terminal_group_atoms.append(terminal_atom)
+    
+
+    def doubles(self):
+        pass
 
 
     def kabsch(self, coords1: Union[dict, list, np.array], coords2: Union[dict, list, np.array]) -> tuple:

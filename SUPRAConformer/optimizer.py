@@ -8,6 +8,19 @@ class Optimizer:
     def __init__(self):
         self.workdir_name = "supra_running_opt"
 
+    
+    def optimize_structure_uff():
+        pass
+
+    
+    def optimize_structure_xtb():
+        pass
+    
+
+    # THIS SHOULD THEN CALL optimize_structure_xtb FOR IN A LOOP FOR EVERY STRUCTURE
+    def refine_structures_xtb():
+        pass
+
 
     def refine_ff_opts(self, path_to_strucs: str, chrg: int=None) -> None:
         strucs_list = os.listdir(path_to_strucs)
