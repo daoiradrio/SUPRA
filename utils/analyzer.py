@@ -38,21 +38,28 @@ class Analyzer:
         for i, file1 in enumerate(conformers1):
             #if (i % m) == 0:
             #    print("=", end="", flush=True)
-            conformer1.read_xyz(os.path.join(path1, file1))
             if ignore == "methyl":
+                conformer1.get_structure(os.path.join(path1, file1))
                 for atom in self.get_methyl_group_atoms(conformer1.bond_partners):
+                    print(atom)
                     del conformer1.coords[atom]
             elif ignore == "all":
+                conformer1.get_structure(os.path.join(path1, file1))
                 for atom in self.get_terminal_group_atoms(conformer1.bond_partners):
                     del conformer1.coords[atom]
+            else:
+                conformer1.read_xyz(os.path.join(path1, file1))
             for file2 in conformers2:
-                conformer2.read_xyz(os.path.join(path2, file2))
                 if ignore == "methyl":
+                    conformer2.get_structure(os.path.join(path2, file2))
                     for atom in self.get_methyl_group_atoms(conformer2.bond_partners):
                         del conformer2.coords[atom]
                 elif ignore == "all":
+                    conformer2.get_structure(os.path.join(path2, file2))
                     for atom in self.get_terminal_group_atoms(conformer2.bond_partners):
                         del conformer2.coords[atom]
+                else:
+                    conformer2.read_xyz(os.path.join(path2, file2))
                 if self.doubles(conformer1.coords, conformer2.coords, rmsd_threshold):
                     counter += 1
                     break
@@ -121,21 +128,27 @@ class Analyzer:
             #if index > m*n:
             #    print("#", end="", flush=True)
             #    n += 1
-            conformer1.read_xyz(os.path.join(path, file1))
             if ignore == "methyl":
+                conformer1.get_structure(os.path.join(path, file1))
                 for atom in self.get_methyl_group_atoms(conformer1.bond_partners):
                     del conformer1.coords[atom]
             elif ignore == "all":
+                conformer1.get_structure(os.path.join(path, file1))
                 for atom in self.get_terminal_group_atoms(conformer1.bond_partners):
                     del conformer1.coords[atom]
+            else:
+                conformer1.read_xyz(os.path.join(path, file1))
             for file2 in conformers[index + 1:]:
-                conformer2.read_xyz(os.path.join(path, file2))
-                if ignore == "methyl": 
+                if ignore == "methyl":
+                    conformer2.get_structure(os.path.join(path, file2))
                     for atom in self.get_methyl_group_atoms(conformer2.bond_partners):
                         del conformer2.coords[atom]
                 elif ignore == "all": 
+                    conformer2.get_structure(os.path.join(path, file2))
                     for atom in self.get_terminal_group_atoms(conformer2.bond_partners):
                         del conformer2.coords[atom]
+                else:
+                    conformer2.read_xyz(os.path.join(path, file2))
                 if self.doubles(conformer1.coords, conformer2.coords, rmsd_threshold):
                     #os.remove(os.path.join(path, file1))
                     counter -= 1
