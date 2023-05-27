@@ -16,9 +16,7 @@ from scipy.optimize import linear_sum_assignment
 class Analyzer:
 
     def __init__(self):
-        self.connectivity = {}
-        self.ignored_terminal_group_atoms = []
-        self.ignored_methyl_group_atoms = []
+        pass
 
 
     def compare_structure_sets(self, path1: str, path2: str, rmsd_threshold: float=0.1, ignore: str=None):
@@ -151,19 +149,13 @@ class Analyzer:
             conformer1.get_structure(os.path.join(path, conformers[0]))
             self.connectivity = conformer1.bond_partners
             self.set_methyl_group_atoms()
-            atoms = [atom for atom in conformer1.coords.keys() if not atom in self.ignored_methyl_group_atoms]
         elif ignore=="all":
             conformer1.get_structure(os.path.join(path, conformers[0]))
             self.connectivity = conformer1.bond_partners
             self.set_terminal_group_atoms()
-            atoms = [atom for atom in conformer1.coords.keys() if not atom in self.ignored_terminal_group_atoms]
         else:
             conformer1.read_xyz(os.path.join(path, conformers[0]))
-            atoms = [atom for atom in conformer1.coords.keys()]
 
-        #n_atoms = len(atoms)
-        #cost = np.zeros((n_atoms, n_atoms))
-        
         #print(f"{'_'*50}")
         #iprint("|", end="", flush=True)
         for index, file1 in enumerate(conformers):
@@ -172,34 +164,19 @@ class Analyzer:
             #    n += 1
             conformer1.read_xyz(os.path.join(path, file1))
             if ignore == "methyl":
-                for atom in self.ignored_methyl_group_atoms:
+                for atom in self.get_methyl_group_atoms(conformer1.bond_partners):
                     del conformer1.coords[atom]
-            elif ignore == "all": 
-                for atom in self.ignored_methyl_group_atoms:
+            elif ignore == "all":
+                for atom in self.get_terminal_group_atoms(conformer1.bond_partners):
                     del conformer1.coords[atom]
-            #elements1 = list(conformer1.coords.keys())
             for file2 in conformers[index + 1:]:
                 conformer2.read_xyz(os.path.join(path, file2))
                 if ignore == "methyl": 
-                    for atom in self.ignored_methyl_group_atoms:
+                    for atom in self.get_methyl_group_atoms(conformer2.bond_partners):
                         del conformer2.coords[atom]
                 elif ignore == "all": 
-                    for atom in self.ignored_methyl_group_atoms:
+                    for atom in self.get_terminal_group_atoms(conformer2.bond_partners):
                         del conformer2.coords[atom]
-                #elements2 = list(conformer2.coords.keys())
-                #kabsch_coords1, kabsch_coords2 = self.kabsch(conformer1.coords, conformer2.coords)
-                #for i in range(n_atoms):
-                #    for j in range(i+1):
-                #        if elements1[i] == elements2[j]:
-                #            element_term = 0.0
-                #        else:
-                #            element_term = 100.0
-                #        diff_vec = kabsch_coords1[i] - kabsch_coords2[j]
-                #        cost_value = np.dot(diff_vec, diff_vec) + element_term
-                #        cost[i][j] = cost_value
-                #        cost[j][i] = cost_value
-                #row, col = linear_sum_assignment(cost)
-                #if (self.rmsd(kabsch_coords1[row], kabsch_coords2[col]) <= rmsd_threshold):
                 if self.doubles(conformer1.coords, conformer2.coords, rmsd_threshold):
                     #os.remove(os.path.join(path, file1))
                     counter -= 1
@@ -210,8 +187,9 @@ class Analyzer:
         print(f"Individual conformers in {path}: {counter}")
     
 
-    def set_methyl_group_atoms(self) -> None:
-        for atom, bond_partners in self.connectivity.items():
+    def get_methyl_group_atoms(self, structure: dict) -> list:
+        methyl_group_atoms = []
+        for atom, bond_partners in structure.items():
             if get_element(atom) == "C":
                 terminal_count = 0
                 bond_partners = [get_element(bond_partner) for bond_partner in bond_partners]
@@ -221,15 +199,21 @@ class Analyzer:
                 terminal_count += bond_partners.count("Br")
                 terminal_count += bond_partners.count("I")
                 if terminal_count == valences[get_element(atom)]-1:
-                    sorted_bond_partners = sorted(self.connectivity[atom], key=lambda x: valences[get_element(x)], reverse=True)
-                    self.ignored_methyl_group_atoms.append(atom)
-                    self.ignored_methyl_group_atoms.append(sorted_bond_partners[1])
-                    self.ignored_methyl_group_atoms.append(sorted_bond_partners[2])
-                    self.ignored_methyl_group_atoms.append(sorted_bond_partners[3])
+                    sorted_bond_partners = sorted(
+                                            structure[atom],
+                                            key=lambda x: valences[get_element(x)],
+                                            reverse=True
+                                           )
+                    methyl_group_atoms.append(atom)
+                    methyl_group_atoms.append(sorted_bond_partners[1])
+                    methyl_group_atoms.append(sorted_bond_partners[2])
+                    methyl_group_atoms.append(sorted_bond_partners[3])
+        return methyl_group_atoms
 
 
-    def set_terminal_group_atoms(self) -> None:
-        for atom, bond_partners in self.connectivity.items():
+    def get_terminal_group_atoms(self, structure: dict) -> list:
+        terminal_group_atoms = []
+        for atom, bond_partners in structure.items():
             if not get_element(atom) in ["H", "F", "Cl", "Br", "I"]:
                 terminal_count = 0
                 bond_partners = [get_element(bond_partner) for bond_partner in bond_partners]
@@ -239,10 +223,15 @@ class Analyzer:
                 terminal_count += bond_partners.count("Br")
                 terminal_count += bond_partners.count("I")
                 if terminal_count == valences[get_element(atom)]-1:
-                    sorted_bond_partners = sorted(self.connectivity[atom], key=lambda x: valences[get_element(x)], reverse=True)
-                    self.ignored_terminal_group_atoms.append(atom)
+                    sorted_bond_partners = sorted(
+                                            structure[atom],
+                                            key=lambda x: valences[get_element(x)],
+                                            reverse=True
+                                           )
+                    terminal_group_atoms.append(atom)
                     for terminal_atom in sorted_bond_partners[1:]:
-                        self.ignored_terminal_group_atoms.append(terminal_atom)
+                        terminal_group_atoms.append(terminal_atom)
+        return terminal_group_atoms
     
 
     def doubles(
@@ -258,12 +247,15 @@ class Analyzer:
                 if elements1[i] == elements2[j]:
                     element_term = 0.0
                 else:
-                    element_term = 100.0
+                    element_term = 1000.0
                 diff_vec = kabsch_coords1[i] - kabsch_coords2[j]
                 cost_value = np.dot(diff_vec, diff_vec) + element_term
                 cost[i][j] = cost_value
                 cost[j][i] = cost_value
         row, col = linear_sum_assignment(cost)
+        print(row)
+        print(col)
+        print(self.rmsd(kabsch_coords1[row], kabsch_coords2[col]))
         return (self.rmsd(kabsch_coords1[row], kabsch_coords2[col]) <= rmsd_threshold)
 
 
