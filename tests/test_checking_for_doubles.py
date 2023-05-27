@@ -2,8 +2,6 @@ import os
 
 from SUPRAConformer.structure import Structure
 from utils.analyzer import Analyzer
-from utils.helper import get_element, valences
-from scipy.optimize import linear_sum_assignment
 
 
 
@@ -52,3 +50,11 @@ def test_strict_doubles_check():
     
     #assert (A1_A2 and not A1_A3 and not A2_A3 and T1_T2 and T1_T3 and T2_T3)
     assert (T1_T2 and T1_T3 and T2_T3)
+
+
+
+def test_compare_structure_sets():
+    set1 = os.path.join(files, "Alanin_set1")
+    set2 = os.path.join(files, "Alanin_set2")
+
+    assert True
