@@ -1,19 +1,90 @@
 import os
 import subprocess
 
+from utils.helper import get_element
+
 
 
 class Optimizer:
 
     def __init__(self):
         self.workdir_name = "supra_running_opt"
+        self.work_struc_name = "struc.xyz"
+        self.opt_struc_name = "opt_struc.xyz"
 
     
-    def optimize_structure_uff():
-        pass
+    @staticmethod
+    def optimize_structure_uff(coords: dict, n: int=None):
+        workdir = f"{self.workdir_name}{n}"
+        workdir = os.path.abspath(workdir)
+        os.makedirs(workdir)
+
+        new_xyz_file = os.path.join(workdir, "struc.xyz")
+        os.system(f"touch {new_xyz_file}")
+        with open(new_xyz_file, "w") as struc_to_optimize:
+            number_of_atoms = len(coords.keys())
+            print(number_of_atoms, file=struc_to_optimize, end="\n\n")
+            for atom, (x, y, z) in coords.items():
+                print(f"{get_element(atom)}\t{x}\t{y}\t{z}", file=struc_to_optimize)
+        
+        control_file = os.path.join(workdir, "control")
+        coord_file = os.path.join(workdir, "coord")
+        os.system(f"touch {control_file}")
+        with open(control_file, "w") as control:
+            print("$symmetry c1", file=control)
+            print("$uff", file=control)
+            print("      2500         1          0 ! maxcycle,modus,nqeq", file=control)
+            print("    111111                      ! iterm", file=control)
+            print("  0.10D-07  0.10D-04            ! econv,gconv", file=control)
+            print("      0.00  1.10                ! qtot,dfac", file=control)
+            print("  0.10D+03  0.10D-04       0.30 ! epssteep,epssearch,dqmax", file=control)
+            print("        25      0.10       0.00 ! mxls,dhls,ahls", file=control)
+            print("      1.00      0.00       0.00 ! alpha,beta,gamma", file=control)
+            print("         F         F          F ! transform,lnumhess,lmd", file=control)
+            print("$end", file=control)
+        
+        with open(coord_file, "w") as f:
+            subprocess.run(
+                args=["x2t", new_xyz_file, ">", coord_file],
+                cwd=workdir,
+                stdout=f,
+                stderr=subprocess.DEVNULL
+            )
+        
+        subprocess.run(
+            args=["uff"],
+            cwd=workdir,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+
+        #TODO: HOW TO INCLUDE ENERGY IN SECOND LINE HERE
+        opt_struc = os.path.join(workdir, self.opt_struc_name)
+        if os.path.isfile(os.path.join(workdir, "not.uffconverged")):
+            subprocess.run(
+                args=["xtb", "--opt", "--gfnff", new_xyz_file],
+                cwd=workdir,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+            os.system(f"mv {os.path.join(workdir, 'xtbopt.xyz')} {opt_struc}")
+        else:
+            with open(opt_struc, "w") as f:
+                subprocess.run(
+                    args=["t2x", coord_file, ">", opt_struc],
+                    cwd=workdir,
+                    stdout=f,
+                    stderr=subprocess.DEVNULL
+                )
+        
+        os.system(
+            f"mv {opt_struc} ../conformer{n}.xyz ; \
+              rm -r {workdir}"
+        )
 
     
-    def optimize_structure_xtb(self, struc_folder: str, struc_file: str, chrg: int=None, n: int=None):
+    @staticmethod
+    def optimize_structure_xtb(struc_folder: str, struc_file: str, chrg: int=None, n: int=None):
         workdir = os.path.join(struc_folder, self.workdir_name+str(n))
         xtb_args = ["xtb", "--opt", "normal"]
         if chrg:
@@ -37,7 +108,8 @@ class Optimizer:
         os.system(f"rm -rf {workdir}")
 
 
-    def refine_structures_xtb(self, path_to_strucs: str, chrg: int=None):
+    @staticmethod
+    def refine_structures_xtb(path_to_strucs: str, chrg: int=None):
         strucs_list = os.listdir(path_to_strucs)
         print("Performing refining optimizations...")
         for i, struc in enumerate(strucs_list):

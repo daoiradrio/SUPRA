@@ -52,10 +52,11 @@ class ConformerGenerator:
                 os.makedirs(self.output_folder_name)
             self.output_folder_name = os.path.abspath(self.output_folder_name)
             for i in range(number_conformers):
-                folder = os.path.abspath(f"{self.workdir_name}{i}")
-                opt_struc = os.path.abspath(os.path.join(folder, self.opt_struc_name))
-                new_conformer_file = os.path.join(self.output_folder_name, f"conformer{i}.xyz")
-                os.system(f"mv {opt_struc} {new_conformer_file}")
+                os.system(f"mv conformer{i}.xyz {self.output_folder_name}")
+                #folder = os.path.abspath(f"{self.workdir_name}{i}")
+                #opt_struc = os.path.abspath(os.path.join(folder, self.opt_struc_name))
+                #new_conformer_file = os.path.join(self.output_folder_name, f"conformer{i}.xyz")
+                #os.system(f"mv {opt_struc} {new_conformer_file}")
                 #os.system(f"rm -rf {folder}")
             #print(f"{len(os.listdir(self.output_folder_name))} conformers have been generated.")
         else:
@@ -409,43 +410,43 @@ class ConformerGenerator:
             # sofern keine strukturinternen Clashes hinzufügen zur Liste erfolgreich erzeugter Konformerstrukturen
             # check new structure for internal clashes
             if not self._clashes(bond_partners, new_coords):
-                workdir = f"{self.workdir_name}{counter}"
-                os.makedirs(workdir)
-                workdir = os.path.abspath(workdir)
-                opt_struc = os.path.join(workdir, self.opt_struc_name)
-                new_xyz_file = os.path.join(workdir, "struc.xyz")
-                os.system(f"touch {new_xyz_file}")
-                with open(new_xyz_file, "w") as optfile:
-                    number_of_atoms = len(new_coords.keys())
-                    print(number_of_atoms, file=optfile, end="\n\n")
-                    for atom, (x, y, z) in new_coords.items():
-                        print(f"{get_element(atom)}\t{x}\t{y}\t{z}", file=optfile)
-                # TODO: MAKE NUMBER OF OPTIMIZATION CYCLES DEPENDENT FROM SIZE OF MOLECULE (NUMBER OF ATOMS)
-                control_file = os.path.join(workdir, "control")
-                coord_file = os.path.join(workdir, "coord")
-                os.system(f"touch {control_file}")
-                with open(control_file, "w") as control:
-                    print("$symmetry c1", file=control)
-                    print("$uff", file=control)
-                    print("      2500         1          0 ! maxcycle,modus,nqeq", file=control)
-                    print("    111111                      ! iterm", file=control)
-                    print("  0.10D-07  0.10D-04            ! econv,gconv", file=control)
-                    print("      0.00  1.10                ! qtot,dfac", file=control)
-                    print("  0.10D+03  0.10D-04       0.30 ! epssteep,epssearch,dqmax", file=control)
-                    print("        25      0.10       0.00 ! mxls,dhls,ahls", file=control)
-                    print("      1.00      0.00       0.00 ! alpha,beta,gamma", file=control)
-                    print("         F         F          F ! transform,lnumhess,lmd", file=control)
-                    print("$end", file=control)
-                with open(coord_file, "w") as f:
-                    subprocess.run(args=["x2t", new_xyz_file, ">", coord_file], cwd=workdir, stdout=f, stderr=subprocess.DEVNULL)
-                subprocess.run(args=["uff"], cwd=workdir, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                if os.path.isfile(os.path.join(workdir, "not.uffconverged")):
-                    subprocess.run(args=["xtb", "--opt", "--gfnff", new_xyz_file], cwd=workdir, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    os.system(f"mv {os.path.join(workdir, 'xtbopt.xyz')} {opt_struc}")
-                else:
-                    #TODO: HOW TO INCLUDE ENERGY IN SECOND LINE HERE
-                    with open(opt_struc, "w") as f:
-                        subprocess.run(args=["t2x", coord_file, ">", opt_struc], cwd=workdir, stdout=f, stderr=subprocess.DEVNULL)
+                #workdir = f"{self.workdir_name}{counter}"
+                #os.makedirs(workdir)
+                #workdir = os.path.abspath(workdir)
+                #opt_struc = os.path.join(workdir, self.opt_struc_name)
+                #new_xyz_file = os.path.join(workdir, "struc.xyz")
+                #os.system(f"touch {new_xyz_file}")
+                #with open(new_xyz_file, "w") as optfile:
+                #    number_of_atoms = len(new_coords.keys())
+                #    print(number_of_atoms, file=optfile, end="\n\n")
+                #    for atom, (x, y, z) in new_coords.items():
+                #        print(f"{get_element(atom)}\t{x}\t{y}\t{z}", file=optfile)
+                ## TODO: MAKE NUMBER OF OPTIMIZATION CYCLES DEPENDENT FROM SIZE OF MOLECULE (NUMBER OF ATOMS)
+                #control_file = os.path.join(workdir, "control")
+                #coord_file = os.path.join(workdir, "coord")
+                #os.system(f"touch {control_file}")
+                #with open(control_file, "w") as control:
+                #    print("$symmetry c1", file=control)
+                #    print("$uff", file=control)
+                #    print("      2500         1          0 ! maxcycle,modus,nqeq", file=control)
+                #    print("    111111                      ! iterm", file=control)
+                #    print("  0.10D-07  0.10D-04            ! econv,gconv", file=control)
+                #    print("      0.00  1.10                ! qtot,dfac", file=control)
+                #    print("  0.10D+03  0.10D-04       0.30 ! epssteep,epssearch,dqmax", file=control)
+                #    print("        25      0.10       0.00 ! mxls,dhls,ahls", file=control)
+                #    print("      1.00      0.00       0.00 ! alpha,beta,gamma", file=control)
+                #    print("         F         F          F ! transform,lnumhess,lmd", file=control)
+                #    print("$end", file=control)
+                #with open(coord_file, "w") as f:
+                #    subprocess.run(args=["x2t", new_xyz_file, ">", coord_file], cwd=workdir, stdout=f, stderr=subprocess.DEVNULL)
+                #subprocess.run(args=["uff"], cwd=workdir, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                #if os.path.isfile(os.path.join(workdir, "not.uffconverged")):
+                #    subprocess.run(args=["xtb", "--opt", "--gfnff", new_xyz_file], cwd=workdir, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                #    os.system(f"mv {os.path.join(workdir, 'xtbopt.xyz')} {opt_struc}")
+                #else:
+                #    #TODO: HOW TO INCLUDE ENERGY IN SECOND LINE HERE
+                #    with open(opt_struc, "w") as f:
+                #        subprocess.run(args=["t2x", coord_file, ">", opt_struc], cwd=workdir, stdout=f, stderr=subprocess.DEVNULL)
                 return counter+1
             else:
                 return counter
