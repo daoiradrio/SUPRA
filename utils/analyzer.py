@@ -210,6 +210,8 @@ class Analyzer:
     def doubles(
         self, coords1: dict, coords2: dict, rmsd_threshold: float
     ) -> bool:
+        if len(coords1.keys()) != len(coords2.keys()):
+            return False
         elements1 = [get_element(atom) for atom in coords1.keys()]
         elements2 = [get_element(atom) for atom in coords2.keys()]
         n_atoms = len(elements1)
@@ -236,6 +238,7 @@ class Analyzer:
         if type(coords2) is dict:
             coords2 = list(coords2.values())
             coords2 = np.array(coords2)
+
         center1 = np.mean(coords1, axis=0)
         center2 = np.mean(coords2, axis=0)
         coords1 -= center1
