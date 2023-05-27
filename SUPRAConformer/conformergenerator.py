@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from SUPRAConformer.structure import Structure
+from SUPRAConformer.optimizer import Optimizer
 from utils.analyzer import Analyzer
 from utils.helper import covalence_radii_single, covalence_radii_double, get_element, increment_combinations, valences
 
@@ -19,6 +20,7 @@ class ConformerGenerator:
         self.workdir_name = "optdir"
         self.opt_struc_name = "opt_struc.xyz"
         self.analyzer = Analyzer()
+        self.optimizer = Optimizer()
         self.torsions = []
         self.central_torsions = []
         self.terminal_torsions = []
@@ -39,26 +41,21 @@ class ConformerGenerator:
         self._find_cycles(structure.bond_partners)
         self._find_peptidebonds(structure.coords, structure.bond_partners)
         self._selection_menu()
-        print("Performing generation of conformer structures...")
         self._generation_setup(list(structure.coords.keys()), structure.bond_partners)
         number_conformers = 0
+        print("Performing generation of conformer structures...")
         for increment in self.angle_increments:
             self.angles = [n * increment for n in range(int(np.round(360 / increment)))]
             number_conformers = self._combinations(
                 bond_partners=structure.bond_partners, new_coords=structure.coords, counter=number_conformers
             )
+        print("Generation of conformer structures done.")
         if number_conformers:
             if not os.path.exists(self.output_folder_name):
                 os.makedirs(self.output_folder_name)
             self.output_folder_name = os.path.abspath(self.output_folder_name)
             for i in range(number_conformers):
                 os.system(f"mv conformer{i}.xyz {self.output_folder_name}")
-                #folder = os.path.abspath(f"{self.workdir_name}{i}")
-                #opt_struc = os.path.abspath(os.path.join(folder, self.opt_struc_name))
-                #new_conformer_file = os.path.join(self.output_folder_name, f"conformer{i}.xyz")
-                #os.system(f"mv {opt_struc} {new_conformer_file}")
-                #os.system(f"rm -rf {folder}")
-            #print(f"{len(os.listdir(self.output_folder_name))} conformers have been generated.")
         else:
             print(f"No conformers could be generated.")
 
@@ -410,43 +407,7 @@ class ConformerGenerator:
             # sofern keine strukturinternen Clashes hinzufügen zur Liste erfolgreich erzeugter Konformerstrukturen
             # check new structure for internal clashes
             if not self._clashes(bond_partners, new_coords):
-                #workdir = f"{self.workdir_name}{counter}"
-                #os.makedirs(workdir)
-                #workdir = os.path.abspath(workdir)
-                #opt_struc = os.path.join(workdir, self.opt_struc_name)
-                #new_xyz_file = os.path.join(workdir, "struc.xyz")
-                #os.system(f"touch {new_xyz_file}")
-                #with open(new_xyz_file, "w") as optfile:
-                #    number_of_atoms = len(new_coords.keys())
-                #    print(number_of_atoms, file=optfile, end="\n\n")
-                #    for atom, (x, y, z) in new_coords.items():
-                #        print(f"{get_element(atom)}\t{x}\t{y}\t{z}", file=optfile)
-                ## TODO: MAKE NUMBER OF OPTIMIZATION CYCLES DEPENDENT FROM SIZE OF MOLECULE (NUMBER OF ATOMS)
-                #control_file = os.path.join(workdir, "control")
-                #coord_file = os.path.join(workdir, "coord")
-                #os.system(f"touch {control_file}")
-                #with open(control_file, "w") as control:
-                #    print("$symmetry c1", file=control)
-                #    print("$uff", file=control)
-                #    print("      2500         1          0 ! maxcycle,modus,nqeq", file=control)
-                #    print("    111111                      ! iterm", file=control)
-                #    print("  0.10D-07  0.10D-04            ! econv,gconv", file=control)
-                #    print("      0.00  1.10                ! qtot,dfac", file=control)
-                #    print("  0.10D+03  0.10D-04       0.30 ! epssteep,epssearch,dqmax", file=control)
-                #    print("        25      0.10       0.00 ! mxls,dhls,ahls", file=control)
-                #    print("      1.00      0.00       0.00 ! alpha,beta,gamma", file=control)
-                #    print("         F         F          F ! transform,lnumhess,lmd", file=control)
-                #    print("$end", file=control)
-                #with open(coord_file, "w") as f:
-                #    subprocess.run(args=["x2t", new_xyz_file, ">", coord_file], cwd=workdir, stdout=f, stderr=subprocess.DEVNULL)
-                #subprocess.run(args=["uff"], cwd=workdir, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                #if os.path.isfile(os.path.join(workdir, "not.uffconverged")):
-                #    subprocess.run(args=["xtb", "--opt", "--gfnff", new_xyz_file], cwd=workdir, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                #    os.system(f"mv {os.path.join(workdir, 'xtbopt.xyz')} {opt_struc}")
-                #else:
-                #    #TODO: HOW TO INCLUDE ENERGY IN SECOND LINE HERE
-                #    with open(opt_struc, "w") as f:
-                #        subprocess.run(args=["t2x", coord_file, ">", opt_struc], cwd=workdir, stdout=f, stderr=subprocess.DEVNULL)
+                self.optimizer.optimize_structure_uff(new_coords, counter)
                 return counter+1
             else:
                 return counter

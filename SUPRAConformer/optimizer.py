@@ -13,8 +13,7 @@ class Optimizer:
         self.opt_struc_name = "opt_struc.xyz"
 
     
-    @staticmethod
-    def optimize_structure_uff(coords: dict, n: int=None):
+    def optimize_structure_uff(self, coords: dict, n: int=None):
         workdir = f"{self.workdir_name}{n}"
         workdir = os.path.abspath(workdir)
         os.makedirs(workdir)
@@ -78,13 +77,12 @@ class Optimizer:
                 )
         
         os.system(
-            f"mv {opt_struc} ../conformer{n}.xyz ; \
+            f"mv {opt_struc} conformer{n}.xyz ; \
               rm -r {workdir}"
         )
 
     
-    @staticmethod
-    def optimize_structure_xtb(struc_folder: str, struc_file: str, chrg: int=None, n: int=None):
+    def optimize_structure_xtb(self, struc_folder: str, struc_file: str, chrg: int=None, n: int=None):
         workdir = os.path.join(struc_folder, self.workdir_name+str(n))
         xtb_args = ["xtb", "--opt", "normal"]
         if chrg:
@@ -108,8 +106,7 @@ class Optimizer:
         os.system(f"rm -rf {workdir}")
 
 
-    @staticmethod
-    def refine_structures_xtb(path_to_strucs: str, chrg: int=None):
+    def refine_structures_xtb(self, path_to_strucs: str, chrg: int=None):
         strucs_list = os.listdir(path_to_strucs)
         print("Performing refining optimizations...")
         for i, struc in enumerate(strucs_list):
