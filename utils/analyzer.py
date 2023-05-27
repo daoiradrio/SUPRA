@@ -19,7 +19,7 @@ class Analyzer:
         pass
 
 
-    def compare_structure_sets(self, path1: str, path2: str, rmsd_threshold: float=0.1, ignore: str=None):
+    def compare_structure_sets(self, path1: str, path2: str, rmsd_threshold: float=0.1, ignore: str=None) -> int:
         conformer1 = Structure()
         conformer2 = Structure()
 
@@ -72,6 +72,7 @@ class Analyzer:
         print(f"Number of structures in Path 1: {len(conformers1)}")
         print(f"Number of structures in Path 2: {len(conformers2)}")
         print(f"Number of structures of Path 1 in Path 2: {counter}")
+        return counter
 
     
     # TODO: ÜBERARBEITEN, AUF NEUESTEN STAND BRINGEN
@@ -111,7 +112,7 @@ class Analyzer:
     #    return conformers
 
     
-    def remove_doubles(self, path: str, rmsd_threshold: float=0.1, ignore: str=None) -> None:
+    def remove_doubles(self, path: str, rmsd_threshold: float=0.1, ignore: str=None) -> int:
         print("Performing removal of duplicate structures...")
 
         conformer1 = Structure()
@@ -156,6 +157,7 @@ class Analyzer:
         #print("\n")
         print("Removal of double structures done.")
         print(f"Individual conformers in {path}: {counter}")
+        return counter
     
 
     def get_methyl_group_atoms(self, structure: dict) -> list:

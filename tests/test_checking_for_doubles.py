@@ -54,7 +54,22 @@ def test_strict_doubles_check():
 
 
 def test_compare_structure_sets():
+    rmsd_threshold = 0.1
+    analyze = Analyzer()
     set1 = os.path.join(files, "Alanin_set1")
     set2 = os.path.join(files, "Alanin_set2")
 
-    assert True
+    strict = analzye.compare_structure_sets(
+                path1=set1,
+                path2=set2,
+                rmsd_threshold=rmsd_threshold
+             )
+
+    loose = analyzer.compare_structure_sets(
+                path1=set1,
+                path2=set2,
+                rmsd_threshold=rmsd_threshold,
+                ignore="methyl"
+            )
+
+    assert (strict == 1 and loose == 2)
