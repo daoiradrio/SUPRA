@@ -59,13 +59,13 @@ def test_compare_structure_sets():
     set1 = os.path.join(files, "Alanin_set1")
     set2 = os.path.join(files, "Alanin_set2")
 
-    strict = analzye.compare_structure_sets(
+    strict = analyze.compare_structure_sets(
                 path1=set1,
                 path2=set2,
                 rmsd_threshold=rmsd_threshold
              )
 
-    loose = analyzer.compare_structure_sets(
+    loose = analyze.compare_structure_sets(
                 path1=set1,
                 path2=set2,
                 rmsd_threshold=rmsd_threshold,
