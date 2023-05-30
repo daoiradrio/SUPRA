@@ -151,7 +151,7 @@ class Analyzer:
                 else:
                     conformer2.read_xyz(os.path.join(path, file2))
                 if self.doubles(conformer1.coords, conformer2.coords, rmsd_threshold):
-                    #os.remove(os.path.join(path, file1))
+                    os.remove(os.path.join(path, file1))
                     counter -= 1
                     break
         #print("\n")
