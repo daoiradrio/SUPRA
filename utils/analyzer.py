@@ -208,7 +208,7 @@ class Analyzer:
     
 
     def doubles(
-        self, coords1: dict, coords2: dict, rmsd_threshold: float
+        self, coords1: dict, coords2: dict, rmsd_threshold: float=0.1
     ) -> bool:
         if len(coords1.keys()) != len(coords2.keys()):
             return False
@@ -373,3 +373,122 @@ class Analyzer:
         rmsd = np.sqrt(1.0/float(N) * sum)
 
         return rmsd
+
+
+    def doubles_advanced(
+            self,
+            coords1: dict, connectivity1: dict,
+            coords2: dict, connectivity2: dict,
+            rmsd_threshold: float=0.1
+    ) -> bool:
+        doubles = False
+        coords1, coords2 = self.match(coords1, connectivity1, coords2, connectivity2)
+        if self.rmsd(coords1, coords2) <= rmsd_threshold:
+            doubles = True
+        return doubles
+
+
+    # No. 1 are reference coordinates and structure
+    # No. 2 coordinates will be reordered to match No. 1
+    def match(self, coords1: dict, structure1: dict, coords2: dict, structure2: dict) -> tuple:
+        # initialization
+        pairs = {}
+        matched_coords1 = []
+        matched_coords2 = []
+        list1 = list(coords1.keys())
+        list2 = list(coords2.keys())
+        spheres1 = {atom: self.spheres(structure1, atom) for atom in list1}
+        spheres2 = {atom: self.spheres(structure2, atom) for atom in list2}
+
+        # find pairs of atoms from No. 1 and 2 that are equivalent in terms of element and coordination spheres
+        # for atoms where this is already unique store the respective coordinates
+        for atom1 in list1:
+            eq = []
+            for atom2 in list2:
+                # compare element symbol
+                if get_element(atom1) == get_element(atom2):
+                    # compare coordination spheres (which elements are in which coordination sphere)
+                    if spheres1[atom1] == spheres2[atom2]:
+                        #pairs[atom1].append(atom2)
+                        eq.append(atom2)
+            # if several atoms from No. 2 are equivalent to a respective atom of No. 1 in terms of element symbol and
+            # coordination spheres store these candidates
+            if len(eq) > 1:
+                pairs[atom1] = eq
+            # if an atom pair is already unique store the respective coordinates
+            else:
+                matched_coords1.append(coords1[atom1])
+                matched_coords2.append(coords2[eq[0]])
+
+        # find correct atom pairs from No. 1 and No. 2 via matching of distances to other atoms
+        for atom, eq_atoms in pairs.items():
+            d1 = np.zeros(shape=(len(matched_coords1), len(eq_atoms)))
+            d2 = np.zeros(shape=(len(matched_coords2), len(eq_atoms)))
+            # store distances Pos.(atom No. 1)-Pos.(matched atom i from No. 1) in matrix d1 which is
+            # of shape (number of already matched coordinates)x(number of candidate atoms) which means
+            # every row stands for a reference atom from No. 1, every column contains the distance of the
+            # yet unmatched atom to the respective reference atom
+            for i, comp_atom in enumerate(matched_coords1):
+                v11 = np.array(coords1[atom])
+                v12 = np.array(comp_atom)
+                d1[i] = np.linalg.norm(v11 - v12)
+                # store reference distances Pos.(atom No. 2)-Pos.(matched atom i from No. 2) in matrix d2 which is
+                # of shape (number of already matched coordinates)x(number of candidate atoms) which means
+                # every row stands for a reference atom from No. 2, every column contains the distance of the
+                # candidate atom to the respective reference atom
+                for j, eq_atom in enumerate(eq_atoms):
+                    v21 = np.array(coords2[eq_atom])
+                    v22 = np.array(matched_coords2[i])
+                    d2[i][j] = np.linalg.norm(v21 - v22)
+            # evaluate deviations of distances, after transposing every row stands for a candidate atom and
+            # contains columnwise the respective deviations
+            d2 = np.transpose(d2 - d1)
+            min_delta = 1000000.0
+            eq = ""
+            # evaluate candidate atom with smallest deviation (compute sum over columns)
+            for i, d in enumerate(d2):
+                delta = np.linalg.norm(d)
+                if delta < min_delta:
+                    min_delta = delta
+                    eq = pairs[atom][i]
+            # store coordinates of atom from No. 1 and coordinates of atom from No. 2 with smallest deviation
+            matched_coords1.append(coords1[atom])
+            matched_coords2.append(coords2[eq])
+            # remove candidate from candidate lists
+            for candidates in pairs.values():
+                if eq in candidates:
+                    candidates.remove(eq)
+
+        return matched_coords1, matched_coords2
+
+
+    def spheres(self, structure: dict, start: str) -> list:
+        atoms = Queue()
+        for atom in structure[start]:
+            atoms.put(atom)
+
+        memory = [start]
+        spheres = []
+
+        sphere_counter = len(structure[start])
+        next_sphere_counter = 0
+        iter = 0
+
+        while not atoms.empty():
+            spheres.append([])
+            while sphere_counter:
+                atom = atoms.get()
+                spheres[iter].append(get_element(atom))
+                sphere_counter -= 1
+                for neighbor in structure[atom]:
+                    if not neighbor in memory:
+                        memory.append(neighbor)
+                        atoms.put(neighbor)
+                        next_sphere_counter += 1
+            spheres[iter] = sorted(spheres[iter])
+            iter += 1
+            sphere_counter = next_sphere_counter
+            next_sphere_counter = 0
+
+        return spheres
+
