@@ -87,7 +87,7 @@ class Optimizer:
         xtb_args = ["xtb", "--opt", "normal"]
         if chrg:
             xtb_args.append("--chrg")
-            xtb.args.append(str(chrg))
+            xtb_args.append(str(chrg))
         os.system(
             f"mkdir {workdir} ; \
               mv {os.path.join(struc_folder, struc_file)} {workdir}"
