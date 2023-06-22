@@ -57,8 +57,11 @@ class Optimizer:
             stderr=subprocess.DEVNULL
         )
 
-        #TODO: HOW TO INCLUDE ENERGY IN SECOND LINE HERE
+        with open("uffenergy", "r") as infile:
+            energy = float(infile.read().split()[-2])
+
         opt_struc = os.path.join(workdir, self.opt_struc_name)
+        """
         if os.path.isfile(os.path.join(workdir, "not.uffconverged")):
             subprocess.run(
                 args=["xtb", "--opt", "--gfnff", new_xyz_file],
@@ -75,6 +78,22 @@ class Optimizer:
                     stdout=f,
                     stderr=subprocess.DEVNULL
                 )
+        """
+        temp_file = os.path.join(workdir, "tmp.xyz")
+        with open(temp_file, "w") as f:
+            subprocess.run(
+                args=["t2x", coord_file, ">", temp_file],
+                cwd=workdir,
+                stdout=f,
+                stderr=subprocess.DEVNULL
+            )
+        
+        with open(opt_struc, "w") as f:
+            for i, line in enumerate(f):
+                if i == 1:
+                    print(f"Energy = {energy}", file=f)
+                else:
+                    print(line, file=f)
         
         os.system(
             f"mv {opt_struc} conformer{n}.xyz ; \
