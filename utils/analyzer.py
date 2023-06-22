@@ -162,8 +162,8 @@ class Analyzer:
                             delete_files[i] = 1
                     else:
                         delete_files[j] = 1
-        
-        for i, delete in delete_files:
+
+        for i, delete in enumerate(delete_files):
             if delete:
                 os.remove(os.path.join(path, conformers[i]))
                 counter -= 1
