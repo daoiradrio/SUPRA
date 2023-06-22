@@ -92,7 +92,7 @@ class Optimizer:
             with open(opt_struc, "w") as outfile:
                 for i, line in enumerate(infile):
                     if i == 1:
-                        print(f"Energy = {energy}", file=outfile, end="")
+                        print(f"Energy = {energy}", file=outfile)
                     else:
                         print(line, file=outfile, end="")
         
