@@ -88,12 +88,13 @@ class Optimizer:
                 stderr=subprocess.DEVNULL
             )
         
-        with open(opt_struc, "w") as f:
-            for i, line in enumerate(f):
-                if i == 1:
-                    print(f"Energy = {energy}", file=f)
-                else:
-                    print(line, file=f)
+        with open(temp_file, "r") as infile:
+            with open(opt_struc, "w") as outfile:
+                for i, line in enumerate(infile):
+                    if i == 1:
+                        print(f"Energy = {energy}", file=outfile)
+                    else:
+                        print(line, file=outfile)
         
         os.system(
             f"mv {opt_struc} conformer{n}.xyz ; \
