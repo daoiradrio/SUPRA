@@ -57,7 +57,7 @@ class Optimizer:
             stderr=subprocess.DEVNULL
         )
 
-        with open("uffenergy", "r") as infile:
+        with open(os.path.join(workdir, "uffenergy"), "r") as infile:
             energy = float(infile.read().split()[-2])
 
         opt_struc = os.path.join(workdir, self.opt_struc_name)
