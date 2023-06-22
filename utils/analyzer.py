@@ -157,10 +157,8 @@ class Analyzer:
                     #break
                     if (conformer1.energy and conformer2.energy):
                         if conformer1.energy < conformer2.energy:
-                            print("hier1")
                             delete_files[j] = 1
                         else:
-                            print("hier2")
                             delete_files[i] = 1
                     else:
                         delete_files[j] = 1
@@ -173,7 +171,40 @@ class Analyzer:
         #print("\n")
         print("Removal of double structures done.")
         print(f"Individual conformers in {path}: {counter}")
-        return counter 
+        return counter
+    
+
+    def remove_doubles_ensemble_file(self, path: str):
+        print("Performing removal of duplicate structures...")
+
+        curr_dir = os.getcwd()
+        workdir = os.path.join(curr_dir, "conformers")
+        struc_filename = "conformer"
+
+        os.makedirs(workdir)
+
+        with open("Alanin_ensemble.xyz", "r") as infile:
+            n_atoms = int(infile.readline().split()[0])
+            file_counter = 0
+            line_iter = 1
+            new_struc = os.path.join(workdir, f"{struc_filename}{file_counter}.xyz")
+            new_struc_file = open(new_struc, "w")
+            print(n_atoms, file=new_struc_file)
+            for line in infile:
+                if (line_iter < n_atoms+2):
+                    print(line, file=new_struc_file, end="")
+                    line_iter += 1
+                else:
+                    new_struc_file.close()
+                    file_counter += 1
+                    line_iter = 1
+                    new_struc = os.path.join(workdir, f"{struc_filename}{file_counter}.xyz")
+                    new_struc_file = open(new_struc, "w")
+                    print(n_atoms, file=new_struc_file)
+        
+        # ...
+
+        print("Removal of double structures done.")
 
     
     def old_remove_doubles(self, path: str, rmsd_threshold: float=0.1, ignore: str=None) -> int:
