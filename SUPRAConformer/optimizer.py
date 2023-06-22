@@ -92,9 +92,9 @@ class Optimizer:
             with open(opt_struc, "w") as outfile:
                 for i, line in enumerate(infile):
                     if i == 1:
-                        print(f"Energy = {energy}", file=outfile)
+                        print(f"Energy = {energy}", file=outfile, end="")
                     else:
-                        print(line, file=outfile)
+                        print(line, file=outfile, end="")
         
         os.system(
             f"mv {opt_struc} conformer{n}.xyz ; \
