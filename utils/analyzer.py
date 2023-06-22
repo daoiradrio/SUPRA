@@ -157,8 +157,10 @@ class Analyzer:
                     #break
                     if (conformer1.energy and conformer2.energy):
                         if conformer1.energy < conformer2.energy:
+                            print("hier1")
                             delete_files[j] = 1
                         else:
+                            print("hier2")
                             delete_files[i] = 1
                     else:
                         delete_files[j] = 1
