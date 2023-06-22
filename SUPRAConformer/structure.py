@@ -13,6 +13,7 @@ class Structure:
         self.bond_partners = {}
         self.bond_orders = {}
         self.bonds = []
+        self.energy = 0
         if file:
             self.get_structure(file)
 
@@ -36,22 +37,24 @@ class Structure:
             return int(label[-1])
 
 
-    def get_structure(self, filename: str):
+    def get_structure(self, filename: str, read_energy: bool = False):
         if not filename:
             filename = input("Path of the .xyz-File: ")
         if not os.path.exists(filename):
             print("STRUCTURE MODULE: File not found at given path.")
             return
-        self.read_xyz(filename)
+        self.read_xyz(filename, read_energy)
         self.get_connectivity()
 
 
-    def read_xyz(self, filename: str):
+    def read_xyz(self, filename: str, read_energy: bool = False):
         self.coords = {}
         with open(filename, "r") as input_file:
             for i, line in enumerate(input_file):
                 if i == 0:
                     self.number_of_atoms = int(line)
+                elif read_energy and i == 1:
+                    self.energy = float(line.split()[-1])
                 elif i >= 2:
                     element, x, y, z = line.split()
                     self.coords[f"{element}{i-2}"] = np.array([float(x), float(y), float(z)])

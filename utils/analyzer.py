@@ -111,8 +111,70 @@ class Analyzer:
     #                break
     #    return conformers
 
-    
+
     def remove_doubles(self, path: str, rmsd_threshold: float=0.1, ignore: str=None) -> int:
+        print("Performing removal of duplicate structures...")
+
+        conformer1 = Structure()
+        conformer2 = Structure()
+        path = os.path.abspath(path)
+        conformers = os.listdir(path)
+        #m = len(conformers)/50
+        #n = 1
+        counter = len(conformers)
+        delete_files = [0 for i in range(counter)]
+
+        #print(f"{'_'*50}")
+        #iprint("|", end="", flush=True)
+        for i, file1 in enumerate(conformers):
+            #if index > m*n:
+            #    print("#", end="", flush=True)
+            #    n += 1
+            if ignore == "methyl":
+                conformer1.get_structure(os.path.join(path, file1), read_energy=True)
+                for atom in self.get_methyl_group_atoms(conformer1.bond_partners):
+                    del conformer1.coords[atom]
+            elif ignore == "all":
+                conformer1.get_structure(os.path.join(path, file1), read_energy=True)
+                for atom in self.get_terminal_group_atoms(conformer1.bond_partners):
+                    del conformer1.coords[atom]
+            else:
+                conformer1.read_xyz(os.path.join(path, file1), read_energy=True)
+            for j, file2 in enumerate(conformers[i+1:]):
+                if ignore == "methyl":
+                    conformer2.get_structure(os.path.join(path, file2), read_energy=True)
+                    for atom in self.get_methyl_group_atoms(conformer2.bond_partners):
+                        del conformer2.coords[atom]
+                elif ignore == "all": 
+                    conformer2.get_structure(os.path.join(path, file2), read_energy=True)
+                    for atom in self.get_terminal_group_atoms(conformer2.bond_partners):
+                        del conformer2.coords[atom]
+                else:
+                    conformer2.read_xyz(os.path.join(path, file2), read_energy=True)
+                if self.doubles(conformer1.coords, conformer2.coords, rmsd_threshold):
+                    #os.remove(os.path.join(path, file1))
+                    #counter -= 1
+                    #break
+                    if (conformer1.energy and conformer2.energy):
+                        if conformer1.energy < conformer2.energy:
+                            delete_files[j] = 1
+                        else:
+                            delete_files[i] = 1
+                    else:
+                        delete_files[j] = 1
+        
+        for i, delete in delete_files:
+            if delete:
+                os.remove(os.path.join(path, conformers[i]))
+                counter -= 1
+
+        #print("\n")
+        print("Removal of double structures done.")
+        print(f"Individual conformers in {path}: {counter}")
+        return counter 
+
+    
+    def old_remove_doubles(self, path: str, rmsd_threshold: float=0.1, ignore: str=None) -> int:
         print("Performing removal of duplicate structures...")
 
         conformer1 = Structure()
