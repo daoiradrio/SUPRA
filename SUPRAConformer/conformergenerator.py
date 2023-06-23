@@ -12,7 +12,8 @@ from utils.analyzer import Analyzer
 from utils.symmetry import Symmetry
 from utils.rotationaxis import RotationAxis
 from utils.bond import Bond
-from utils.helper import covalence_radii_single, covalence_radii_double, get_element, increment_combinations, valences, atom_in_torsions
+from utils.helper import covalence_radii_single, covalence_radii_double, get_element, \
+                         increment_combinations, valences, atom_in_torsions, get_number
 
 
 
@@ -43,9 +44,9 @@ class ConformerGenerator:
         for increment in self.angle_increments:
             self.angles = [n * increment for n in range(int(np.round(360 / increment)))]
             self.check_rot_sym_of_torsions(structure, increment)
-            number_conformers = self._combinations(
-                bond_partners=structure.bond_partners, new_coords=structure.coords, counter=number_conformers
-            )
+            #number_conformers = self._combinations(
+            #    bond_partners=structure.bond_partners, new_coords=structure.coords, counter=number_conformers
+            #)
         print("Generation of conformer structures done.")
         if number_conformers:
             if not os.path.exists(self.output_folder_name):
@@ -393,19 +394,31 @@ class ConformerGenerator:
             # rotational symmetry left side of torsion bond
             status = {atom: "UNKNOWN" for atom in mol.coords.keys()}
             self._get_torsion_group(mol.bond_partners, atom1, atom2, status, torsion.sym_rot_atoms1)
+            torsion.sym_rot_atoms1 = sorted(torsion.sym_rot_atoms1, key=lambda label: get_number(label))
             torsion.rot_sym1 = sym.rot_order_along_bond(mol, torsion.sym_rot_atoms1, mol.coords[atom1], mol.coords[atom2])
             # rotational symmetry right side of torsion bond
             status = {atom: "UNKNOWN" for atom in mol.coords.keys()}
             self._get_torsion_group(mol.bond_partners, torsion.atom2, torsion.atom1, status, torsion.sym_rot_atoms2)
+            torsion.sym_rot_atoms2 = sorted(torsion.sym_rot_atoms2, key=lambda label: get_number(label))
             torsion.rot_sym2 = sym.rot_order_along_bond(mol, torsion.sym_rot_atoms2, mol.coords[atom1], mol.coords[atom2])
 
+            """
+            print()
+            print(f"{atom1} {atom2}")
+            print(f"Side {atom1}: {torsion.rot_sym1}")
+            print(f"{torsion.sym_rot_atoms1}")
+            print(f"Side {atom2}: {torsion.rot_sym2}")
+            print(f"{torsion.sym_rot_atoms2}")
+            print()
+            """
+            
         torsion_done = [0 for _ in self.torsions]
 
         for i, torsion1 in enumerate(self.torsions):
             if (torsion_done[i]):
                 continue
-            if (torsion1.rot_sym1 == 1 or max(360/torsion.rot_sym1, angle_increment) % min(360/torsion.rot_sym1, angle_increment) != 0):
-                if (torsion1.rot_sym2 == 1 or max(360/torsion.rot_sym2, angle_increment) % min(360/torsion.rot_sym2, angle_increment) != 0):
+            if (torsion1.rot_sym1 == 1 or max(360/torsion1.rot_sym1, angle_increment) % min(360/torsion1.rot_sym1, angle_increment) != 0):
+                if (torsion1.rot_sym2 == 1 or max(360/torsion1.rot_sym2, angle_increment) % min(360/torsion1.rot_sym2, angle_increment) != 0):
                     for j in range(360//angle_increment):
                         torsion1.rot_angles.append(j*angle_increment)
                     torsion_done[i] = 1
@@ -436,6 +449,7 @@ class ConformerGenerator:
                                 k = 0
                                 while (k*angle_increment < 360/torsion1.rot_sym1):
                                     torsion2.rot_angles.append(k*angle_increment)
+                                    k += 1
                                 torsion_done[j] = 1
                                 for k in range(360//angle_increment):
                                     torsion1.rot_angles.append(k*angle_increment)
@@ -448,12 +462,13 @@ class ConformerGenerator:
                                 k = 0
                                 while (k*angle_increment < 360/torsion1.rot_sym2):
                                     torsion2.rot_angles.append(k*angle_increment)
+                                    k += 1
                                 torsion_done[j] = 1
                                 for k in range(360//angle_increment):
                                     torsion1.rot_angles.append(k*angle_increment)
                                 torsion_done[i] = 1
                                 continue
-        
+        """
         print()
         print(f"Inkrement: {angle_increment}")
         for i, torsion in enumerate(self.torsions):
@@ -462,6 +477,7 @@ class ConformerGenerator:
                 print(angle, end=" ")
             print()
         print()
+        """
                 
 
 

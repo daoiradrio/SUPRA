@@ -22,7 +22,7 @@ def main():
     print()
     mol.get_structure(os.path.abspath(args.path))
     gen.generate_conformers(mol)
-    an.remove_doubles("SUPRA_Output/")
+    #an.remove_doubles("SUPRA_Output/")
     print()
 
 
