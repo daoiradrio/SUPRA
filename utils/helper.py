@@ -84,7 +84,7 @@ def get_number(label: str) -> int:
 
 def atom_in_torsions(torsions: list, label: str) -> bool:
     for torsion in torsions:
-        if (label == torsion[0] or label == torsion[1]):
+        if (label == torsion.atom1 or label == torsion.atom2):
             return True
     return False
 

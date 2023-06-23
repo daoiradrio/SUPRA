@@ -11,7 +11,7 @@ class RotationAxis:
 
 
     
-    def rotate_atom(self, coords: np.array, deg: float) -> np.array:
+    def rotate(self, coords: np.array, deg: float) -> np.array:
         angle = np.deg2rad(deg)
 
         new_coords = coords - self.from_coords
@@ -22,7 +22,7 @@ class RotationAxis:
 
         return new_coords
 
-"""
+
     @staticmethod
     def rotate_atom(from_coords: np.array, to_coords: np.array, coords: np.array, deg: float) -> np.array:
         axis = (to_coords - from_coords) / np.linalg.norm(to_coords - from_coords)
@@ -35,4 +35,3 @@ class RotationAxis:
         coords = coords + from_coords
 
         return coords
-"""

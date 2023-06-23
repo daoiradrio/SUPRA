@@ -1,7 +1,9 @@
-# covalence radii, max. valences, atom label to element symbol converter
-from utils.helper import valences, covalence_radii_single, covalence_radii_double, covalence_radii_triple, get_number
-import numpy as np # sqrt
 import os # path.exists
+
+import numpy as np # sqrt
+
+from utils.bond import Bond
+from utils.helper import covalence_radii_single, covalence_radii_double, covalence_radii_triple, get_element
 
 
 
@@ -18,24 +20,6 @@ class Structure:
             self.get_structure(file)
 
 
-    # translation of atom label into element symbol
-    @staticmethod
-    def get_element(label: str) -> str:
-        # if letter on second index: two letter element symbol, return first two chars of label
-        if label[1].isalpha():
-            return (label[0] + label[1])
-        # if no letter on second index: one letter element symbol, return first char of label
-        else:
-            return label[0]
-
-    
-    @staticmethod
-    def get_number(label: str) -> int:
-        if label[-2].isdigit():
-            return int(label[-2] + label[-1])
-        else:
-            return int(label[-1])
-
 
     def get_structure(self, filename: str, read_energy: bool = False):
         if not filename:
@@ -45,6 +29,7 @@ class Structure:
             return
         self.read_xyz(filename, read_energy)
         self.get_connectivity()
+
 
 
     def read_xyz(self, filename: str, read_energy: bool = False):
@@ -58,6 +43,7 @@ class Structure:
                 elif i >= 2:
                     element, x, y, z = line.split()
                     self.coords[f"{element}{i-2}"] = np.array([float(x), float(y), float(z)])
+
 
 
     def get_connectivity(self):
@@ -75,51 +61,18 @@ class Structure:
                 coords2 = self.coords[atom2]
                 bond_order = self._check_connectivity(atom1, coords1, atom2, coords2)
                 if bond_order:
-                    self.bonds.append((atom1, atom2))
+                    new_bond = Bond()
+                    new_bond.atom1 = atom1
+                    new_bond.atom2 = atom2
+                    new_bond.bond_order = bond_order
+                    self.bonds.append(new_bond)
+                    #self.bonds.append((atom1, atom2))
                     #self.bonds.append(sorted([atom1, atom2], key=lambda label: get_number(label)))
                     self.bond_partners[atom1].append(atom2)
                     self.bond_partners[atom2].append(atom1)
-                    self.bond_orders[(atom1, atom2)] = bond_order
+                    #self.bond_orders[(atom1, atom2)] = bond_order
                     valence += 1
 
-
-    # TODO: ÜBERPRÜFUNG HINZUFÜGEN (PFAD KORREKT, DATEI LESBAR, ETC.)
-    # read atom coordinates from .xyz-file, calculate connectivity
-    def old_get_structure(self, filename: str) -> None:
-        if not filename:
-            filename = input("Path of the .xyz-File: ")
-        if not os.path.exists(filename):
-            print("STRUCTURE MODULE: File not found at given path.")
-            return
-        self.coords = {}
-        self.bond_partners = {}
-        self.bond_orders = {}
-        self.bonds = []
-        with open(filename, "r") as input_file:
-            for i, line in enumerate(input_file):
-                if i == 0:
-                    self.number_of_atoms = int(line)
-                elif i >= 2:
-                    element, x, y, z = line.split()
-                    self.coords[f"{element}{i}"] = np.array([float(x), float(y), float(z)])
-                    self.bond_partners[f"{element}{i}"] = []
-        atoms = list(self.coords.keys())
-        for i, atom1 in enumerate(atoms):
-            coords1 = self.coords[atom1]
-            max_valence = valences[self.get_element(atom1)]
-            valence = 0
-            for atom2 in atoms[i+1:]:
-                if valence == max_valence:
-                    break
-                else:
-                    coords2 = self.coords[atom2]
-                    bond_order = self._check_connectivity(atom1, coords1, atom2, coords2)
-                    if bond_order:
-                        self.bonds.append((atom1, atom2))
-                        self.bond_partners[atom1].append(atom2)
-                        self.bond_partners[atom2].append(atom1)
-                        self.bond_orders[(atom1, atom2)] = bond_order
-                        valence += 1
 
 
     # calculate connectivity and bond order
@@ -127,8 +80,8 @@ class Structure:
         # initialize variables
         tolerance = 0.08
         bond_order = 0
-        element1 = self.get_element(atom1)
-        element2 = self.get_element(atom2)
+        element1 = get_element(atom1)
+        element2 = get_element(atom2)
         # distance of atom1 and atom2
         distance = np.linalg.norm(coord1 - coord2)
         # in the following -1000 is returned if elements are not implemented yet
