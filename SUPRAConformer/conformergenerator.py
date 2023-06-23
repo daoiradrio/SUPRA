@@ -44,9 +44,9 @@ class ConformerGenerator:
         for increment in self.angle_increments:
             self.angles = [n * increment for n in range(int(np.round(360 / increment)))]
             self.check_rot_sym_of_torsions(structure, increment)
-            #number_conformers = self._combinations(
-            #    bond_partners=structure.bond_partners, new_coords=structure.coords, counter=number_conformers
-            #)
+            number_conformers = self._combinations(
+                bond_partners=structure.bond_partners, new_coords=structure.coords, counter=number_conformers
+            )
         print("Generation of conformer structures done.")
         if number_conformers:
             if not os.path.exists(self.output_folder_name):
@@ -516,7 +516,8 @@ class ConformerGenerator:
             axis_vec1 = new_coords[self.torsions[index].atom1]
             axis_vec2 = new_coords[self.torsions[index].atom2]
             # jeden möglichen Torsionswinkel für Bindung durchgehen
-            for angle in self.angles:
+            #for angle in self.angles:
+            for angle in self.torsions[index].rot_angles:
                 new_coords_copy = new_coords.copy()
                 for atom in self.torsions[index].torsion_atoms:
                     new_coords_copy[atom] = RotationAxis.rotate_atom(axis_vec1, axis_vec2, new_coords[atom], angle)
