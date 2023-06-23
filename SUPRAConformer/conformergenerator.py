@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 from SUPRAConformer.structure import Structure
 from SUPRAConformer.optimizer import Optimizer
 from utils.analyzer import Analyzer
+from utils.symmetry import Symmetry
+from utils.rotationaxis import RotationAxis
 from utils.helper import covalence_radii_single, covalence_radii_double, get_element, increment_combinations, valences
 
 
@@ -41,6 +43,9 @@ class ConformerGenerator:
         self._find_cycles(structure.bond_partners)
         self._find_peptidebonds(structure.coords, structure.bond_partners)
         self._selection_menu()
+        sym = Symmetry()
+        sym.check_rot_sym_of_torsions(structure, self.torsions)
+        return
         self._generation_setup(list(structure.coords.keys()), structure.bond_partners)
         number_conformers = 0
         print("Performing generation of conformer structures...")
@@ -341,21 +346,18 @@ class ConformerGenerator:
             torsion_atoms_right = []
             # zählen der linken Seite (entspricht erstgenanntem Atom der Bindung in torsions)
             status = {atom: "UNKNOWN" for atom in atoms}
-            left = self._torsion_atom_counter(
-                bond_partners, bond[0], bond[1], status, -1, torsion_atoms_left
-            )
+            self._torsion_atom_counter(bond_partners, bond[0], bond[1], status, torsion_atoms_left)
             # zählen der linken Seite (entspricht letztgenanntem Atom der Bindung in torsions)
             status = {atom: "UNKNOWN" for atom in atoms}
-            right = self._torsion_atom_counter(
-                bond_partners, bond[1], bond[0], status, -1, torsion_atoms_right
-            )
+            self._torsion_atom_counter(bond_partners, bond[1], bond[0], status, torsion_atoms_right)
             # wenn links weniger oder genauso viele Atome wie rechts wird links gedreht, d.h. Atome der linken
             # Seite zu torsions_atoms hinzufügen
-            if left <= right:
+            if len(torsion_atoms_left) <= len(torsion_atoms_right):
                 self.torsion_atoms.append(torsion_atoms_left)
             # wenn rechts weniger  Atome wie links wird links gedreht, d.h. Atome der rechten Seite zu
             # torsions_atoms hinzufügen
             else:
+
                 self.torsion_atoms.append(torsion_atoms_right)
 
 
@@ -366,36 +368,25 @@ class ConformerGenerator:
     # UNKNOWN: Knoten noch nicht besucht
     # SEEN: Knoten besucht
     def _torsion_atom_counter(
-            self, bond_partners: dict, atom: str, last_atom: str,
-            status: dict, counter: int, torsion_atoms: list
-    ) -> int:
+            self, bond_partners: dict, atom: str, last_atom: str, status: dict, torsion_atoms: list
+    ) -> list:
         # Atom bereits betrachtet
         if status[atom] == "SEEN":
-            return counter
-        # Atom ist Terminalatom, d.h. Ende einer Kette
-        elif get_element(atom) in ["H", "F", "Cl", "Br", "I"]:
-            # Atom als betrachtet markieren
-            status[atom] = "SEEN"
-            # Atom zu torsion_atoms hinzufügen
-            torsion_atoms.append(atom)
-            return counter + 1
+            return
         # Atom noch nicht betrachtet und nicht Ende einer Kette
         else:
             # Atom als betrachtet markieren
             status[atom] = "SEEN"
-            # Atom zu torsion_atoms hinzufügen
-            torsion_atoms.append(atom)
-            # Zähler aktualisieren
-            counter += 1
             # rekursiver Aufruf der Funktion für alle Bindungspartner von Atom, solange diesem nicht dem
             # Atom des vorherigen Funktionsaurufs entsprechen
             for neighbor in bond_partners[atom]:
                 if neighbor != last_atom:
-                    counter = self._torsion_atom_counter(
-                        bond_partners, neighbor, atom, status, counter, torsion_atoms
+                    torsion_atoms.append(neighbor)
+                    self._torsion_atom_counter(
+                        bond_partners, neighbor, atom, status, torsion_atoms
                     )
         # Anzahl der zu rotierenden Atome der entsprechenden Seite der Bindung zurückgeben
-        return counter
+        return
 
 
     # calculates all possible conformer structures and generates an output file for every conformer structure without
@@ -416,20 +407,11 @@ class ConformerGenerator:
             # Punkte initialisieren, welche die Rotationsachse definieren
             axis_vec1 = new_coords[self.torsions[index][0]]
             axis_vec2 = new_coords[self.torsions[index][1]]
-            axis = axis_vec2 - axis_vec1
-            axis = axis / np.linalg.norm(axis)
             # jeden möglichen Torsionswinkel für Bindung durchgehen
             for angle in self.angles:
-                angle = np.deg2rad(angle)
                 new_coords_copy = new_coords.copy()
                 for atom in self.torsion_atoms[index]:
-                    coords = new_coords[atom]
-                    coords = coords - axis_vec1
-                    coords = np.dot(axis, np.dot(axis, coords)) \
-                             + np.cos(angle) * np.cross(np.cross(axis, coords), axis) \
-                             + np.sin(angle) * np.cross(axis, coords)
-                    coords = coords + axis_vec1
-                    new_coords_copy[atom] = coords
+                    new_coords_copy[atom] = RotationAxis.rotate_atom(axis_vec1, axis_vec2, new_coords[atom], angle)
                 # rekursiver Aufruf für nächste Bindung
                 counter = self._combinations(bond_partners, new_coords_copy, counter, index+1)
             return counter

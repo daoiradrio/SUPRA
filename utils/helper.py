@@ -82,6 +82,13 @@ def get_number(label: str) -> int:
         return int(label[-1])
 
 
+def atom_in_torsions(torsions: list, label: str) -> bool:
+    for torsion in torsions:
+        if (label == torsion[0] or label == torsion[1]):
+            return True
+    return False
+
+
 def is_hb_don(label: str) -> bool:
     flag = False
     element = get_element(label)

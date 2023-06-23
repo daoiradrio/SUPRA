@@ -1,5 +1,5 @@
 # covalence radii, max. valences, atom label to element symbol converter
-from utils.helper import valences, covalence_radii_single, covalence_radii_double, covalence_radii_triple
+from utils.helper import valences, covalence_radii_single, covalence_radii_double, covalence_radii_triple, get_number
 import numpy as np # sqrt
 import os # path.exists
 
@@ -67,7 +67,7 @@ class Structure:
         self.bonds = []
         for i, atom1 in enumerate(atoms):
             coords1 = self.coords[atom1]
-            max_valence = valences[self.get_element(atom1)]
+            #max_valence = valences[self.get_element(atom1)]
             valence = 0
             for atom2 in atoms[i+1:]:
                 #if valence == max_valence:
@@ -76,6 +76,7 @@ class Structure:
                 bond_order = self._check_connectivity(atom1, coords1, atom2, coords2)
                 if bond_order:
                     self.bonds.append((atom1, atom2))
+                    #self.bonds.append(sorted([atom1, atom2], key=lambda label: get_number(label)))
                     self.bond_partners[atom1].append(atom2)
                     self.bond_partners[atom2].append(atom1)
                     self.bond_orders[(atom1, atom2)] = bond_order
