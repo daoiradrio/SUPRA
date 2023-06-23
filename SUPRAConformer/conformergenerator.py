@@ -30,7 +30,6 @@ class ConformerGenerator:
         self.methyl_torsions = []
         self.angle_increments = list()
         self.angles = list()
-        self.rot_angles = []
 
 
     def generate_conformers(self, structure: Structure) -> None:
@@ -43,7 +42,7 @@ class ConformerGenerator:
         print("Performing generation of conformer structures...")
         for increment in self.angle_increments:
             self.angles = [n * increment for n in range(int(np.round(360 / increment)))]
-            self.check_rot_sym_of_torsions(structure)
+            self.check_rot_sym_of_torsions(structure, increment)
             number_conformers = self._combinations(
                 bond_partners=structure.bond_partners, new_coords=structure.coords, counter=number_conformers
             )
@@ -384,27 +383,86 @@ class ConformerGenerator:
     
 
 
-    def check_rot_sym_of_torsions(self, mol: Structure) -> None:
+    def check_rot_sym_of_torsions(self, mol: Structure, angle_increment: int) -> None:
         sym = Symmetry()
+
         for torsion in self.torsions:
             atom1 = torsion.atom1
             atom2 = torsion.atom2
+            torsion.rot_angles = []
             # rotational symmetry left side of torsion bond
             status = {atom: "UNKNOWN" for atom in mol.coords.keys()}
             self._get_torsion_group(mol.bond_partners, atom1, atom2, status, torsion.sym_rot_atoms1)
-            left_rot_sym = sym.rot_order_along_bond(mol, torsion.sym_rot_atoms1, mol.coords[atom1], mol.coords[atom2])
+            torsion.rot_sym1 = sym.rot_order_along_bond(mol, torsion.sym_rot_atoms1, mol.coords[atom1], mol.coords[atom2])
             # rotational symmetry right side of torsion bond
             status = {atom: "UNKNOWN" for atom in mol.coords.keys()}
             self._get_torsion_group(mol.bond_partners, torsion.atom2, torsion.atom1, status, torsion.sym_rot_atoms2)
-            right_rot_sym = sym.rot_order_along_bond(mol, torsion.sym_rot_atoms2, mol.coords[atom1], mol.coords[atom2])
+            torsion.rot_sym2 = sym.rot_order_along_bond(mol, torsion.sym_rot_atoms2, mol.coords[atom1], mol.coords[atom2])
 
-            print(f"{atom1} {atom2}")
-            print(f"{torsion.sym_rot_atoms1}")
-            print(f"Side of {atom1}: {left_rot_sym}")
-            print(f"{torsion.sym_rot_atoms2}")
-            print(f"Side of {atom2}: {right_rot_sym}")
+        torsion_done = [0 for _ in self.torsions]
+
+        for i, torsion1 in enumerate(self.torsions):
+            if (torsion_done[i]):
+                continue
+            if (torsion1.rot_sym1 == 1 or max(360/torsion.rot_sym1, angle_increment) % min(360/torsion.rot_sym1, angle_increment) != 0):
+                if (torsion1.rot_sym2 == 1 or max(360/torsion.rot_sym2, angle_increment) % min(360/torsion.rot_sym2, angle_increment) != 0):
+                    for j in range(360//angle_increment):
+                        torsion1.rot_angles.append(j*angle_increment)
+                    torsion_done[i] = 1
+                    continue
+            if (torsion1.sym_rot_atoms1 == torsion1.rot_atoms1):
+                if (torsion1.rot_sym1 > 1):
+                    if (max(360/torsion.rot_sym1, angle_increment) % min(360/torsion.rot_sym1, angle_increment) == 0):
+                        j = 0
+                        while (j*angle_increment < 360/torsion1.rot_sym1):
+                            torsion1.rot_angles.append(j*angle_increment)
+                            j += 1
+                        torsion_done[i] = 1
+                        continue
+            if (torsion1.sym_rot_atoms2 == torsion1.rot_atoms2):
+                if (torsion1.rot_sym2 > 1):
+                    if (max(360/torsion.rot_sym2, angle_increment) % min(360/torsion.rot_sym2, angle_increment) == 0):
+                        j = 0
+                        while (j*angle_increment < 360/torsion1.rot_sym2):
+                            torsion1.rot_angles.append(j*angle_increment)
+                            j += 1
+                        torsion_done[i] = 1
+                        continue
+            for j, torsion2 in enumerate(self.torsions[i+1:], start=i+1):
+                if (torsion1.rot_sym1 > 1):
+                    if (max(360/torsion.rot_sym1, angle_increment) % min(360/torsion.rot_sym1, angle_increment) == 0):
+                        if (torsion1.sym_rot_atoms1 == torsion2.sym_rot_atoms1 or torsion1.sym_rot_atoms1 == torsion2.sym_rot_atoms2):
+                            if not (torsion_done[j]):
+                                k = 0
+                                while (k*angle_increment < 360/torsion1.rot_sym1):
+                                    torsion2.rot_angles.append(k*angle_increment)
+                                torsion_done[j] = 1
+                                for k in range(360//angle_increment):
+                                    torsion1.rot_angles.append(k*angle_increment)
+                                torsion_done[i] = 1
+                                continue
+                if (torsion1.rot_sym2 > 1):
+                    if (max(360/torsion.rot_sym2, angle_increment) % min(360/torsion.rot_sym2, angle_increment) == 0):
+                        if (torsion1.sym_rot_atoms2 == torsion2.sym_rot_atoms1 or torsion1.sym_rot_atoms2 == torsion2.sym_rot_atoms2):
+                            if not (torsion_done[j]):
+                                k = 0
+                                while (k*angle_increment < 360/torsion1.rot_sym2):
+                                    torsion2.rot_angles.append(k*angle_increment)
+                                torsion_done[j] = 1
+                                for k in range(360//angle_increment):
+                                    torsion1.rot_angles.append(k*angle_increment)
+                                torsion_done[i] = 1
+                                continue
+        
+        print()
+        print(f"Inkrement: {angle_increment}")
+        for i, torsion in enumerate(self.torsions):
+            print(f"{torsion.atom1} {torsion.atom2}")
+            for angle in torsion.rot_angles:
+                print(angle, end=" ")
             print()
-
+        print()
+                
 
 
     def _get_torsion_group(self, connectivity: dict, atom: str, last_atom: str, status: dict, torsion_atoms: list):

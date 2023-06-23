@@ -9,3 +9,6 @@ class Bond:
         self.rot_atoms2 = []
         self.sym_rot_atoms1 = []
         self.sym_rot_atoms2 = []
+        self.rot_sym1 = 1
+        self.rot_sym2 = 1
+        self.rot_angles = []
