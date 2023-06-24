@@ -9,8 +9,11 @@ class Optimizer:
 
     def __init__(self):
         self.workdir_name = "supra_running_opt"
+        self.coord_file_name = "coord"
+        self.temp_file_name = "temp.xyz"
         self.work_struc_name = "struc.xyz"
         self.opt_struc_name = "opt_struc.xyz"
+
 
     
     def optimize_structure_uff(self, coords: dict, n: int=None):
@@ -44,8 +47,7 @@ class Optimizer:
         
         with open(coord_file, "w") as f:
             subprocess.run(
-                #args=["x2t", new_xyz_file, ">", coord_file],
-                args=["x2t", self.work_struc_name, ">", "coord"],
+                args=["x2t", self.work_struc_name, ">", self.coord_file_name],
                 cwd=workdir,
                 stdout=f,
                 stderr=subprocess.DEVNULL
@@ -80,11 +82,10 @@ class Optimizer:
                     stderr=subprocess.DEVNULL
                 )
         """
-        temp_file = os.path.join(workdir, "temp.xyz")
+        temp_file = os.path.join(workdir, self.temp_file_name)
         with open(temp_file, "w") as f:
             subprocess.run(
-                #args=["t2x", coord_file, ">", temp_file],
-                args=["t2x", "coord", ">", "temp.xyz"],
+                args=["t2x", self.coord_file_name, ">", self.temp_file_name],
                 cwd=workdir,
                 stdout=f,
                 stderr=subprocess.DEVNULL
@@ -104,6 +105,7 @@ class Optimizer:
         #)
         os.system(f"mv {opt_struc} conformer{n}.xyz")
 
+    
     
     def optimize_structure_xtb(self, struc_folder: str, struc_file: str, chrg: int=None, n: int=None):
         workdir = os.path.join(struc_folder, self.workdir_name+str(n))
@@ -127,6 +129,7 @@ class Optimizer:
         opt_struc_file = os.path.join(struc_folder, f"conformer{n}.xyz")
         os.system(f"mv {xtb_struc_file} {opt_struc_file}")
         os.system(f"rm -rf {workdir}")
+
 
 
     def refine_structures_xtb(self, path_to_strucs: str, chrg: int=None):
