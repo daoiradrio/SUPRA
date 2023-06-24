@@ -45,7 +45,7 @@ class Optimizer:
         with open(coord_file, "w") as f:
             subprocess.run(
                 args=["x2t", new_xyz_file, ">", coord_file],
-                cwd=workdir,
+                #cwd=workdir,
                 stdout=f,
                 stderr=subprocess.DEVNULL
             )
@@ -87,9 +87,9 @@ class Optimizer:
         print("###################")
         with open(temp_file, "w") as f:
             subprocess.run(
-                #args=["t2x", coord_file, ">", temp_file],
-                args=["t2x", "coord", ">", "temp.xyz"],
-                cwd=workdir,
+                args=["t2x", coord_file, ">", temp_file],
+                #args=["t2x", "coord", ">", "temp.xyz"],
+                #cwd=workdir,
                 stdout=f,
                 stderr=subprocess.DEVNULL
             )
