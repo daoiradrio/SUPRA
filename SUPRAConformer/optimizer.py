@@ -80,11 +80,15 @@ class Optimizer:
                 )
         """
         temp_file = os.path.join(workdir, "temp.xyz")
-        print(f"{coord_file} {temp_file}")
+        print("###################")
+        print(f"{coord_file}")
+        print(f"{temp_file}")
+        print(f"{workdir}")
+        print("###################")
         with open(temp_file, "w") as f:
             subprocess.run(
                 args=["t2x", coord_file, ">", temp_file],
-                cwd=os.getcwd(),
+                cwd=workdir,
                 stdout=f,
                 stderr=subprocess.DEVNULL
             )
