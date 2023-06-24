@@ -84,7 +84,7 @@ class Optimizer:
         with open(temp_file, "w") as f:
             subprocess.run(
                 args=["t2x", coord_file, ">", temp_file],
-                cwd=workdir,
+                cwd=os.getcwd(),
                 stdout=f,
                 stderr=subprocess.DEVNULL
             )
