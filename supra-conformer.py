@@ -22,7 +22,6 @@ def main():
     print()
     mol.get_structure(os.path.abspath(args.path))
     gen.generate_conformers(mol)
-    print(os.path.join(os.getcwd(), "SUPRA_Output/"))
     an.remove_doubles(path=os.path.join(os.getcwd(), "SUPRA_Output/"), use_energy=True)
     print()
 
