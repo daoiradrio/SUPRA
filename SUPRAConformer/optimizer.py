@@ -45,7 +45,7 @@ class Optimizer:
         with open(coord_file, "w") as f:
             subprocess.run(
                 #args=["x2t", new_xyz_file, ">", coord_file],
-                args=["x2t", self.work_struc_name, ">", "coord"]
+                args=["x2t", self.work_struc_name, ">", "coord"],
                 cwd=workdir,
                 stdout=f,
                 stderr=subprocess.DEVNULL
