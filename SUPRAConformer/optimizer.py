@@ -97,10 +97,11 @@ class Optimizer:
                     else:
                         print(line, file=outfile, end="")
         
-        os.system(
-            f"mv {opt_struc} conformer{n}.xyz ; \
-              rm -r {workdir}"
-        )
+        #os.system(
+        #    f"mv {opt_struc} conformer{n}.xyz ; \
+        #      rm -r {workdir}"
+        #)
+        os.system(f"mv {opt_struc} conformer{n}.xyz")
 
     
     def optimize_structure_xtb(self, struc_folder: str, struc_file: str, chrg: int=None, n: int=None):
