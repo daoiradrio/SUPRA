@@ -110,7 +110,7 @@ class Analyzer:
     #    return conformers
 
 
-    def remove_doubles(self, path: str, rmsd_threshold: float=0.1, ignore: str=None) -> int:
+    def remove_doubles(self, path: str, rmsd_threshold: float=0.1, ignore: str=None, use_energy: bool = False) -> int:
         print("Performing removal of duplicate structures...")
 
         conformer1 = Structure()
@@ -129,26 +129,26 @@ class Analyzer:
             #    print("#", end="", flush=True)
             #    n += 1
             if ignore == "methyl":
-                conformer1.get_structure(os.path.join(path, file1), read_energy=True)
+                conformer1.get_structure(os.path.join(path, file1), read_energy=use_energy)
                 for atom in self.get_methyl_group_atoms(conformer1.bond_partners):
                     del conformer1.coords[atom]
             elif ignore == "all":
-                conformer1.get_structure(os.path.join(path, file1), read_energy=True)
+                conformer1.get_structure(os.path.join(path, file1), read_energy=use_energy)
                 for atom in self.get_terminal_group_atoms(conformer1.bond_partners):
                     del conformer1.coords[atom]
             else:
-                conformer1.read_xyz(os.path.join(path, file1), read_energy=True)
+                conformer1.read_xyz(os.path.join(path, file1), read_energy=use_energy)
             for j, file2 in enumerate(conformers[i+1:]):
                 if ignore == "methyl":
-                    conformer2.get_structure(os.path.join(path, file2), read_energy=True)
+                    conformer2.get_structure(os.path.join(path, file2), read_energy=use_energy)
                     for atom in self.get_methyl_group_atoms(conformer2.bond_partners):
                         del conformer2.coords[atom]
                 elif ignore == "all": 
-                    conformer2.get_structure(os.path.join(path, file2), read_energy=True)
+                    conformer2.get_structure(os.path.join(path, file2), read_energy=use_energy)
                     for atom in self.get_terminal_group_atoms(conformer2.bond_partners):
                         del conformer2.coords[atom]
                 else:
-                    conformer2.read_xyz(os.path.join(path, file2), read_energy=True)
+                    conformer2.read_xyz(os.path.join(path, file2), read_energy=use_energy)
                 if self.doubles(conformer1.coords, conformer2.coords, rmsd_threshold):
                     #os.remove(os.path.join(path, file1))
                     #counter -= 1
