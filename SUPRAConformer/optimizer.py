@@ -79,7 +79,8 @@ class Optimizer:
                     stderr=subprocess.DEVNULL
                 )
         """
-        temp_file = os.path.join(workdir, "tmp.xyz")
+        temp_file = os.path.join(workdir, "temp.xyz")
+        print(f"{coord_file} {temp_file}")
         with open(temp_file, "w") as f:
             subprocess.run(
                 args=["t2x", coord_file, ">", temp_file],
@@ -96,10 +97,10 @@ class Optimizer:
                     else:
                         print(line, file=outfile, end="")
         
-        #os.system(
-        #    f"mv {opt_struc} conformer{n}.xyz ; \
-        #      rm -r {workdir}"
-        #)
+        os.system(
+            f"mv {opt_struc} conformer{n}.xyz ; \
+              rm -r {workdir}"
+        )
 
     
     def optimize_structure_xtb(self, struc_folder: str, struc_file: str, chrg: int=None, n: int=None):
