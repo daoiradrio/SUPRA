@@ -14,7 +14,7 @@ class Optimizer:
 
     
     def optimize_structure_uff(self, coords: dict, n: int=None):
-        workdir = f"{self.workdir_name}{n}"
+        workdir = os.path.join(os.getcwd(), f"{self.workdir_name}{n}")
         workdir = os.path.abspath(workdir)
         os.makedirs(workdir)
 
