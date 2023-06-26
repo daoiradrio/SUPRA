@@ -2,6 +2,9 @@ import os
 import subprocess
 
 from utils.helper import get_element
+from rdkit import Chem
+from rdkit.Chem import rdDetermineBonds
+from rdkit.Chem.rdForceFieldHelpers import UFFOptimizeMoleculeConfs
 
 
 
@@ -13,9 +16,15 @@ class Optimizer:
         self.temp_file_name = "temp.xyz"
         self.work_struc_name = "struc.xyz"
         self.opt_struc_name = "opt_struc.xyz"
-
-
     
+
+
+    def optmize_structure_uff(self, coords: dict, n: int = None):
+        pass
+
+
+
+    """
     def optimize_structure_uff(self, coords: dict, n: int=None):
         workdir = os.path.join(os.getcwd(), f"{self.workdir_name}{n}")
         workdir = os.path.abspath(workdir)
@@ -64,24 +73,6 @@ class Optimizer:
             energy = float(infile.read().split()[-2])
 
         opt_struc = os.path.join(workdir, self.opt_struc_name)
-        """
-        if os.path.isfile(os.path.join(workdir, "not.uffconverged")):
-            subprocess.run(
-                args=["xtb", "--opt", "--gfnff", new_xyz_file],
-                cwd=workdir,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
-            os.system(f"mv {os.path.join(workdir, 'xtbopt.xyz')} {opt_struc}")
-        else:
-            with open(opt_struc, "w") as f:
-                subprocess.run(
-                    args=["t2x", coord_file, ">", opt_struc],
-                    cwd=workdir,
-                    stdout=f,
-                    stderr=subprocess.DEVNULL
-                )
-        """
         temp_file = os.path.join(workdir, self.temp_file_name)
         with open(temp_file, "w") as f:
             subprocess.run(
@@ -103,6 +94,7 @@ class Optimizer:
             f"mv {opt_struc} conformer{n}.xyz ; \
               rm -r {workdir}"
         )
+    """
 
     
 
