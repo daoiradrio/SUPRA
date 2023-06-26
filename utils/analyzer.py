@@ -138,7 +138,7 @@ class Analyzer:
                     del conformer1.coords[atom]
             else:
                 conformer1.read_xyz(os.path.join(path, file1), read_energy=use_energy)
-            for j, file2 in enumerate(conformers[i+1:]):
+            for j, file2 in enumerate(conformers[i+1:], start=i+1):
                 if ignore == "methyl":
                     conformer2.get_structure(os.path.join(path, file2), read_energy=use_energy)
                     for atom in self.get_methyl_group_atoms(conformer2.bond_partners):
@@ -149,21 +149,27 @@ class Analyzer:
                         del conformer2.coords[atom]
                 else:
                     conformer2.read_xyz(os.path.join(path, file2), read_energy=use_energy)
+                #print(f"{file1} {file2}")
                 if self.doubles(conformer1.coords, conformer2.coords, rmsd_threshold):
+                    #print("*************DOUBLES! ", end="")
                     #os.remove(os.path.join(path, file1))
                     #counter -= 1
                     #break
                     if (conformer1.energy and conformer2.energy):
                         if conformer1.energy < conformer2.energy:
+                            #print(f"Lösche {file2}*******************")
                             delete_files[j] = 1
                         else:
+                            #print(f"Lösche {file1}*******************")
                             delete_files[i] = 1
                     else:
                         delete_files[j] = 1
+        
+        #print(delete_files)
 
         for i, delete in enumerate(delete_files):
             if delete:
-                os.remove(os.path.join(path, conformers[i]))
+                #os.remove(os.path.join(path, conformers[i]))
                 counter -= 1
 
         #print("\n")
@@ -172,39 +178,43 @@ class Analyzer:
         return counter
     
 
-    def remove_doubles_ensemble_file(self, path: str):
-        print("Performing removal of duplicate structures...")
-
-        curr_dir = os.getcwd()
-        workdir = os.path.join(curr_dir, "conformers")
+    def remove_doubles_ensemble_file(self, ensemble_file: str, rmsd_threshold: float=0.1, ignore: str=None, use_energy: bool = False):
+        ensemble_file = os.path.abspath(ensemble_file)
+        dir_ensemble_file = os.path.dirname(ensemble_file)
+        workdir = os.path.join(dir_ensemble_file, "conformers")
         struc_filename = "conformer"
 
         os.makedirs(workdir)
 
-        with open("Alanin_ensemble.xyz", "r") as infile:
+        with open(ensemble_file, "r") as infile:
             n_atoms = int(infile.readline().split()[0])
             file_counter = 0
-            line_iter = 1
+            line_iter = 0
+            infile.seek(0)
             new_struc = os.path.join(workdir, f"{struc_filename}{file_counter}.xyz")
             new_struc_file = open(new_struc, "w")
-            print(n_atoms, file=new_struc_file)
             for line in infile:
-                if (line_iter < n_atoms+2):
-                    print(line, file=new_struc_file, end="")
-                    line_iter += 1
-                else:
+                if (line_iter >= n_atoms+2):
                     new_struc_file.close()
+                    line_iter = 0
                     file_counter += 1
-                    line_iter = 1
                     new_struc = os.path.join(workdir, f"{struc_filename}{file_counter}.xyz")
                     new_struc_file = open(new_struc, "w")
-                    print(n_atoms, file=new_struc_file)
+                print(line, end="", file=new_struc_file)
+                line_iter += 1
+            new_struc_file.close()
         
-        # ...
+        self.remove_doubles(workdir, rmsd_threshold, ignore, use_energy)
+        
+        with open(os.path.join(dir_ensemble_file, "supra_ensemble.xyz"), "w") as outfile:
+            conformers = os.listdir(workdir)
+            for conformer in conformers:
+                with open(os.path.join(workdir, conformer), "r") as infile:
+                    print(infile.read(), end="", file=outfile)
+        
+        os.system(f"rm -rf {workdir}")
 
-        print("Removal of double structures done.")
 
-    
     def old_remove_doubles(self, path: str, rmsd_threshold: float=0.1, ignore: str=None) -> int:
         print("Performing removal of duplicate structures...")
 
@@ -331,6 +341,19 @@ class Analyzer:
         if type(coords2) is dict:
             coords2 = list(coords2.values())
             coords2 = np.array(coords2)
+        
+        """
+        print(coords2)
+        print()
+        pre_shift_vec = np.array([10.0, 10.0, 10.0])
+        pre_rot_mat = np.zeros((3, 3))
+        pre_rot_mat[0][2] =  1.0
+        pre_rot_mat[1][1] = -1.0
+        pre_rot_mat[2][0] =  1.0
+        for i, coord in enumerate(coords2):
+            coords2[i] = np.dot(pre_rot_mat, coord) + pre_shift_vec
+        print(coords2)
+        """
 
         center1 = np.mean(coords1, axis=0)
         center2 = np.mean(coords2, axis=0)
@@ -357,6 +380,18 @@ class Analyzer:
         # anwenden der Rotationsmatrix auf Koordinatenset 2 um beide Sets möglichst zur Deckung zu bringen
         for i, _ in enumerate(coords2):
             coords2[i] = np.matmul(coords2[i], R)
+        
+        """
+        print()
+        print(len(coords1))
+        for x, y, z in coords1:
+            print(f"{x}\t{y}\t{z}")
+        print()
+        print(len(coords2))
+        for x, y, z in coords2:
+            print(f"{x}\t{y}\t{z}")
+        print()
+        """
 
         return (coords1, coords2)
     
