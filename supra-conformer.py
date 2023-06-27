@@ -12,17 +12,24 @@ from utils.analyzer import Analyzer
 
 def main():
     mol = Structure()
-    gen = ConformerGenerator()
-    an = Analyzer()
+    generator = ConformerGenerator()
+    analyzer = Analyzer()
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-path", type=str, required=True)
     args = parser.parse_args()
 
-    print()
     mol.get_structure(os.path.abspath(args.path))
-    gen.generate_conformers(mol)
-    an.remove_doubles(path=os.path.join(os.getcwd(), "SUPRA_Output/"), use_energy=True)
+
+    print()
+
+    generator.generate_conformers(mol)
+
+    print("Performing removal of duplicate structures...")
+    conformers = analyzer.remove_doubles(path=os.path.join(os.getcwd(), "SUPRA_Output/"), use_energy=True)
+    print("Removal of double structures done.")
+    print(f"Individual generated conformers: {conformers}")
+
     print()
 
 

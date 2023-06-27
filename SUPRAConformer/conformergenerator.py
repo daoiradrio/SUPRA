@@ -39,8 +39,8 @@ class ConformerGenerator:
         self._find_peptidebonds(structure.coords, structure.bond_partners)
         self._selection_menu()
         self._generation_setup(list(structure.coords.keys()), structure.bond_partners)
-        number_conformers = 0
         print("Performing generation of conformer structures...")
+        number_conformers = 0
         for increment in self.angle_increments:
             self.angles = [n * increment for n in range(int(np.round(360 / increment)))]
             self.check_rot_sym_of_torsions(structure, increment)
@@ -54,8 +54,6 @@ class ConformerGenerator:
             self.output_folder_name = os.path.abspath(self.output_folder_name)
             for i in range(number_conformers):
                 os.system(f"mv conformer{i}.xyz {self.output_folder_name}")
-        else:
-            print(f"No conformers could be generated.")
     
 
 
@@ -532,12 +530,15 @@ class ConformerGenerator:
             element1 = get_element(atom1)
             for atom2, coords2 in new_coords.items():
                 if not atom1 == atom2:
+                    #print(f"{atom1} {atom2}")
                     element2 = get_element(atom2)
                     distance = np.linalg.norm(coords1 - coords2)
-                    min_distance = covalence_radii_single[element1] + covalence_radii_single[element2] + 0.08
+                    min_distance = covalence_radii_single[element1] + covalence_radii_single[element2] + 0.15#0.08
                     if distance < min_distance:
+                        #print("hier1")
                         if self._distant(bond_partners, atom1, atom2):
                             return True
+                        #print("hier2")
         return False
 
 

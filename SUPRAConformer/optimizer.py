@@ -23,6 +23,12 @@ class Optimizer:
         xyz_string = f"{len(coords.keys())}\n\n"
         for atom, (x, y, z) in coords.items():
             xyz_string = xyz_string + f"{get_element(atom)}\t{x}\t{y}\t{z}\n"
+        
+        #print(f"*************** Bin bei Struktur {n} ***************")
+        #with open(os.path.join(os.getcwd(), f"debug{n}.xyz"), "w") as outfile:
+        #    print(len(coords.keys()), end="\n\n", file=outfile)
+        #    for atom, (x, y, z) in coords.items():
+        #        print(f"{get_element(atom)}\t{x}\t{y}\t{z}", file=outfile)
 
         mol = Chem.MolFromXYZBlock(xyz_string)
         mol = Chem.Mol(mol)

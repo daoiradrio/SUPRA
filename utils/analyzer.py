@@ -17,6 +17,7 @@ class Analyzer:
         pass
 
 
+
     def compare_structure_sets(self, path1: str, path2: str, rmsd_threshold: float=0.1, ignore: str=None) -> int:
         conformer1 = Structure()
         conformer2 = Structure()
@@ -72,7 +73,8 @@ class Analyzer:
         print(f"Number of structures of Path 1 in Path 2: {counter}")
         return counter
 
-    
+
+
     # TODO: ÜBERARBEITEN, AUF NEUESTEN STAND BRINGEN
     #def filter_doubles_parallel(self, path: str, cpu: int):
     #    if cpu > mp.cpu_count():
@@ -110,9 +112,8 @@ class Analyzer:
     #    return conformers
 
 
-    def remove_doubles(self, path: str, rmsd_threshold: float=0.1, ignore: str=None, use_energy: bool = False) -> int:
-        print("Performing removal of duplicate structures...")
 
+    def remove_doubles(self, path: str, rmsd_threshold: float=0.1, ignore: str=None, use_energy: bool = False) -> int:
         conformer1 = Structure()
         conformer2 = Structure()
         path = os.path.abspath(path)
@@ -149,34 +150,25 @@ class Analyzer:
                         del conformer2.coords[atom]
                 else:
                     conformer2.read_xyz(os.path.join(path, file2), read_energy=use_energy)
-                #print(f"{file1} {file2}")
-                if self.doubles(conformer1.coords, conformer2.coords, rmsd_threshold):
-                    #print("*************DOUBLES! ", end="")
-                    #os.remove(os.path.join(path, file1))
-                    #counter -= 1
-                    #break
+                if self.rmsd(conformer1.coords, conformer2.coords) <= rmsd_threshold:
                     if (conformer1.energy and conformer2.energy):
                         if conformer1.energy < conformer2.energy:
-                            #print(f"Lösche {file2}*******************")
                             delete_files[j] = 1
                         else:
-                            #print(f"Lösche {file1}*******************")
                             delete_files[i] = 1
                     else:
                         delete_files[j] = 1
-        
-        #print(delete_files)
 
         for i, delete in enumerate(delete_files):
             if delete:
-                #os.remove(os.path.join(path, conformers[i]))
+                os.remove(os.path.join(path, conformers[i]))
                 counter -= 1
 
         #print("\n")
-        print("Removal of double structures done.")
-        print(f"Individual conformers in {path}: {counter}")
+        
         return counter
     
+
 
     def remove_doubles_ensemble_file(self, ensemble_file: str, rmsd_threshold: float=0.1, ignore: str=None, use_energy: bool = False):
         ensemble_file = os.path.abspath(ensemble_file)
@@ -213,6 +205,7 @@ class Analyzer:
                     print(infile.read(), end="", file=outfile)
         
         os.system(f"rm -rf {workdir}")
+
 
 
     def old_remove_doubles(self, path: str, rmsd_threshold: float=0.1, ignore: str=None) -> int:
@@ -253,15 +246,17 @@ class Analyzer:
                         del conformer2.coords[atom]
                 else:
                     conformer2.read_xyz(os.path.join(path, file2))
-                if self.doubles(conformer1.coords, conformer2.coords, rmsd_threshold):
+                if self.rmsd(conformer1.coords, conformer2.coords, rmsd_threshold) <= rmsd_threshold:
                     os.remove(os.path.join(path, file1))
                     counter -= 1
                     break
         #print("\n")
         print("Removal of double structures done.")
         print(f"Individual conformers in {path}: {counter}")
+   
         return counter
     
+
 
     def get_methyl_group_atoms(self, structure: dict) -> list:
         methyl_group_atoms = []
@@ -287,6 +282,7 @@ class Analyzer:
         return methyl_group_atoms
 
 
+
     def get_terminal_group_atoms(self, structure: dict) -> list:
         terminal_group_atoms = []
         for atom, bond_partners in structure.items():
@@ -310,11 +306,10 @@ class Analyzer:
         return terminal_group_atoms
     
 
-    def doubles(
-        self, coords1: dict, coords2: dict, rmsd_threshold: float=0.1
-    ) -> bool:
+
+    def rmsd(self, coords1: dict, coords2: dict) -> float:
         if len(coords1.keys()) != len(coords2.keys()):
-            return False
+            return 1000.0
         elements1 = [get_element(atom) for atom in coords1.keys()]
         elements2 = [get_element(atom) for atom in coords2.keys()]
         n_atoms = len(elements1)
@@ -331,7 +326,14 @@ class Analyzer:
                 cost[i][j] = cost_value
                 cost[j][i] = cost_value
         row, col = linear_sum_assignment(cost)
-        return (self.rmsd(kabsch_coords1[row], kabsch_coords2[col]) <= rmsd_threshold)
+        return self.calc_rmsd(kabsch_coords1[row], kabsch_coords2[col])
+    
+
+
+    def rmsd_tight(self, coords1: dict, connectivity1: dict, coords2: dict, connectivity2: dict,) -> float:
+        coords1, coords2 = self.match(coords1, connectivity1, coords2, connectivity2)
+        return self.calc_rmsd(coords1, coords2)
+
 
 
     def kabsch(self, coords1: Union[dict, list, np.array], coords2: Union[dict, list, np.array]) -> tuple:
@@ -341,19 +343,6 @@ class Analyzer:
         if type(coords2) is dict:
             coords2 = list(coords2.values())
             coords2 = np.array(coords2)
-        
-        """
-        print(coords2)
-        print()
-        pre_shift_vec = np.array([10.0, 10.0, 10.0])
-        pre_rot_mat = np.zeros((3, 3))
-        pre_rot_mat[0][2] =  1.0
-        pre_rot_mat[1][1] = -1.0
-        pre_rot_mat[2][0] =  1.0
-        for i, coord in enumerate(coords2):
-            coords2[i] = np.dot(pre_rot_mat, coord) + pre_shift_vec
-        print(coords2)
-        """
 
         center1 = np.mean(coords1, axis=0)
         center2 = np.mean(coords2, axis=0)
@@ -380,23 +369,12 @@ class Analyzer:
         # anwenden der Rotationsmatrix auf Koordinatenset 2 um beide Sets möglichst zur Deckung zu bringen
         for i, _ in enumerate(coords2):
             coords2[i] = np.matmul(coords2[i], R)
-        
-        """
-        print()
-        print(len(coords1))
-        for x, y, z in coords1:
-            print(f"{x}\t{y}\t{z}")
-        print()
-        print(len(coords2))
-        for x, y, z in coords2:
-            print(f"{x}\t{y}\t{z}")
-        print()
-        """
 
         return (coords1, coords2)
     
 
-    def rmsd(self, coords1: Union[dict, list, np.array], coords2: Union[dict, list, np.array]) -> float:
+
+    def calc_rmsd(self, coords1: Union[dict, list, np.array], coords2: Union[dict, list, np.array]) -> float:
         if type(coords1) == dict:
             coords1 = list(coords1.values())
         if type(coords2) is dict:
@@ -409,84 +387,6 @@ class Analyzer:
                           (coords1[i][2] - coords2[i][2])**2)
         return np.sqrt((1.0/float(n)) * delta_sum)
 
-
-    # überprüfen, ob zwei Strukturen identisch (Doubles) oder verschieden sind
-    #def rmsd(self, coords1: Union[Structure, dict, list], coords2: Union[Structure, dict, list]) -> float:
-    @staticmethod
-    def kabsch_and_rmsd(coords1: Union[Structure, dict, list], coords2: Union[Structure, dict, list]) -> float:
-        # ggf. umwandeln des Koordinatendateityps von Dictionary zu Liste für beide Koordinatensets
-        if type(coords1) == Structure:
-            coords1 = list(coords1.coords.values())
-        elif type(coords1) == dict:
-            coords1 = list(coords1.values())
-
-        if type(coords2) == Structure:
-            coords2 = list(coords2.coords.values())
-        elif type(coords2) is dict:
-            coords2 = list(coords2.values())
-
-        # Überprüfen ob beide Koordinatensets dieselbe Anzahl an Punkten enthalten
-        if len(coords1) != len(coords2):
-            print("Number of atoms are not the same in the given structures.")
-            raise ValueError
-        else:
-            coords1 = np.array(coords1)
-            coords2 = np.array(coords2)
-
-        # 1. Minimiere RMSD zwischen self.coords und coords mithilfe von Kabsch-Algorithmus
-
-        # Zentriere beide Sets von Koordinaten über jeweilige geometrische Zentren
-        center1 = np.mean(coords1, axis=0)
-        center2 = np.mean(coords2, axis=0)
-        coords1 -= center1
-        coords2 -= center2
-
-        # Kovarianzmatrix berechnen
-        H = np.matmul(coords1.T, coords2)
-
-        # Singulärwertzerlegung der Kovarianzmatrix berechnen
-        U, S, Vt = np.linalg.svd(H)
-
-        # Matrix zur Berechnung der Rotationsmatrix in Abhängigkeit der Determinante bestimmen
-        det = np.linalg.det(np.matmul(Vt.T, U.T))
-        if det >= 0:
-            det = 1.0
-        else:
-            det = -1.0
-        matrix = np.array([[1, 0, 0], [0, 1, 0], [0, 0, det]])
-
-        # Rotationsmatrix berechnen
-        R = np.matmul(np.matmul(Vt.T, matrix), U.T)
-
-        # anwenden der Rotationsmatrix auf Koordinatenset 2 um beide Sets möglichst zur Deckung zu bringen
-        for index in range(len(coords2)):
-            coords2[index] = np.matmul(coords2[index], R)
-
-        # 2. Berechne RMSD
-
-        # Anzahl der Punkte N, es gilt len(coords1)=len(coords2) (s.o.)
-        N = len(coords1)
-        sum = 0.0
-        for i in range(N):
-            sum += (coords1[i][0] - coords2[i][0])**2 + \
-                   (coords1[i][1] - coords2[i][1])**2 + \
-                   (coords1[i][2] - coords2[i][2])**2
-        rmsd = np.sqrt(1.0/float(N) * sum)
-
-        return rmsd
-
-
-    def doubles_advanced(
-            self,
-            coords1: dict, connectivity1: dict,
-            coords2: dict, connectivity2: dict,
-            rmsd_threshold: float=0.1
-    ) -> bool:
-        doubles = False
-        coords1, coords2 = self.match(coords1, connectivity1, coords2, connectivity2)
-        if self.rmsd(coords1, coords2) <= rmsd_threshold:
-            doubles = True
-        return doubles
 
 
     # No. 1 are reference coordinates and structure
@@ -563,6 +463,7 @@ class Analyzer:
         return matched_coords1, matched_coords2
 
 
+
     def spheres(self, structure: dict, start: str) -> list:
         atoms = Queue()
         for atom in structure[start]:
@@ -592,4 +493,6 @@ class Analyzer:
             next_sphere_counter = 0
 
         return spheres
+
+
 
