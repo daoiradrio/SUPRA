@@ -4,7 +4,7 @@ import subprocess
 from utils.helper import get_element
 from rdkit import Chem
 from rdkit.Chem import rdDetermineBonds
-from rdkit.Chem.rdForceFieldHelpers import UFFOptimizeMoleculeConfs
+from rdkit.Chem.rdForceFieldHelpers import UFFOptimizeMoleculeConfs, MMFFOptimizeMoleculeConfs
 
 
 
@@ -23,18 +23,13 @@ class Optimizer:
         xyz_string = f"{len(coords.keys())}\n\n"
         for atom, (x, y, z) in coords.items():
             xyz_string = xyz_string + f"{get_element(atom)}\t{x}\t{y}\t{z}\n"
-        
-        #print(f"*************** Bin bei Struktur {n} ***************")
-        #with open(os.path.join(os.getcwd(), f"debug{n}.xyz"), "w") as outfile:
-        #    print(len(coords.keys()), end="\n\n", file=outfile)
-        #    for atom, (x, y, z) in coords.items():
-        #        print(f"{get_element(atom)}\t{x}\t{y}\t{z}", file=outfile)
 
         mol = Chem.MolFromXYZBlock(xyz_string)
         mol = Chem.Mol(mol)
         rdDetermineBonds.DetermineBonds(mol)
 
-        res = UFFOptimizeMoleculeConfs(mol, maxIters=1000)
+        #res = UFFOptimizeMoleculeConfs(mol, maxIters=1000)
+        res = MMFFOptimizeMoleculeConfs(mol, maxIters=1000)
         energy = res[0][1]
 
         opt_struc_file = os.path.join(os.getcwd(), f"conformer{n}.xyz")

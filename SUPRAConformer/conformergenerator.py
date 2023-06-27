@@ -503,6 +503,11 @@ class ConformerGenerator:
             # check new structure for internal clashes
             if not self._clashes(bond_partners, new_coords):
                 self.optimizer.optimize_structure_uff(new_coords, counter)
+                #new_file = os.path.join(os.getcwd(), f"conformer{counter}.xyz")
+                #with open(new_file, "w") as outfile:
+                #    print(len(new_coords.keys()), file=outfile, end="\n\n")
+                #    for atom, (x, y, z) in new_coords.items():
+                #        print(f"{get_element(atom)}\t{x}\t{y}\t{z}", file=outfile)
                 return counter+1
             else:
                 return counter
