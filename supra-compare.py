@@ -10,7 +10,7 @@ from utils.analyzer import Analyzer
 
 def main():
     parser = argparse.ArgumentParser()
-    an = Analyzer()
+    analyzer = Analyzer()
 
     parser.add_argument("-path1", type=str, required=True)
     parser.add_argument("-path2", type=str, required=True)
@@ -23,9 +23,7 @@ def main():
     else:
         rmsd = 0.1
 
-    print()
-    an.compare_structure_sets(path1=args.path1, path2=args.path2, rmsd_threshold=rmsd, ignore=args.ignore)
-    print()
+    analyzer.compare_structure_sets(path1=args.path1, path2=args.path2, rmsd_threshold=rmsd, ignore=args.ignore)
 
 
 

@@ -32,6 +32,7 @@ class Analyzer:
 
         counter = 0
         #m = round(len(conformers1)/50)
+        print()
         print("Comparing structures...")
         #print("[", end="", flush="True")
         for i, file1 in enumerate(conformers1):
@@ -59,7 +60,7 @@ class Analyzer:
                         del conformer2.coords[atom]
                 else:
                     conformer2.read_xyz(os.path.join(path2, file2))
-                if self.doubles(conformer1.coords, conformer2.coords, rmsd_threshold):
+                if self.rmsd(conformer1.coords, conformer2.coords) <= rmsd_threshold:
                     counter += 1
                     break
         #print("]")
@@ -71,6 +72,8 @@ class Analyzer:
         print(f"Number of structures in Path 1: {len(conformers1)}")
         print(f"Number of structures in Path 2: {len(conformers2)}")
         print(f"Number of structures of Path 1 in Path 2: {counter}")
+        print()
+
         return counter
 
 

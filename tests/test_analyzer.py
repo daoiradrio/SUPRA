@@ -20,14 +20,12 @@ def test_loose_doubles_check():
     mol1 = Structure(os.path.join(files, "Alanin.xyz"))
     mol2 = Structure(os.path.join(files, "Alanin_methyl_rotated_60_deg.xyz"))
 
-    analyze.doubles(mol1.coords, mol2.coords, rmsd_threshold)
-
     for atom in analyze.get_methyl_group_atoms(mol1.bond_partners):
         del mol1.coords[atom]
     for atom in analyze.get_methyl_group_atoms(mol2.bond_partners):
         del mol2.coords[atom]
 
-    assert analyze.doubles(mol1.coords, mol2.coords, rmsd_threshold)
+    assert analyze.rmsd(mol1.coords, mol2.coords) <= rmsd_threshold
 
 
 
@@ -46,10 +44,10 @@ def test_strict_doubles_check():
     #A1_A2 = analyze.doubles(A1.coords, A2.coords, rmsd_threshold)
     #A1_A3 = analyze.doubles(A1.coords, A3.coords, rmsd_threshold)
     #A2_A3 = analyze.doubles(A2.coords, A3.coords, rmsd_threshold)
-    T1_T2 = analyze.doubles(T1.coords, T2.coords, rmsd_threshold)
-    T1_T3 = analyze.doubles(T1.coords, T3.coords, rmsd_threshold)
-    T2_T3 = analyze.doubles(T2.coords, T3.coords, rmsd_threshold)
-    T4_T5 = analyze.doubles(T4.coords, T5.coords, rmsd_threshold)
+    T1_T2 = analyze.rmsd(T1.coords, T2.coords) <= rmsd_threshold
+    T1_T3 = analyze.rmsd(T1.coords, T3.coords) <= rmsd_threshold
+    T2_T3 = analyze.rmsd(T2.coords, T3.coords) <= rmsd_threshold
+    T4_T5 = analyze.rmsd(T4.coords, T5.coords) <= rmsd_threshold
     
     #assert (A1_A2 and not A1_A3 and not A2_A3 and T1_T2 and T1_T3 and T2_T3)
     assert (T1_T2 and T1_T3 and T2_T3 and not T4_T5)
