@@ -14,9 +14,9 @@ def main():
 
     parser.add_argument("-path1", type=str, required=True)
     parser.add_argument("-path2", type=str, required=True)
-    parser.add_argument("-rmsd", type=float, required=False, const=0.1)
-    parser.add_argument("-ignore", type=str, required=False, const=None)
-    parser.add_argument("-mode", type=str, required=False, const="normal")
+    parser.add_argument("-rmsd", type=float, required=False, default=0.1)
+    parser.add_argument("-ignore", type=str, required=False, default=None)
+    parser.add_argument("-mode", type=str, required=False, default="normal")
     args = parser.parse_args()
 
     analyzer.compare_structure_sets(path1=args.path1, path2=args.path2, rmsd_threshold=args.rmsd, ignore=args.ignore, mode=args.mode)
