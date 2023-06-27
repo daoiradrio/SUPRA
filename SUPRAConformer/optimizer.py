@@ -19,8 +19,25 @@ class Optimizer:
     
 
 
-    def optmize_structure_uff(self, coords: dict, n: int = None):
-        pass
+    def optimize_structure_uff(self, coords: dict, n: int = None):
+        xyz_string = f"{len(coords.keys())}\n\n"
+        for atom, (x, y, z) in coords.items():
+            xyz_string = xyz_string + f"{get_element(atom)}\t{x}\t{y}\t{z}\n"
+
+        mol = Chem.MolFromXYZBlock(xyz_string)
+        mol = Chem.Mol(mol)
+        rdDetermineBonds.DetermineBonds(mol)
+
+        res = UFFOptimizeMoleculeConfs(mol, maxIters=1000)
+        energy = res[0][1]
+
+        opt_struc_file = os.path.join(os.getcwd(), f"conformer{n}.xyz")
+        with open(opt_struc_file, "w") as outfile:
+            print(len(coords.keys()), file=outfile)
+            print(f"UFF-Energy = {energy}", file=outfile)
+            for i, atom in enumerate(mol.GetAtoms()):
+                pos = mol.GetConformer().GetAtomPosition(i)
+                print(f"{atom.GetSymbol()}\t{pos.x}\t{pos.y}\t{pos.z}", file=outfile)
 
 
 

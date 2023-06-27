@@ -6,6 +6,8 @@ dependencies:
   - _openmp_mutex=4.5=2_gnu
   - alsa-lib=1.2.8=h166bdaf_0
   - attr=2.5.1=h166bdaf_1
+  - boost=1.78.0=py311h59ea3da_4
+  - boost-cpp=1.78.0=h6582d0a_3
   - brotli=1.0.9=h166bdaf_8
   - brotli-bin=1.0.9=h166bdaf_8
   - brotlipy=0.7.0=py311hd4cff14_1005
@@ -31,10 +33,12 @@ dependencies:
   - fonts-conda-forge=1=0
   - fonttools=4.39.3=py311h2582759_0
   - freetype=2.12.1=hca18f0e_1
+  - freetype-py=2.4.0=pyhd8ed1ab_0
   - gettext=0.21.1=h27087fc_0
   - glib=2.76.2=hfc55251_0
   - glib-tools=2.76.2=hfc55251_0
   - graphite2=1.3.13=h58526e2_1001
+  - greenlet=2.0.2=py311hb755f60_1
   - gst-plugins-base=1.22.0=h4243ec0_2
   - gstreamer=1.22.0=h25f0c4b_2
   - harfbuzz=6.0.0=h3ff4399_1
@@ -105,8 +109,9 @@ dependencies:
   - nss=3.89=he45b914_0
   - numpy=1.24.3=py311h64a7726_0
   - openjpeg=2.5.0=hfec8fc6_2
-  - openssl=3.1.0=hd590300_3
+  - openssl=3.1.1=hd590300_1
   - packaging=23.1=pyhd8ed1ab_0
+  - pandas=2.0.2=py311h320fe9a_0
   - pcre2=10.40=hc3806b6_0
   - pillow=9.5.0=py311h573f0d3_0
   - pip=23.1.2=pyhd8ed1ab_0
@@ -117,6 +122,7 @@ dependencies:
   - pooch=1.7.0=pyha770c72_3
   - pthread-stubs=0.4=h36c2ea0_1001
   - pulseaudio-client=16.1=h5195f5e_3
+  - pycairo=1.24.0=py311h8feb60e_0
   - pycparser=2.21=pyhd8ed1ab_0
   - pyopenssl=23.1.1=pyhd8ed1ab_0
   - pyparsing=3.0.9=pyhd8ed1ab_0
@@ -126,14 +132,20 @@ dependencies:
   - pytest=7.3.1=pyhd8ed1ab_0
   - python=3.11.3=h2755cc3_0_cpython
   - python-dateutil=2.8.2=pyhd8ed1ab_0
+  - python-tzdata=2023.3=pyhd8ed1ab_0
   - python_abi=3.11=3_cp311
+  - pytz=2023.3=pyhd8ed1ab_0
   - qt-main=5.15.8=h5c52f38_10
+  - rdkit=2023.03.2=py311hc21844d_0
   - readline=8.2=h8228510_1
+  - reportlab=4.0.0=py311h459d7ec_0
   - requests=2.29.0=pyhd8ed1ab_0
+  - rlpycairo=0.2.0=pyhd8ed1ab_0
   - scipy=1.10.1=py311h8e6699e_1
   - setuptools=67.7.2=pyhd8ed1ab_0
   - sip=6.7.9=py311hb755f60_0
   - six=1.16.0=pyh6c4a22f_0
+  - sqlalchemy=2.0.17=py311h459d7ec_0
   - tk=8.6.12=h27826a3_0
   - toml=0.10.2=pyhd8ed1ab_0
   - tomli=2.0.1=pyhd8ed1ab_0
@@ -165,4 +177,4 @@ dependencies:
   - zipp=3.15.0=pyhd8ed1ab_0
   - zlib=1.2.13=h166bdaf_4
   - zstd=1.5.2=h3eb15da_6
-prefix: /home/dario/mambaforge/envs/supra
+prefix: /home/dario/miniforge3/envs/supra
