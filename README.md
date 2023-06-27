@@ -7,11 +7,12 @@
 5. ```ln -s /path/to/python3 /usr/bin/supra-python3``` (```/path/to/python3``` from ```which python3``` in activated supra environment)
 6. ```ln -s /path/to/SUPRA/supra-conformer.py ~/bin/supra-conformer```
 7. ```ln -s /path/to/SUPRA/supra-doubles.py ~/bin/supra-doubles```
-8. ```ln -s /path/to/SUPRA/supra-refine.py ~/bin/supra-refine```
-9. Add ```export PYTHONPATH=/path/to/SUPRA``` to ```~/.bashrc``` 
-10. Put```xtb``` binary in ```~/bin```
-11. ```source ~/.bashrc```
-12. ```conda activate supra```
+8. ```ln -s /path/to/SUPRA/supra-compare.py ~/bin/supra-compare```
+9. ```ln -s /path/to/SUPRA/supra-refine.py ~/bin/supra-refine```
+10. Add ```export PYTHONPATH=/path/to/SUPRA``` to ```~/.bashrc``` 
+11. Put```xtb``` binary in ```~/bin```
+12. ```source ~/.bashrc```
+13. ```conda activate supra```
 
 ## (Partly) automatic installation
 1. Clone SUPRA repository
