@@ -18,7 +18,7 @@ class Analyzer:
 
 
 
-    def compare_structure_sets(self, path1: str, path2: str, rmsd_threshold: float=0.1, ignore: str=None) -> int:
+    def compare_structure_sets(self, path1: str, path2: str, rmsd_threshold: float=0.1, ignore: str=None, mode: str="normal") -> int:
         conformer1 = Structure()
         conformer2 = Structure()
 
@@ -60,7 +60,16 @@ class Analyzer:
                         del conformer2.coords[atom]
                 else:
                     conformer2.read_xyz(os.path.join(path2, file2))
-                if self.rmsd(conformer1.coords, conformer2.coords) <= rmsd_threshold:
+                if mode == "loose":
+                    rmsd = self.calc_rmsd(conformer1.coords, conformer2.coords)
+                elif mode == "normal":
+                    rmsd = self.rmsd(conformer1.coords, conformer2.coords)
+                elif mode == "tight":
+                    if not ignore:
+                        conformer1.get_connectivity()
+                        conformer2.get_connectivity()
+                    rmsd = self.rmsd_tight(conformer1.coords, conformer1.bond_partners, conformer2.coords, conformer2.bond_partners)
+                if rmsd <= rmsd_threshold:
                     counter += 1
                     break
         #print("]")
@@ -116,7 +125,7 @@ class Analyzer:
 
 
 
-    def remove_doubles(self, path: str, rmsd_threshold: float=0.1, ignore: str=None, use_energy: bool = False) -> int:
+    def remove_doubles(self, path: str, rmsd_threshold: float=0.1, ignore: str=None, use_energy: bool = False, mode: str="normal") -> int:
         conformer1 = Structure()
         conformer2 = Structure()
         path = os.path.abspath(path)
@@ -153,7 +162,16 @@ class Analyzer:
                         del conformer2.coords[atom]
                 else:
                     conformer2.read_xyz(os.path.join(path, file2), read_energy=use_energy)
-                if self.rmsd(conformer1.coords, conformer2.coords) <= rmsd_threshold:
+                if mode == "loose":
+                    rmsd = self.calc_rmsd(conformer1.coords, conformer2.coords)
+                elif mode == "normal":
+                    rmsd = self.rmsd(conformer1.coords, conformer2.coords)
+                elif mode == "tight":
+                    if not ignore:
+                        conformer1.get_connectivity()
+                        conformer2.get_connectivity()
+                    rmsd = self.rmsd_tight(conformer1.coords, conformer1.bond_partners, conformer2.coords, conformer2.bond_partners)
+                if rmsd <= rmsd_threshold:
                     if (conformer1.energy and conformer2.energy):
                         if conformer1.energy < conformer2.energy:
                             delete_files[j] = 1
@@ -173,7 +191,7 @@ class Analyzer:
     
 
 
-    def remove_doubles_ensemble_file(self, ensemble_file: str, rmsd_threshold: float=0.1, ignore: str=None, use_energy: bool = False):
+    def remove_doubles_ensemble_file(self, ensemble_file: str, rmsd_threshold: float=0.1, ignore: str=None, use_energy: bool = False, mode: str="normal"):
         ensemble_file = os.path.abspath(ensemble_file)
         dir_ensemble_file = os.path.dirname(ensemble_file)
         workdir = os.path.join(dir_ensemble_file, "conformers")
@@ -199,7 +217,7 @@ class Analyzer:
                 line_iter += 1
             new_struc_file.close()
         
-        self.remove_doubles(workdir, rmsd_threshold, ignore, use_energy)
+        self.remove_doubles(workdir, rmsd_threshold, ignore, use_energy, mode)
         
         with open(os.path.join(dir_ensemble_file, "supra_ensemble.xyz"), "w") as outfile:
             conformers = os.listdir(workdir)
@@ -335,7 +353,8 @@ class Analyzer:
 
     def rmsd_tight(self, coords1: dict, connectivity1: dict, coords2: dict, connectivity2: dict,) -> float:
         coords1, coords2 = self.match(coords1, connectivity1, coords2, connectivity2)
-        return self.calc_rmsd(coords1, coords2)
+        kabsch_coords1, kabsch_coords2 = self.kabsch(coords1, coords2)
+        return self.calc_rmsd(kabsch_coords1, kabsch_coords2)
 
 
 
