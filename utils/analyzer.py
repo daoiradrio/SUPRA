@@ -515,6 +515,4 @@ class Analyzer:
             next_sphere_counter = 0
 
         return spheres
-
-
-
+    
