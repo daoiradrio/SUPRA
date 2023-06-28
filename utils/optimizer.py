@@ -5,7 +5,7 @@ from utils.helper import get_element
 
 from rdkit import Chem
 from rdkit.Chem import rdDetermineBonds
-from rdkit.Chem.rdForceFieldHelpers import UFFOptimizeMoleculeConfs, MMFFOptimizeMoleculeConfs
+from rdkit.Chem.rdForceFieldHelpers import MMFFOptimizeMoleculeConfs
 
 from pyscf import gto, scf
 from pyscf.geomopt.geometric_solver import optimize
@@ -25,30 +25,34 @@ class Optimizer:
     
 
     def qc_refine_structures(self, path: str):
-        path = os.path.abspath(path)
+        abspath = os.path.abspath(path)
+        structures = os.listdir(abspath)
+        for structure in structures:
+            struc_path = os.path.join(abspath, structure)
+            self.qc_structure_optimization(struc_path)
 
     
 
     def qc_structure_optimization(self, path: str):
         path = os.path.abspath(path)
         dirname = os.path.dirname(path)
+        filename = os.path.basename(path)
+        workdir = os.path.join(dirname, self.workdir_name)
+        
+        os.system(f"mkdir {workdir} ; mv {path} {workdir}")
 
-        mol = gto.M(atom=path)
-
+        mol = gto.M(atom=os.path.join(workdir, filename))
         mf = scf.RHF(mol)
-        opt_mol = optimize(mf, maxsteps=3)
+        opt_mol = optimize(mf, maxsteps=1000)
 
-        print()
-        for i in range(mol.natm):
-            print(f"{mol.atom_pure_symbol(i)}\t{mol.atom_coord(i)}")
-        print()
+        with open(path, "w") as outfile:
+            print(opt_mol.natm, end="\n\n", file=outfile)
+            for i in range(opt_mol.natm):
+                x, y, z = opt_mol.atom_coord(i)
+                print(f"{opt_mol.atom_pure_symbol(i)}\t{x}\t{y}\t{z}", file=outfile)
 
-        print()
-        for i in range(opt_mol.natm):
-            print(f"{opt_mol.atom_pure_symbol(i)}\t{opt_mol.atom_coord(i)}")
-        print()
+        os.system(f"rm -rf {workdir}")
 
-        #os.system("rm -rf tmp*")
 
 
     def uff_structure_optimization(self, coords: dict, n: int = None):
@@ -60,7 +64,6 @@ class Optimizer:
         mol = Chem.Mol(mol)
         rdDetermineBonds.DetermineBonds(mol)
 
-        #res = UFFOptimizeMoleculeConfs(mol, maxIters=1000)
         res = MMFFOptimizeMoleculeConfs(mol, maxIters=1000)
         energy = res[0][1]
 
@@ -177,7 +180,7 @@ class Optimizer:
         strucs_list = os.listdir(path_to_strucs)
         print("Performing refining optimizations...")
         for i, struc in enumerate(strucs_list):
-            self.optimize_structure_xtb(
+            self.xtb_structure_optimization(
                 struc_folder=path_to_strucs,
                 struc_file=struc,
                 chrg=chrg, 
