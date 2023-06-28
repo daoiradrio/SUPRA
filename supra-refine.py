@@ -4,14 +4,14 @@
 
 import os
 import argparse
-from SUPRAConformer.optimizer import Optimizer
+from utils.optimizer import Optimizer
 from utils.analyzer import Analyzer
 
 
 
 def main():
     opt = Optimizer()
-    an = Analyzer()
+    analyzer = Analyzer()
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-path", type=str, required=True)
@@ -23,10 +23,16 @@ def main():
     else:
         chrg = None
 
-    print()
-    opt.refine_structures_xtb(strucs_path, chrg)
-    an.remove_doubles(strucs_path)
-    print()
+    #print()
+    #opt.refine_structures_xtb(strucs_path, chrg)
+    #analyzer.remove_doubles(strucs_path)
+    #print()
+
+    print("Performing removal of duplicate structures...")
+    conformers = analyzer.remove_doubles(path=os.path.join(os.getcwd(), "SUPRA_Output/"), use_energy=True, mode="normal")
+    conformers = analyzer.remove_doubles(path=os.path.join(os.getcwd(), "SUPRA_Output/"), use_energy=True, mode="tight")
+    print("Removal of double structures done.")
+    print(f"Individual generated conformers: {conformers}")
 
 
 

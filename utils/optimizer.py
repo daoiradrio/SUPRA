@@ -2,9 +2,14 @@ import os
 import subprocess
 
 from utils.helper import get_element
+
 from rdkit import Chem
 from rdkit.Chem import rdDetermineBonds
 from rdkit.Chem.rdForceFieldHelpers import UFFOptimizeMoleculeConfs, MMFFOptimizeMoleculeConfs
+
+from pyscf import gto, scf
+from pyscf.geomopt.geometric_solver import optimize
+#from pyscf.geomopt.berny_solver import optimize
 
 
 
@@ -16,10 +21,37 @@ class Optimizer:
         self.temp_file_name = "temp.xyz"
         self.work_struc_name = "struc.xyz"
         self.opt_struc_name = "opt_struc.xyz"
+
     
 
+    def qc_refine_structures(self, path: str):
+        path = os.path.abspath(path)
 
-    def optimize_structure_uff(self, coords: dict, n: int = None):
+    
+
+    def qc_structure_optimization(self, path: str):
+        path = os.path.abspath(path)
+        dirname = os.path.dirname(path)
+
+        mol = gto.M(atom=path)
+
+        mf = scf.RHF(mol)
+        opt_mol = optimize(mf, maxsteps=3)
+
+        print()
+        for i in range(mol.natm):
+            print(f"{mol.atom_pure_symbol(i)}\t{mol.atom_coord(i)}")
+        print()
+
+        print()
+        for i in range(opt_mol.natm):
+            print(f"{opt_mol.atom_pure_symbol(i)}\t{opt_mol.atom_coord(i)}")
+        print()
+
+        #os.system("rm -rf tmp*")
+
+
+    def uff_structure_optimization(self, coords: dict, n: int = None):
         xyz_string = f"{len(coords.keys())}\n\n"
         for atom, (x, y, z) in coords.items():
             xyz_string = xyz_string + f"{get_element(atom)}\t{x}\t{y}\t{z}\n"
@@ -116,7 +148,7 @@ class Optimizer:
 
     
 
-    def optimize_structure_xtb(self, struc_folder: str, struc_file: str, chrg: int=None, n: int=None):
+    def xtb_structure_optimization(self, struc_folder: str, struc_file: str, chrg: int=None, n: int=None):
         workdir = os.path.join(struc_folder, self.workdir_name+str(n))
         xtb_args = ["xtb", "--opt", "normal"]
         if chrg:
@@ -141,7 +173,7 @@ class Optimizer:
 
 
 
-    def refine_structures_xtb(self, path_to_strucs: str, chrg: int=None):
+    def xtb_refine_structures(self, path_to_strucs: str, chrg: int=None):
         strucs_list = os.listdir(path_to_strucs)
         print("Performing refining optimizations...")
         for i, struc in enumerate(strucs_list):

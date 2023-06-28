@@ -3,7 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - _libgcc_mutex=0.1=conda_forge
-  - _openmp_mutex=4.5=2_gnu
+  - _openmp_mutex=4.5=2_kmp_llvm
   - alsa-lib=1.2.8=h166bdaf_0
   - attr=2.5.1=h166bdaf_1
   - boost=1.78.0=py311h59ea3da_4
@@ -22,6 +22,7 @@ dependencies:
   - cryptography=40.0.2=py311h9b4c7bb_0
   - cycler=0.11.0=pyhd8ed1ab_0
   - dbus=1.13.6=h5008d03_3
+  - dftd4=3.5.0=h03160e7_0
   - exceptiongroup=1.1.1=pyhd8ed1ab_0
   - expat=2.5.0=hcb278e6_1
   - font-ttf-dejavu-sans-mono=2.37=hab24e00_0
@@ -97,9 +98,11 @@ dependencies:
   - libxkbcommon=1.5.0=h79f4944_1
   - libxml2=2.10.4=hfdac1af_0
   - libzlib=1.2.13=h166bdaf_4
+  - llvm-openmp=16.0.6=h4dfa4b3_0
   - lz4-c=1.9.4=hcb278e6_0
   - matplotlib=3.7.1=py311h38be061_0
   - matplotlib-base=3.7.1=py311h8597a09_0
+  - mctc-lib=0.3.1=h74f4db8_0
   - mpg123=1.31.3=hcb278e6_0
   - munkres=1.1.4=pyh9f0ad1d_0
   - mysql-common=8.0.32=hf1915f5_2
@@ -143,11 +146,14 @@ dependencies:
   - rlpycairo=0.2.0=pyhd8ed1ab_0
   - scipy=1.10.1=py311h8e6699e_1
   - setuptools=67.7.2=pyhd8ed1ab_0
+  - simple-dftd3=0.7.0=heafb486_2
   - sip=6.7.9=py311hb755f60_0
   - six=1.16.0=pyh6c4a22f_0
   - sqlalchemy=2.0.17=py311h459d7ec_0
+  - tblite=0.3.0=h03160e7_0
   - tk=8.6.12=h27826a3_0
   - toml=0.10.2=pyhd8ed1ab_0
+  - toml-f=0.3.1=h74f4db8_0
   - tomli=2.0.1=pyhd8ed1ab_0
   - tornado=6.3=py311h2582759_0
   - typing-extensions=4.5.0=hd8ed1ab_0
@@ -173,8 +179,16 @@ dependencies:
   - xorg-xextproto=7.3.0=h0b41bf4_1003
   - xorg-xf86vidmodeproto=2.3.1=h7f98852_1002
   - xorg-xproto=7.0.31=h7f98852_1007
+  - xtb=6.6.0=h03160e7_0
   - xz=5.2.6=h166bdaf_0
   - zipp=3.15.0=pyhd8ed1ab_0
   - zlib=1.2.13=h166bdaf_4
   - zstd=1.5.2=h3eb15da_6
-prefix: /home/dario/miniforge3/envs/supra
+  - pip:
+      - geometric==1.0.1
+      - h5py==3.9.0
+      - networkx==3.1
+      - pyberny==0.6.3
+      - pyscf==2.2.1
+      - pyscf-qsdopt==0.1.0
+prefix: /home/baum/miniforge3/envs/supra
