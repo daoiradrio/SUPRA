@@ -33,7 +33,8 @@ def main():
         structure2 = Structure(args.path2)
         print()
         if args.mode == "loose":
-            rmsd = analyzer.calc_rmsd(structure1.coords, structure2.coords)
+            kabsch_coords1, kabsch_coords2 = analyzer.kabsch(structure1.coords, structure2.coords)
+            rmsd = analyzer.calc_rmsd(kabsch_coords1, kabsch_coords2)
         elif args.mode == "normal":
             rmsd = analyzer.rmsd(structure1.coords, structure2.coords)
         elif args.mode == "tight":
