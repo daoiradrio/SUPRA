@@ -179,10 +179,16 @@ class Analyzer:
                             delete_files[i] = 1
                     else:
                         delete_files[j] = 1
+        
+        #if sum(delete_files):
+        #    raw_path = os.path.dirname(path)
+        #    out_dir = os.path.join(raw_path, "SUPRA_Output")
+        #    os.system(f"mkdir {out_dir}")
 
         for i, delete in enumerate(delete_files):
-            if delete:
-                os.remove(os.path.join(path, conformers[i]))
+            if not delete:
+                #os.remove(os.path.join(path, conformers[i]))
+                #os.system(f"cp {os.path.join(path, conformers[i])} {os.path.join(out_dir, conformers[i])}")
                 counter -= 1
 
         #print("\n")
@@ -219,7 +225,7 @@ class Analyzer:
         
         self.remove_doubles(workdir, rmsd_threshold, ignore, use_energy, mode)
         
-        with open(os.path.join(dir_ensemble_file, "supra_ensemble.xyz"), "w") as outfile:
+        with open(os.path.join(dir_ensemble_file, "SUPRA_output_ensemble.xyz"), "w") as outfile:
             conformers = os.listdir(workdir)
             for conformer in conformers:
                 with open(os.path.join(workdir, conformer), "r") as infile:
