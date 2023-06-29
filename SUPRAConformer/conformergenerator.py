@@ -466,6 +466,7 @@ class ConformerGenerator:
                                     torsion_restricted[j] = 1
                             torsion_done[i] = 1
                             torsion_done[j] = 1
+                            continue
                 if (torsion1.rot_sym2 > 1):
                     if (max(360/torsion.rot_sym2, angle_increment) % min(360/torsion.rot_sym2, angle_increment) == 0):
                         if (torsion1.sym_rot_atoms2 == torsion2.sym_rot_atoms1 or torsion1.sym_rot_atoms2 == torsion2.sym_rot_atoms2):
@@ -498,6 +499,7 @@ class ConformerGenerator:
                                     torsion_restricted[j] = 1
                             torsion_done[i] = 1
                             torsion_done[j] = 1
+                            continue
 
         """
         for i, torsion1 in enumerate(self.torsions):
