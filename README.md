@@ -10,17 +10,15 @@
 8. ```ln -s /path/to/SUPRA/supra-compare.py ~/bin/supra-compare```
 9. ```ln -s /path/to/SUPRA/supra-refine.py ~/bin/supra-refine```
 10. Add ```export PYTHONPATH=/path/to/SUPRA``` to ```~/.bashrc``` 
-11. Put```xtb``` binary in ```~/bin```
-12. ```source ~/.bashrc```
-13. ```conda activate supra```
+11. ```source ~/.bashrc```
+12. ```conda activate supra```
 
 ## (Partly) automatic installation
 1. Clone SUPRA repository
 2. Install miniforge: https://github.com/conda-forge/miniforge
 3. ```./install.sh```
-4. Put ```xtb``` binary in ```~/bin```
-5. ```source ~/.bashrc```
-6. ```conda activate supra```
+4. ```source ~/.bashrc```
+5. ```conda activate supra```
 
 ## Usage
 SUPRA offers interfaces with different functionality. These are explained in the following.
