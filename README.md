@@ -1,5 +1,12 @@
 # SUPRA
 
+## Automatic installation
+1. Clone SUPRA repository
+2. Install miniforge: https://github.com/conda-forge/miniforge
+3. ```./install.sh```
+4. ```source ~/.bashrc```
+5. ```conda activate supra```
+
 ## Manual installation
 1. Clone SUPRA repository
 2. Install miniforge: https://github.com/conda-forge/miniforge
@@ -12,13 +19,6 @@
 10. Add ```export PYTHONPATH=/path/to/SUPRA``` to ```~/.bashrc``` 
 11. ```source ~/.bashrc```
 12. ```conda activate supra```
-
-## (Partly) automatic installation
-1. Clone SUPRA repository
-2. Install miniforge: https://github.com/conda-forge/miniforge
-3. ```./install.sh```
-4. ```source ~/.bashrc```
-5. ```conda activate supra```
 
 ## Usage
 SUPRA offers interfaces with different functionality. These are explained in the following.
