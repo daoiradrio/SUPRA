@@ -70,8 +70,9 @@ class Analyzer:
                         conformer2.get_connectivity()
                     rmsd = self.rmsd_tight(conformer1.coords, conformer1.bond_partners, conformer2.coords, conformer2.bond_partners)
                 if rmsd <= rmsd_threshold:
+                    print(f"{file1} {file2}")
                     counter += 1
-                    break
+                    #break
         #print("]")
         print("Comparing structures done.")
         print()
@@ -186,8 +187,8 @@ class Analyzer:
         #    os.system(f"mkdir {out_dir}")
 
         for i, delete in enumerate(delete_files):
-            if not delete:
-                #os.remove(os.path.join(path, conformers[i]))
+            if delete:
+                os.remove(os.path.join(path, conformers[i]))
                 #os.system(f"cp {os.path.join(path, conformers[i])} {os.path.join(out_dir, conformers[i])}")
                 counter -= 1
 

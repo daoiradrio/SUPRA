@@ -46,6 +46,7 @@ class ConformerGenerator:
         ###
         #self._find_peptidebonds(structure.coords, structure.bond_partners)
         #self._selection_menu()
+        #"""
         if ignore_peptide:
             self._find_peptidebonds(structure.coords, structure.bond_partners)
         self.torsions = self.central_torsions
@@ -68,6 +69,7 @@ class ConformerGenerator:
                 return
             else:
                 print("Invalid input.")
+        #"""
         ###
         self._generation_setup(list(structure.coords.keys()), structure.bond_partners)
         print("Performing generation of conformer structures...")
@@ -83,8 +85,9 @@ class ConformerGenerator:
             if not os.path.exists(self.output_folder_name):
                 os.makedirs(self.output_folder_name)
             self.output_folder_name = os.path.abspath(self.output_folder_name)
-            for i in range(number_conformers):
-                os.system(f"mv conformer{i}.xyz {self.output_folder_name}")
+            #for i in range(number_conformers):
+            #    os.system(f"mv conformer{i}.xyz {self.output_folder_name}")
+            os.system(f"mv conformer*.xyz {self.output_folder_name}")
         return number_conformers
     
 
@@ -591,7 +594,7 @@ class ConformerGenerator:
                             torsion_done[i] = 1
                             continue
         """
-        """
+        #"""
         print()
         print(f"Inkrement: {angle_increment}")
         for i, torsion in enumerate(self.torsions):
@@ -600,7 +603,7 @@ class ConformerGenerator:
                 print(angle, end=" ")
             print()
         print()
-        """
+        #"""
 
 
 
@@ -621,13 +624,17 @@ class ConformerGenerator:
     # calculates all possible conformer structures and generates an output file for every conformer structure without
     # internal clash
     # the output file is an input file for a geometry optimization with ORCA
-    def _combinations(self, bond_partners: dict, new_coords: dict, counter: int, index: int = 0) -> int:
+    def _combinations(self, bond_partners: dict, new_coords: dict, counter: int, index: int = 0,
+    temp: list = []) -> int:
         # base case, new torsion angle for every angle has been calculated
         if index == len(self.torsions):
             # sofern keine strukturinternen Clashes hinzufügen zur Liste erfolgreich erzeugter Konformerstrukturen
             # check new structure for internal clashes
             if not self._clashes(bond_partners, new_coords):
                 self.optimizer.uff_structure_optimization(new_coords, counter)
+                for angle in temp:
+                    print(angle, end=" ")
+                print(f": {counter}")
                 return counter+1
             else:
                 return counter
@@ -637,13 +644,13 @@ class ConformerGenerator:
             axis_vec1 = new_coords[self.torsions[index].atom1]
             axis_vec2 = new_coords[self.torsions[index].atom2]
             # jeden möglichen Torsionswinkel für Bindung durchgehen
-            #for angle in self.angles:
-            for angle in self.torsions[index].rot_angles:
+            for angle in self.angles:
+            #for angle in self.torsions[index].rot_angles:
                 new_coords_copy = new_coords.copy()
                 for atom in self.torsions[index].torsion_atoms:
                     new_coords_copy[atom] = RotationAxis.rotate_atom(axis_vec1, axis_vec2, new_coords[atom], angle)
                 # rekursiver Aufruf für nächste Bindung
-                counter = self._combinations(bond_partners, new_coords_copy, counter, index+1)
+                counter = self._combinations(bond_partners, new_coords_copy, counter, index+1, temp+[angle])
             return counter
 
 

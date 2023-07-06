@@ -42,7 +42,7 @@ def main():
         print(f"Path of molecule 1: {args.path1}")
         print(f"Path of molecule 2: {args.path2}")
         print()
-        print(f"RMSD: {rmsd}")
+        print(f"RMSD: {rmsd:.4f}")
         print()
 
 
