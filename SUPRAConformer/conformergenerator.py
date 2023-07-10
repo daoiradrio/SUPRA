@@ -11,9 +11,10 @@ from utils.optimizer import Optimizer
 from utils.analyzer import Analyzer
 from utils.symmetry import Symmetry
 from utils.rotationaxis import RotationAxis
-from utils.bond import Bond
 from utils.helper import covalence_radii_single, covalence_radii_double, get_element, \
                          increment_combinations, valences, atom_in_torsions, get_number
+
+from scipy.spatial.transform import Rotation
 
 
 
@@ -72,6 +73,12 @@ class ConformerGenerator:
         #"""
         ###
         self._generation_setup(list(structure.coords.keys()), structure.bond_partners)
+        for bond in self.torsions:
+            print(f"{bond.atom1} {bond.atom2}:", end=" ")
+            for atom in bond.torsion_atoms:
+                print(atom, end=" ")
+            print()
+        #return
         print("Performing generation of conformer structures...")
         number_conformers = 0
         for increment in self.angle_increments:
@@ -631,6 +638,7 @@ class ConformerGenerator:
             # sofern keine strukturinternen Clashes hinzufügen zur Liste erfolgreich erzeugter Konformerstrukturen
             # check new structure for internal clashes
             if not self._clashes(bond_partners, new_coords):
+                self.output_coords(new_coords, counter)
                 self.optimizer.uff_structure_optimization(new_coords, counter)
                 for angle in temp:
                     print(angle, end=" ")
@@ -643,12 +651,20 @@ class ConformerGenerator:
             # Punkte initialisieren, welche die Rotationsachse definieren
             axis_vec1 = new_coords[self.torsions[index].atom1]
             axis_vec2 = new_coords[self.torsions[index].atom2]
+            axis = (axis_vec2 - axis_vec1) / np.linalg.norm(axis_vec2 - axis_vec1)
             # jeden möglichen Torsionswinkel für Bindung durchgehen
             for angle in self.angles:
+                rad = (float(angle) / 360.0) * 2 * np.pi 
+                R = Rotation.from_rotvec(rad * axis)
             #for angle in self.torsions[index].rot_angles:
                 new_coords_copy = new_coords.copy()
                 for atom in self.torsions[index].torsion_atoms:
-                    new_coords_copy[atom] = RotationAxis.rotate_atom(axis_vec1, axis_vec2, new_coords[atom], angle)
+                    #new_coords_copy[atom] = RotationAxis.rotate_atom(axis_vec1, axis_vec2, new_coords[atom], angle)
+                    #new_coord = new_coords[atom] - axis_vec1
+                    #new_coord = R.apply(new_coord)
+                    new_coord = RotationAxis.new_rotate_atom(new_coords[atom], axis_vec1, axis_vec2, rad)
+                    print(new_coord)
+                    new_coords_copy[atom] = new_coord
                 # rekursiver Aufruf für nächste Bindung
                 counter = self._combinations(bond_partners, new_coords_copy, counter, index+1, temp+[angle])
             return counter
@@ -691,10 +707,11 @@ class ConformerGenerator:
 
 
     def output_coords(self, coords: dict, counter: int) -> None:
-        output_folder = "../Output/"
+        output_folder = "SUPRA_Output/"
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
         with open(f"{output_folder}conformer{counter}.xyz", "w") as outfile:
+            print(len(list(coords.keys())), file=outfile, end="\n\n")
             for atom, (x, y, z) in coords.items():
                 element = get_element(atom)
                 print(f"{element}\t{x:18.15f}\t{y:18.15f}\t{z:18.15f}", file=outfile)
