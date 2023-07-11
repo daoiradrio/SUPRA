@@ -17,6 +17,7 @@ class ClusterGenerator:
 
     def generate_clusters(self, monomer: ClusterStructure, max_cluster_size: int):
         self.monomer = monomer
+        self.generation_setup()
         self.generate_clusters(monomer, max_cluster_size)
     
 
