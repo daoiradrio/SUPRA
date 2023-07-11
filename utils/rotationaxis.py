@@ -41,86 +41,24 @@ class RotationAxis:
 
 
     @staticmethod
-    def new_rotate_atom(p, x1, x2, theta):
-        p = np.append(p, 1)
-        p = [[pp] for pp in p]
-        x1, y1, z1 = x1
-        x2, y2, z2 = x2
+    def new_rotate_atom(p, x1, x2, angle):
+        a = (x2 - x1) / np.linalg.norm(x2 - x1)
+        ax, ay, az = a
+        theta = np.deg2rad(angle)
 
-        U = [x2-x1, y2-y1, z2-z1]
-        U = np.array(U) / np.sqrt(np.dot(U,U))
-        a,b,c = U
-        d = np.sqrt(b**2 + c**2)
+        R = np.zeros((3, 3))
+        R[0][0] = ax**2 + (ay**2 + az**2) * np.cos(theta)
+        R[0][1] = ax * ay * (1 - np.cos(theta)) - az * np.sin(theta)
+        R[0][2] = ax * az * (1 - np.cos(theta)) + ay * np.sin(theta)
+        R[1][0] = ax * ay * (1 - np.cos(theta)) + az * np.sin(theta)
+        R[1][1] = ay**2 + (ax**2 + az**2) * np.cos(theta)
+        R[1][2] = ay * az * (1 - np.cos(theta)) - ax * np.sin(theta)
+        R[2][0] = ax * az * (1 - np.cos(theta)) - ay * np.sin(theta)
+        R[2][1] = ay * az * (1 - np.cos(theta)) + ax * np.sin(theta)
+        R[2][2] = az**2 + (ax**2 + ay**2) * np.cos(theta)
 
-        T = [
-            [1,0,0,-x1],
-            [0,1,0,-y1],
-            [0,0,1,-z1],
-            [0,0,0,1  ]
-        ]
-        T_inv = [
-            [1,0,0,x1],
-            [0,1,0,y1],
-            [0,0,1,z1],
-            [0,0,0,1 ]
-        ]
+        new_p = p - x1
+        new_p = np.dot(R, new_p)
+        new_p = new_p + x1
 
-        R_x = [
-            [1,0,0,0     ],
-            [0,c/d,-b/d,0],
-            [0,b/d,c/d,0 ],
-            [0,0,0,1     ]
-        ]
-        R_x_inv = [
-            [1,0,0,0     ],
-            [0,c/d,b/d,0 ],
-            [0,-b/d,c/d,0],
-            [0,0,0,1     ]
-        ]
-
-        R_y = [
-            [d,0,-a,0],
-            [0,1,0,0 ],
-            [a,0,d,0 ],
-            [0,0,0,1 ]
-        ]
-        R_y_inv = [
-            [d,0,a,0 ],
-            [0,1,0,0 ],
-            [-a,0,d,0],
-            [0,0,0,1 ]
-        ]
-
-        ct = np.cos(theta)
-        st = np.sin(theta)
-        R_z = [
-            [ct,st,0,0 ],
-            [-st,ct,0,0],
-            [0,0,1,0   ],
-            [0,0,0,1   ]
-        ]
-
-        p2 = np.dot(T, p)
-        p2 = np.dot(R_x, p2)
-        p2 = np.dot(R_y, p2)
-        p2 = np.dot(R_z, p2)
-        p2 = np.dot(R_y_inv, p2)
-        p2 = np.dot(R_x_inv, p2)
-        p2 = np.dot(T_inv, p)
-
-        return p2[0][:3]
-
-
-
-    @staticmethod
-    def matrix_multiply(*matrices):
-        if len(matrices) == 1:
-            return matrices
-        else:
-            try:
-                m_other = RotationAxis.matrix_multiply(*matrices[1:])
-                return np.matmul(matrices[0], m_other)
-            except:
-                #print(matrices[0])
-                #print(m_other)
-                raise
+        return new_p

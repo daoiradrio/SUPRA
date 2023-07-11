@@ -447,6 +447,49 @@ class ConformerGenerator:
             torsion.sym_rot_atoms2 = sorted(torsion.sym_rot_atoms2, key=lambda label: get_number(label))
             torsion.rot_sym2 = sym.rot_order_along_bond(mol, torsion.sym_rot_atoms2, mol.coords[atom1], mol.coords[atom2])
             # assign rotation angles if already possible
+            if (torsion.rot_sym1 > 1)                                                                         and \
+               (max(360/torsion.rot_sym1, angle_increment) % min(360/torsion.rot_sym1, angle_increment) == 0) and \
+               (torsion.sym_rot_atoms1 == torsion.rot_atoms1):
+                # IN DER PRAXIS (WENN NICHT INKREMENT 60 VERWENDET WIRD) KANN SICH DIESE ABFRAGE VERMUTLICH GESPART WERDEN
+                if (max(360/torsion.rot_sym2, angle_increment) % min(360/torsion.rot_sym2, angle_increment) == 0) and \
+                   (torsion.sym_rot_atoms2 == torsion.rot_atoms2)                                                 and \
+                   (torsion.rot_sym1 < torsion.rot_sym2):
+                    # case 3
+                    j = 1
+                    while (j*angle_increment < 360/torsion.rot_sym2):
+                        torsion.rot_angles.append(j*angle_increment)
+                        j += 1
+                    torsion_done[i] = 1
+                    torsion_restricted[i] = 1
+                    continue
+                else:
+                    # case 2
+                    j = 1
+                    while (j*angle_increment < 360/torsion.rot_sym1):
+                        torsion.rot_angles.append(j*angle_increment)
+                        j += 1
+                    torsion_done[i] = 1
+                    torsion_restricted[i] = 1
+                    continue
+            elif (torsion.rot_sym2 > 1)                                                                         and \
+                 (max(360/torsion.rot_sym2, angle_increment) % min(360/torsion.rot_sym2, angle_increment) == 0) and \
+                 (torsion.sym_rot_atoms2 == torsion.rot_atoms2):
+                # case 3
+                j = 1
+                while (j*angle_increment < 360/torsion.rot_sym2):
+                    torsion.rot_angles.append(j*angle_increment)
+                    j += 1
+                torsion_done[i] = 1
+                torsion_restricted[i] = 1
+                continue
+            elif (torsion.rot_sym1 == 1 or max(360/torsion.rot_sym1, angle_increment) % min(360/torsion.rot_sym1, angle_increment) != 0) and \
+                 (torsion.rot_sym2 == 1 or max(360/torsion.rot_sym2, angle_increment) % min(360/torsion.rot_sym2, angle_increment) != 0):
+                # case 1
+                for j in range(1, 360//angle_increment):
+                    torsion.rot_angles.append(j*angle_increment)
+                torsion_done[i] = 1
+                continue
+            """
             if (torsion.rot_sym1 == 1 or max(360/torsion.rot_sym1, angle_increment) % min(360/torsion.rot_sym1, angle_increment) != 0):
                 if (torsion.rot_sym2 == 1 or max(360/torsion.rot_sym2, angle_increment) % min(360/torsion.rot_sym2, angle_increment) != 0):
                     for j in range(1, 360//angle_increment):
@@ -458,7 +501,7 @@ class ConformerGenerator:
                     if (max(360/torsion.rot_sym1, angle_increment) % min(360/torsion.rot_sym1, angle_increment) == 0):
                         j = 1
                         while (j*angle_increment < 360/torsion.rot_sym1):
-                            torsion1.rot_angles.append(j*angle_increment)
+                            torsion.rot_angles.append(j*angle_increment)
                             j += 1
                         torsion_done[i] = 1
                         torsion_restricted[i] = 1
@@ -468,20 +511,24 @@ class ConformerGenerator:
                     if (max(360/torsion.rot_sym2, angle_increment) % min(360/torsion.rot_sym2, angle_increment) == 0):
                         j = 1
                         while (j*angle_increment < 360/torsion.rot_sym2):
-                            torsion1.rot_angles.append(j*angle_increment)
+                            torsion.rot_angles.append(j*angle_increment)
                             j += 1
                         torsion_done[i] = 1
                         torsion_restricted[i] = 1
                         continue
+            """
         
         for i, torsion1 in enumerate(self.torsions):
             if (torsion_done[i]):
                 continue
             for j, torsion2 in enumerate(self.torsions[i+1:], start=i+1):
                 if (torsion1.rot_sym1 > 1):
-                    if (max(360/torsion.rot_sym1, angle_increment) % min(360/torsion.rot_sym1, angle_increment) == 0):
+                    if (max(360/torsion1.rot_sym1, angle_increment) % min(360/torsion1.rot_sym1, angle_increment) == 0):
                         if (torsion1.sym_rot_atoms1 == torsion2.sym_rot_atoms1 or torsion1.sym_rot_atoms1 == torsion2.sym_rot_atoms2):
                             if torsion_done[j]:
+                                for k in range(1, 360//angle_increment):
+                                    torsion1.rot_angles.append(k*angle_increment)
+                                """
                                 if torsion_restricted[j]:
                                     for k in range(1, 360//angle_increment):
                                         torsion1.rot_angles.append(k*angle_increment)
@@ -491,8 +538,9 @@ class ConformerGenerator:
                                         torsion1.rot_angles.append(k*angle_increment)
                                         k += 1
                                     torsion_restricted[i] = 1
+                                """
                             else:
-                                if len(torsion1.torsion_atoms) > len(torsion.torsion_atoms):
+                                if len(torsion1.torsion_atoms) > len(torsion2.torsion_atoms):
                                     k = 1
                                     while (k*angle_increment < 360/torsion1.rot_sym1):
                                         torsion1.rot_angles.append(k*angle_increment)
@@ -512,9 +560,12 @@ class ConformerGenerator:
                             torsion_done[j] = 1
                             continue
                 if (torsion1.rot_sym2 > 1):
-                    if (max(360/torsion.rot_sym2, angle_increment) % min(360/torsion.rot_sym2, angle_increment) == 0):
+                    if (max(360/torsion1.rot_sym2, angle_increment) % min(360/torsion1.rot_sym2, angle_increment) == 0):
                         if (torsion1.sym_rot_atoms2 == torsion2.sym_rot_atoms1 or torsion1.sym_rot_atoms2 == torsion2.sym_rot_atoms2):
                             if torsion_done[j]:
+                                for k in range(1, 360//angle_increment):
+                                        torsion1.rot_angles.append(k*angle_increment)
+                                """
                                 if torsion_restricted[j]:
                                     for k in range(1, 360//angle_increment):
                                         torsion1.rot_angles.append(k*angle_increment)
@@ -524,8 +575,9 @@ class ConformerGenerator:
                                         torsion1.rot_angles.append(k*angle_increment)
                                         k += 1
                                     torsion_restricted[i] = 1
+                                """
                             else:
-                                if len(torsion1.torsion_atoms) > len(torsion.torsion_atoms):
+                                if len(torsion1.torsion_atoms) > len(torsion2.torsion_atoms):
                                     k = 1
                                     while (k*angle_increment < 360/torsion1.rot_sym2):
                                         torsion1.rot_angles.append(k*angle_increment)
@@ -638,8 +690,10 @@ class ConformerGenerator:
             # sofern keine strukturinternen Clashes hinzufügen zur Liste erfolgreich erzeugter Konformerstrukturen
             # check new structure for internal clashes
             if not self._clashes(bond_partners, new_coords):
-                self.output_coords(new_coords, counter)
-                self.optimizer.uff_structure_optimization(new_coords, counter)
+                #self.output_coords(new_coords, counter)
+                #self.optimizer.UFF_structure_optimization(new_coords, counter)
+                self.optimizer.MMFF_structure_optimization(new_coords, counter)
+                #self.optimizer.optimize_structure_uff(new_coords, counter)
                 for angle in temp:
                     print(angle, end=" ")
                 print(f": {counter}")
@@ -653,18 +707,14 @@ class ConformerGenerator:
             axis_vec2 = new_coords[self.torsions[index].atom2]
             axis = (axis_vec2 - axis_vec1) / np.linalg.norm(axis_vec2 - axis_vec1)
             # jeden möglichen Torsionswinkel für Bindung durchgehen
-            for angle in self.angles:
-                rad = (float(angle) / 360.0) * 2 * np.pi 
-                R = Rotation.from_rotvec(rad * axis)
-            #for angle in self.torsions[index].rot_angles:
+            #for angle in self.angles:
+            for angle in self.torsions[index].rot_angles:
+                R = Rotation.from_rotvec(np.deg2rad(angle) * axis)
                 new_coords_copy = new_coords.copy()
                 for atom in self.torsions[index].torsion_atoms:
-                    #new_coords_copy[atom] = RotationAxis.rotate_atom(axis_vec1, axis_vec2, new_coords[atom], angle)
-                    #new_coord = new_coords[atom] - axis_vec1
-                    #new_coord = R.apply(new_coord)
-                    new_coord = RotationAxis.new_rotate_atom(new_coords[atom], axis_vec1, axis_vec2, rad)
-                    print(new_coord)
-                    new_coords_copy[atom] = new_coord
+                    new_coord = new_coords[atom] - axis_vec1
+                    new_coord = R.apply(new_coord)
+                    new_coords_copy[atom] = new_coord + axis_vec1
                 # rekursiver Aufruf für nächste Bindung
                 counter = self._combinations(bond_partners, new_coords_copy, counter, index+1, temp+[angle])
             return counter
