@@ -1,7 +1,9 @@
 import numpy as np
 
 from SUPRAConformer.structure import Structure
-from utils.helper import is_hb_don, is_hb_acc
+from utils.hydrogen_bond_donator import HydrogenBondDonator
+from utils.hydrogen_bond_acceptor import HydrogenBondAcceptor
+from utils.helper import get_element
 
 
 
@@ -34,47 +36,28 @@ class ClusterStructure(Structure):
 
         # hydrogen bond donators which are free to bind to a hydrogen bond acceptor
         #SHOW GENERAL STRUCTURES
-        self.hb_don = list()
+        self.hydrogen_bond_acceptors = []
 
         # hydrogen bond acceptors which are free to bind to a hydrogen bond donator
         #SHOW GENERAL STRUCTURES
-        self.hb_acc = list()
+        self.hydrogen_bond_donators = []
 
         # NOCH (WO)ANDERS UNTERBRINGEN UND AUF ANDERE ELEMENTE ANPASSEN
         self.hb_len = 1.1
 
-        self.find_hbs()
-
-        #DATENSTRUKTUR UM WBB (ATOMLABEL UND POSITION) ZU SPEICHERN UM ANHAND DESSEN KONFORMERE ERZEUGEN ZU KÖNNEN
+        self.find_hb_accs_dons()
 
     
+
     # find and store atoms that form hydrogen bonds (hbs), so hb donors or acceptors
-    def find_hbs(self) -> None:
+    def find_hb_accs_dons(self) -> None:
         for atom in self.coords.keys():
-            if self.get_element(atom) in ["O", "N"]:
-                self.hb_don.append(atom)
-                #self.hb_don_vec[atom] = self.get_don_vec(atom)
+            if get_element(atom) in ["O", "N"]:
+                new_don = HydrogenBondDonator(atom, self.coords[atom])
+                new_don.get_don_vec(self.bond_partners[atom], self.coords)
+                self.hydrogen_bond_donators.append(new_don)
                 for neighbor in self.bond_partners[atom]:
-                    if self.get_element(neighbor) == "H":
-                        self.hb_acc.append(neighbor)
-                        #self.hb_acc_vec[neighbor] = self.get_acc_vec(neighbor)
-
-    
-    def get_don_vec(self, don: str) -> np.array:
-        vecs = []
-        for neighbor in self.bond_partners[don]:
-            new_vec = self.coords[don] - self.coords[neighbor]
-            new_vec = new_vec / np.linalg.norm(new_vec)
-            vecs.append(new_vec)
-        new_hb = self.coords[don].copy()
-        for vec in vecs:
-            new_hb += vec
-        return new_hb
-
-
-    def get_acc_vec(self, acc: str) -> np.array:
-        neighbor = self.bond_partners[acc][0]
-        new_hb = self.coords[acc] - self.coords[neighbor]
-        new_hb = new_hb / np.linalg.norm(new_hb)
-        new_hb = self.coords[acc] + new_hb
-        return new_hb
+                    if get_element(neighbor) == "H":
+                        new_acc = HydrogenBondAcceptor(neighbor, self.coords[neighbor])
+                        new_acc.get_acc_vec(self.coords[self.bond_partners[neighbor][0]])
+                        self.hydrogen_bond_acceptors.append(new_acc)

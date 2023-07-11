@@ -1,20 +1,17 @@
 import os
 import queue
-import subprocess
 import threading
 
 import numpy as np
 import matplotlib.pyplot as plt
 
+from scipy.spatial.transform import Rotation
 from SUPRAConformer.structure import Structure
 from utils.optimizer import Optimizer
 from utils.analyzer import Analyzer
 from utils.symmetry import Symmetry
-from utils.rotationaxis import RotationAxis
 from utils.helper import covalence_radii_single, covalence_radii_double, get_element, \
                          increment_combinations, valences, atom_in_torsions, get_number
-
-from scipy.spatial.transform import Rotation
 
 
 
@@ -73,12 +70,6 @@ class ConformerGenerator:
         #"""
         ###
         self._generation_setup(list(structure.coords.keys()), structure.bond_partners)
-        for bond in self.torsions:
-            print(f"{bond.atom1} {bond.atom2}:", end=" ")
-            for atom in bond.torsion_atoms:
-                print(atom, end=" ")
-            print()
-        #return
         print("Performing generation of conformer structures...")
         number_conformers = 0
         for increment in self.angle_increments:

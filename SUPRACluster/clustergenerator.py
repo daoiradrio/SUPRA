@@ -1,9 +1,11 @@
-from utils.helper import is_hb_don, is_hb_acc, rotation, get_element, get_number
-from SUPRACluster.clusterstructure import ClusterStructure
-from SUPRAConformer.conformergenerator import ConformerGenerator
-import numpy as np
 import os
+
+import numpy as np
+
 from copy import deepcopy
+from utils.helper import is_hb_don, is_hb_acc, rotation, get_element, get_number
+from SUPRAConformer.structure import Structure
+from SUPRACluster.clusterstructure import ClusterStructure
 
 
 
@@ -25,6 +27,12 @@ class ClusterGenerator:
         self.monomer = monomer
         self.counter = 0
         self.max_cluster_size = 3 # VOM USER WÄHLEN LASSEN
+    
+
+
+    def generate_clusters(self, monomer: ClusterStructure):
+        pass
+
     
 
     def add_monomer(self, cluster1: ClusterStructure, atom1: str, cluster2: ClusterStructure, atom2: str):
@@ -61,6 +69,7 @@ class ClusterGenerator:
             dock_cluster.coords[new_label] = new_coords
 
 
+
     def new_set_zmatrix(self, hb_atom: str):
         new_zmatrix = []
         self.zmatrices[hb_atom] = new_zmatrix
@@ -91,6 +100,7 @@ class ClusterGenerator:
             dihedral = self.get_dihedral(pos1, pos2, pos3, pos4)
 
 
+
     def get_angle(self, p1: np.array, p2: np.array, p3: np.array):
         print(p1, p2, p3)
         v1 = p2 - p1 / np.linalg.norm(p2 - p1)
@@ -98,6 +108,7 @@ class ClusterGenerator:
         cos = np.dot(v1, v2)
         sin = np.linalg.norm(np.cross(v1, v2))
         return np.arctan2(sin, cos)
+
 
 
     def get_dihedral(self, p1: np.array, p2: np.array, p3: np.array, p4: np.array) -> None:
@@ -110,12 +121,14 @@ class ClusterGenerator:
         n2 = n2 / np.linalg.norm(n2)
 
 
+
     def old_get_angle_math_stack_exchange(self, p1: np.array, p2: np.array, p3: np.array) -> float:
         v1 = (p2 - p1) / np.linalg.norm(p2 - p1)
         v2 = (p3 - p2) / np.linalg.norm(p3 - p2)
         norm_a = np.linalg.norm(v1 - v2)
         norm_b = np.linalg.norm(v1 + v2)
         return np.arctan2(norm_a, norm_b)
+
 
 
     def old_get_angle_see_ref_on_laptop(self, p1: np.array, p2: np.array, p3: np.array) -> float:
@@ -137,6 +150,7 @@ class ClusterGenerator:
                     )
                 )
         return angle
+
 
 
     def set_zmatrix(self, hb_atom: str):
@@ -191,6 +205,7 @@ class ClusterGenerator:
             len_u2 = len_vec23
             dihedral = np.arctan2(len_u2 * np.dot(vec12, u2u3), np.dot(u1u2, u2u3))
             new_zmatrix.append([atom4, len_vec34, angle, dihedral])
+
 
     
     # case acceptor atom: atom1 = neighbor of acceptor, atom0 = acceptor
@@ -264,10 +279,12 @@ class ClusterGenerator:
             new_zmatrix.append([atom3, distance, angle, dihedral])
     
 
+
     # BETEILIGTE WBB ATOME MÜSSEN AUS ENTSPRECHENDEN DATENSTRUKTUREN ENTFERNT WERDEN
     def add_monomer_at_acc(self):
         pass
     
+
 
     # BETEILIGTE WBB ATOME MÜSSEN AUS ENTSPRECHENDEN DATENSTRUKTUREN ENTFERNT WERDEN
     def add_monomer_at_don(self, cluster: ClusterStructure, atom_to_dock_at: str, docking_atom: str):
@@ -332,12 +349,14 @@ class ClusterGenerator:
         self.write_cluster_xyz(cluster.coords)
 
      
+
     def adjust_distance(self):
         pass
     def adjust_angle(self):
         pass
     def adjust_dihedral(self):
         pass
+
 
 
     #STATT MONOMER STRUCTURE IN GENERATOR ZU SPEICHERN BEI FUNKTIONEN WIE HIER ÜBERGEBEN
@@ -473,9 +492,11 @@ class ClusterGenerator:
         cluster.monomers += 1
 
 
+
     def update_torsion(self, cluster: ClusterStructure, dock_atom: str, docking_atom: str):
         cluster.torsions = [dock_atom, docking_atom]
         cluster.torsion_atoms = [atom[0] for atom in self.zmatrices[docking_atom]]
+
 
 
     #def update_bending(self, cluster: ClusterStructure, dock_atom: str, docking_atom: str):
@@ -494,6 +515,7 @@ class ClusterGenerator:
         #    self.set_bendings(cluster, docking_atom, dock_atom, neighbor)
         #    status = {atom: "UNKNOWN" for atom in cluster.structure}
         #    self.set_bending_atoms(cluster, docking_atom, status, dock_atom)
+
 
 
     #WIE SOLL MIT DONATOREN MIT EINEM EINZIGEN NACHBARN VERFAHREN WERDEN (Z.B. CARBOXYLSAUERSTOFF)?? DAFÜR
@@ -537,6 +559,7 @@ class ClusterGenerator:
             cluster.bendings.append([list(rotation(acc, don, 360/n * i, axis)), list(don)])
 
 
+
     def set_bending_atoms(self, cluster: ClusterStructure, current_atom: str, status: dict, acc: str):
         status[current_atom] = "KNOWN"
         for atom in cluster.structure[current_atom]:
@@ -544,6 +567,7 @@ class ClusterGenerator:
                 if atom != acc:
                     cluster.bending_atoms.append(atom)
                     self.set_bending_atoms(cluster, atom, status, acc)
+
 
 
     def conformers(self, oligomer: ClusterStructure, monomer: ClusterStructure, max_size: int):
@@ -632,6 +656,7 @@ class ClusterGenerator:
                                 self.conformers(NewCluster, monomer, max_size)
 
 
+
     def write_cluster_xyz(self, cluster_coords: dict) -> None:
         with open("out.xyz", "w") as xyzfile:
             n_atoms = len(cluster_coords.keys())
@@ -642,6 +667,7 @@ class ClusterGenerator:
                 y = coords[1]
                 z = coords[2]
                 print(f"{element}   {x:.5f}   {y:.5f}   {z:.5f}", file=xyzfile)
+
 
 
     def output(self, coords, counter: int = None):
