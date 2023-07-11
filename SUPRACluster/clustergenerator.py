@@ -4,38 +4,42 @@ import numpy as np
 
 from copy import deepcopy
 from utils.helper import is_hb_don, is_hb_acc, rotation, get_element, get_number
-from SUPRAConformer.structure import Structure
 from SUPRACluster.clusterstructure import ClusterStructure
-
-
-
-# TODO
-# - WOZU WIRD MONOMER_STRUCTURE GESPEICHERT?? WIRD NICHT OHNEHIN STETS EINE CLUSTERSTRUCTURE MIT ÜBERGEBEN
-#   WODURCH WEITERES SPEICHERN DER KONNEKTIVITÄT IM GENERATOR UNNÖTIG IST??
-#   --> WENN DAS ANGEPASST WIRD MUSS AUCH HANDLING DER Z-MATRIZEN ÜBERARBEITET WERDEN
 
 
 
 class ClusterGenerator:
 
-    #SO KEINE FLEXIBILTÄT BZGL. CLUSTERN AUS VERSCHIEDENARTIGEN MONOMEREN (S.O. TO DO)
-    #HIER MUSS ANGEPASST WERDEN WENN VERSCHIEDENARTIGE MONOMERE VERBAUT WERDEN (self.monomer_structure)
-    def __init__(self, monomer: ClusterStructure):
-        self.hb_len = 1.1
-        self.zmatrices = dict()
-        self.container = list()
+    def __init__(self):
+        self.monomer = None
+
+
+
+    def generate_clusters(self, monomer: ClusterStructure, max_cluster_size: int):
         self.monomer = monomer
-        self.counter = 0
-        self.max_cluster_size = 3 # VOM USER WÄHLEN LASSEN
+        self.generate_clusters(monomer, max_cluster_size)
     
 
 
-    def generate_clusters(self, monomer: ClusterStructure):
+    def generation_setup(self):
         pass
 
-    
 
-    def add_monomer(self, cluster1: ClusterStructure, atom1: str, cluster2: ClusterStructure, atom2: str):
+
+    def _combinations(self, cluster: ClusterStructure, max_cluster_size: int):
+        if cluster.monomers == max_cluster_size:
+            pass
+        else:
+            for acc in cluster.hydrogen_bond_acceptors:
+                for angle in [0, 120, 240]:
+                    pass
+            for don in cluster.hydrogen_bond_donators:
+                for angle in [0, 120, 240]:
+                    pass
+
+
+
+    def _add_monomer(self, cluster1: ClusterStructure, atom1: str, cluster2: ClusterStructure, atom2: str):
         if is_hb_don(atom1):
             if not is_hb_acc(atom2):
                 print("ERROR")
