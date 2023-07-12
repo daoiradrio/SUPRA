@@ -681,9 +681,9 @@ class ConformerGenerator:
             # sofern keine strukturinternen Clashes hinzufügen zur Liste erfolgreich erzeugter Konformerstrukturen
             # check new structure for internal clashes
             if not self._clashes(bond_partners, new_coords):
-                #self.output_coords(new_coords, counter)
+                self.output_coords(new_coords, counter)
                 #self.optimizer.UFF_structure_optimization(new_coords, counter)
-                self.optimizer.MMFF_structure_optimization(new_coords, counter)
+                #self.optimizer.MMFF_structure_optimization(new_coords, counter)
                 #self.optimizer.optimize_structure_uff(new_coords, counter)
                 for angle in temp:
                     print(angle, end=" ")
@@ -698,8 +698,8 @@ class ConformerGenerator:
             axis_vec2 = new_coords[self.torsions[index].atom2]
             axis = (axis_vec2 - axis_vec1) / np.linalg.norm(axis_vec2 - axis_vec1)
             # jeden möglichen Torsionswinkel für Bindung durchgehen
-            #for angle in self.angles:
-            for angle in self.torsions[index].rot_angles:
+            for angle in self.angles:
+            #for angle in self.torsions[index].rot_angles:
                 R = Rotation.from_rotvec(np.deg2rad(angle) * axis)
                 new_coords_copy = new_coords.copy()
                 for atom in self.torsions[index].torsion_atoms:
