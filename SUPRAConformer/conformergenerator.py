@@ -10,6 +10,7 @@ from SUPRAConformer.structure import Structure
 from utils.optimizer import Optimizer
 from utils.analyzer import Analyzer
 from utils.symmetry import Symmetry
+from utils.torsion import Torsion
 from utils.helper import covalence_radii_single, covalence_radii_double, get_element, \
                          increment_combinations, valences, atom_in_torsions, get_number
 
@@ -105,17 +106,42 @@ class ConformerGenerator:
             if sum1 == valence1-1:
                 if get_element(bond.atom1) == "C" and \
                   [get_element(atom) for atom in bond_partners1[1:]] == ["H", "H", "H"]:
-                    self.methyl_torsions.append(bond)
+                    #self.methyl_torsions.append(bond)
+                    new_torsion = Torsion()
+                    new_torsion.atom1 = bond.atom1
+                    new_torsion.atom2 = bond.atom2
+                    new_torsion.bond_order = bond.bond_order
+                    self.methyl_torsions.append(new_torsion)
                 else:
-                    self.terminal_torsions.append(bond)
+                    #self.terminal_torsions.append(bond)
+                    new_torsion = Torsion()
+                    new_torsion.atom1 = bond.atom1
+                    new_torsion.atom2 = bond.atom2
+                    new_torsion.bond_order = bond.bond_order
+                    self.terminal_torsions.append(new_torsion)
             elif sum2 == valence2-1:
                 if get_element(bond.atom2) == "C" and \
                   [get_element(atom) for atom in bond_partners2[1:]] == ["H", "H", "H"]:
-                    self.methyl_torsions.append(bond)
+                    #self.methyl_torsions.append(bond)
+                    new_torsion = Torsion()
+                    new_torsion.atom1 = bond.atom1
+                    new_torsion.atom2 = bond.atom2
+                    new_torsion.bond_order = bond.bond_order
+                    self.methyl_torsions.append(new_torsion)
                 else:
-                    self.terminal_torsions.append(bond)
+                    #self.terminal_torsions.append(bond)
+                    new_torsion = Torsion()
+                    new_torsion.atom1 = bond.atom1
+                    new_torsion.atom2 = bond.atom2
+                    new_torsion.bond_order = bond.bond_order
+                    self.terminal_torsions.append(new_torsion)
             else:
-                self.central_torsions.append(bond)
+                #self.central_torsions.append(bond)
+                new_torsion = Torsion()
+                new_torsion.atom1 = bond.atom1
+                new_torsion.atom2 = bond.atom2
+                new_torsion.bond_order = bond.bond_order
+                self.central_torsions.append(new_torsion)
 
 
 
@@ -183,15 +209,15 @@ class ConformerGenerator:
         peptidebonds = []
         double_bond = covalence_radii_double["C"] + covalence_radii_double["O"] + 0.08
         # loop over every rotatable bond
-        for bond in self.central_torsions:
+        for torsion in self.central_torsions:
             # check for characteristic C=O + C-NRR' bonding environment
             # first check: C and N included in bond?
-            if sorted([get_element(bond.atom1), get_element(bond.atom2)]) == ["C", "N"]:
+            if sorted([get_element(torsion.atom1), get_element(torsion.atom2)]) == ["C", "N"]:
                 # second check: C with bonding partner O?
-                if get_element(bond.atom1) == "C":
-                    C = bond.atom1
+                if get_element(torsion.atom1) == "C":
+                    C = torsion.atom1
                 else:
-                    C = bond.atom2
+                    C = torsion.atom2
                 for atom3 in bond_partners[C]:
                     element3 = get_element(atom3)
                     if element3 == "O":
@@ -201,7 +227,7 @@ class ConformerGenerator:
                         distance = np.linalg.norm(p1 - p2)
                         if distance <= double_bond:
                             # found peptide bond, remove bond from list of rotatable bonds
-                            peptidebonds.append(bond)
+                            peptidebonds.append(torsion)
                             break
         for bond in peptidebonds:
             self.central_torsions.remove(bond)
@@ -644,7 +670,7 @@ class ConformerGenerator:
                             torsion_done[i] = 1
                             continue
         """
-        #"""
+        """
         print()
         print(f"Inkrement: {angle_increment}")
         for i, torsion in enumerate(self.torsions):
@@ -653,7 +679,7 @@ class ConformerGenerator:
                 print(angle, end=" ")
             print()
         print()
-        #"""
+        """
 
 
 
@@ -681,13 +707,13 @@ class ConformerGenerator:
             # sofern keine strukturinternen Clashes hinzufügen zur Liste erfolgreich erzeugter Konformerstrukturen
             # check new structure for internal clashes
             if not self._clashes(bond_partners, new_coords):
-                self.output_coords(new_coords, counter)
+                #self.output_coords(new_coords, counter)
                 #self.optimizer.UFF_structure_optimization(new_coords, counter)
-                #self.optimizer.MMFF_structure_optimization(new_coords, counter)
+                self.optimizer.MMFF_structure_optimization(new_coords, counter)
                 #self.optimizer.optimize_structure_uff(new_coords, counter)
-                for angle in temp:
-                    print(angle, end=" ")
-                print(f": {counter}")
+                #for angle in temp:
+                #    print(angle, end=" ")
+                #print(f": {counter}")
                 return counter+1
             else:
                 return counter
@@ -698,8 +724,8 @@ class ConformerGenerator:
             axis_vec2 = new_coords[self.torsions[index].atom2]
             axis = (axis_vec2 - axis_vec1) / np.linalg.norm(axis_vec2 - axis_vec1)
             # jeden möglichen Torsionswinkel für Bindung durchgehen
-            for angle in self.angles:
-            #for angle in self.torsions[index].rot_angles:
+            #for angle in self.angles:
+            for angle in self.torsions[index].rot_angles:
                 R = Rotation.from_rotvec(np.deg2rad(angle) * axis)
                 new_coords_copy = new_coords.copy()
                 for atom in self.torsions[index].torsion_atoms:
