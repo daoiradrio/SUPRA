@@ -13,7 +13,6 @@ class Structure:
         self.number_of_atoms = 0
         self.coords = {}
         self.bond_partners = {}
-        self.bond_orders = {}
         self.bonds = []
         self.energy = 0
         if file:
@@ -59,7 +58,7 @@ class Structure:
                 #if valence == max_valence:
                 #    break
                 coords2 = self.coords[atom2]
-                bond_order = self._check_connectivity(atom1, coords1, atom2, coords2)
+                bond_order = self._get_bond_order(atom1, coords1, atom2, coords2)
                 if bond_order:
                     new_bond = Bond()
                     new_bond.atom1 = atom1
@@ -76,7 +75,7 @@ class Structure:
 
 
     # calculate connectivity and bond order
-    def _check_connectivity(self, atom1: str, coord1: np.array, atom2: str, coord2: np.array) -> int:
+    def _get_bond_order(self, atom1: str, coord1: np.array, atom2: str, coord2: np.array) -> int:
         # initialize variables
         tolerance = 0.08
         bond_order = 0

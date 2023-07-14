@@ -22,14 +22,14 @@ class ConformerGenerator:
         self.output_folder_name = "SUPRA_Output"
         self.workdir_name = "optdir"
         self.opt_struc_name = "opt_struc.xyz"
-        self.analyzer = Analyzer()
-        self.optimizer = Optimizer()
+        self.analyzer = None
+        self.optimizer = None
         self.torsions = []
         self.central_torsions = []
         self.terminal_torsions = []
         self.methyl_torsions = []
-        self.angle_increments = list()
-        self.angles = list()
+        self.angle_increments = []
+        #self.angles = list()
 
 
     def generate_conformers(
@@ -40,7 +40,9 @@ class ConformerGenerator:
         ignore_terminal: bool = False,
         ignore_peptide: bool = False
     ) -> None:
-        self._get_torsions(structure.bonds, structure.bond_partners)
+        self.optimizer = Optimizer()
+        self.analyzer = Analyzer()
+        self._find_torsions(structure.bonds, structure.bond_partners)
         self._find_cycles(structure.bond_partners)
         ###
         #self._find_peptidebonds(structure.coords, structure.bond_partners)
@@ -70,12 +72,12 @@ class ConformerGenerator:
                 print("Invalid input.")
         #"""
         ###
-        self._generation_setup(list(structure.coords.keys()), structure.bond_partners)
+        self._generation_setup(structure.bond_partners)
         print("Performing generation of conformer structures...")
         number_conformers = 0
         for increment in self.angle_increments:
             self.angles = [n * increment for n in range(int(np.round(360 / increment)))]
-            self.check_rot_sym_of_torsions(structure, increment)
+            self._find_rot_sym_of_torsions(structure, increment)
             number_conformers = self._combinations(
                 bond_partners=structure.bond_partners, new_coords=structure.coords, counter=number_conformers
             )
@@ -91,7 +93,7 @@ class ConformerGenerator:
     
 
 
-    def _get_torsions(self, bonds: list, bond_partners: dict) -> None:
+    def _find_torsions(self, bonds: list, bond_partners: dict) -> None:
         for bond in bonds:
             if bond.bond_order != 1:
                 continue
@@ -394,15 +396,16 @@ class ConformerGenerator:
 
     # zählen der jeweils zu rotierenden Atome auf beiden Seiten der Bindung, Hinzufügen zu torsion_atoms von der
     # Seite welche weniger Atome enthält
-    def _generation_setup(self, atoms: list, bond_partners: dict) -> None:
+    def _generation_setup(self, bond_partners: dict) -> None:
+        atoms = list(bond_partners.keys())
         # Durchführung für jede gefundene und gefilterte bzw. ausgewählte Rotationsbindung
         for torsion in self.torsions:
             # zählen der linken Seite (entspricht erstgenanntem Atom der Bindung in torsions)
             status = {atom: "UNKNOWN" for atom in atoms}
-            self._torsion_atom_counter(bond_partners, torsion.atom1, torsion.atom2, status, torsion.rot_atoms1)
+            self._find_torsion_atoms(bond_partners, torsion.atom1, torsion.atom2, status, torsion.rot_atoms1)
             # zählen der linken Seite (entspricht letztgenanntem Atom der Bindung in torsions)
             status = {atom: "UNKNOWN" for atom in atoms}
-            self._torsion_atom_counter(bond_partners, torsion.atom2, torsion.atom1, status, torsion.rot_atoms2)
+            self._find_torsion_atoms(bond_partners, torsion.atom2, torsion.atom1, status, torsion.rot_atoms2)
             # wenn links weniger oder genauso viele Atome wie rechts wird links gedreht, d.h. Atome der linken
             # Seite zu torsions_atoms hinzufügen
             if len(torsion.rot_atoms1) <= len(torsion.rot_atoms2):
@@ -420,7 +423,7 @@ class ConformerGenerator:
     # basiert auf Depth-First-Search (DFS) auf ungerichtetem Graphen mit Färbemethode (analog zu find_cycles)
     # UNKNOWN: Knoten noch nicht besucht
     # SEEN: Knoten besucht
-    def _torsion_atom_counter(
+    def _find_torsion_atoms(
             self, bond_partners: dict, atom: str, last_atom: str, status: dict, torsion_atoms: list
     ) -> list:
         # Atom bereits betrachtet
@@ -435,7 +438,7 @@ class ConformerGenerator:
             for neighbor in bond_partners[atom]:
                 if neighbor != last_atom:
                     torsion_atoms.append(neighbor)
-                    self._torsion_atom_counter(
+                    self._find_torsion_atoms(
                         bond_partners, neighbor, atom, status, torsion_atoms
                     )
         # Anzahl der zu rotierenden Atome der entsprechenden Seite der Bindung zurückgeben
@@ -443,7 +446,7 @@ class ConformerGenerator:
     
 
 
-    def check_rot_sym_of_torsions(self, mol: Structure, angle_increment: int) -> None:
+    def _find_rot_sym_of_torsions(self, mol: Structure, angle_increment: int) -> None:
         sym = Symmetry()
 
         torsion_done = [0 for _ in self.torsions]
@@ -455,12 +458,12 @@ class ConformerGenerator:
             torsion.rot_angles = [0]
             # rotational symmetry left side of torsion bond
             status = {atom: "UNKNOWN" for atom in mol.coords.keys()}
-            self._get_torsion_group(mol.bond_partners, atom1, atom2, status, torsion.sym_rot_atoms1)
+            self._find_torsion_group(mol.bond_partners, atom1, atom2, status, torsion.sym_rot_atoms1)
             torsion.sym_rot_atoms1 = sorted(torsion.sym_rot_atoms1, key=lambda label: get_number(label))
             torsion.rot_sym1 = sym.rot_order_along_bond(mol, torsion.sym_rot_atoms1, mol.coords[atom1], mol.coords[atom2])
             # rotational symmetry right side of torsion bond
             status = {atom: "UNKNOWN" for atom in mol.coords.keys()}
-            self._get_torsion_group(mol.bond_partners, torsion.atom2, torsion.atom1, status, torsion.sym_rot_atoms2)
+            self._find_torsion_group(mol.bond_partners, torsion.atom2, torsion.atom1, status, torsion.sym_rot_atoms2)
             torsion.sym_rot_atoms2 = sorted(torsion.sym_rot_atoms2, key=lambda label: get_number(label))
             torsion.rot_sym2 = sym.rot_order_along_bond(mol, torsion.sym_rot_atoms2, mol.coords[atom1], mol.coords[atom2])
             # assign rotation angles if already possible
@@ -683,7 +686,7 @@ class ConformerGenerator:
 
 
 
-    def _get_torsion_group(self, connectivity: dict, atom: str, last_atom: str, status: dict, torsion_atoms: list):
+    def _find_torsion_group(self, connectivity: dict, atom: str, last_atom: str, status: dict, torsion_atoms: list) -> None:
         if status[atom] == "SEEN":
             return
         else:
@@ -738,10 +741,10 @@ class ConformerGenerator:
 
 
 
-    def _clashes(self, bond_partners: dict, new_coords: dict) -> bool:
-        for atom1, coords1 in new_coords.items():
+    def _clashes(self, bond_partners: dict, coords: dict) -> bool:
+        for atom1, coords1 in coords.items():
             element1 = get_element(atom1)
-            for atom2, coords2 in new_coords.items():
+            for atom2, coords2 in coords.items():
                 if not atom1 == atom2:
                     element2 = get_element(atom2)
                     distance = np.linalg.norm(coords1 - coords2)

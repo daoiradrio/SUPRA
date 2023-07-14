@@ -18,7 +18,7 @@ class Analyzer:
 
 
 
-    def compare_structure_sets(self, path1: str, path2: str, rmsd_threshold: float=0.1, ignore: str=None, mode: str="normal") -> int:
+    def compare_structure_sets(self, path1: str, path2: str, rmsd_threshold: float=0.1, ignore: str=None, mode: str="normal") -> None:
         conformer1 = Structure()
         conformer2 = Structure()
 
@@ -84,7 +84,7 @@ class Analyzer:
         print(f"Number of structures of Path 1 in Path 2: {counter}")
         print()
 
-        return counter
+        return
 
 
 
@@ -144,22 +144,22 @@ class Analyzer:
             #    n += 1
             if ignore == "methyl":
                 conformer1.get_structure(os.path.join(path, file1), read_energy=use_energy)
-                for atom in self.get_methyl_group_atoms(conformer1.bond_partners):
+                for atom in self._find_methyl_group_atoms(conformer1.bond_partners):
                     del conformer1.coords[atom]
             elif ignore == "all":
                 conformer1.get_structure(os.path.join(path, file1), read_energy=use_energy)
-                for atom in self.get_terminal_group_atoms(conformer1.bond_partners):
+                for atom in self._find_terminal_group_atoms(conformer1.bond_partners):
                     del conformer1.coords[atom]
             else:
                 conformer1.read_xyz(os.path.join(path, file1), read_energy=use_energy)
             for j, file2 in enumerate(conformers[i+1:], start=i+1):
                 if ignore == "methyl":
                     conformer2.get_structure(os.path.join(path, file2), read_energy=use_energy)
-                    for atom in self.get_methyl_group_atoms(conformer2.bond_partners):
+                    for atom in self._find_methyl_group_atoms(conformer2.bond_partners):
                         del conformer2.coords[atom]
                 elif ignore == "all": 
                     conformer2.get_structure(os.path.join(path, file2), read_energy=use_energy)
-                    for atom in self.get_terminal_group_atoms(conformer2.bond_partners):
+                    for atom in self._find_terminal_group_atoms(conformer2.bond_partners):
                         del conformer2.coords[atom]
                 else:
                     conformer2.read_xyz(os.path.join(path, file2), read_energy=use_energy)
@@ -236,57 +236,7 @@ class Analyzer:
 
 
 
-    def old_remove_doubles(self, path: str, rmsd_threshold: float=0.1, ignore: str=None) -> int:
-        print("Performing removal of duplicate structures...")
-
-        conformer1 = Structure()
-        conformer2 = Structure()
-        path = os.path.abspath(path)
-        conformers = os.listdir(path)
-        #m = len(conformers)/50
-        #n = 1
-        counter = len(conformers)
-
-        #print(f"{'_'*50}")
-        #iprint("|", end="", flush=True)
-        for index, file1 in enumerate(conformers):
-            #if index > m*n:
-            #    print("#", end="", flush=True)
-            #    n += 1
-            if ignore == "methyl":
-                conformer1.get_structure(os.path.join(path, file1))
-                for atom in self.get_methyl_group_atoms(conformer1.bond_partners):
-                    del conformer1.coords[atom]
-            elif ignore == "all":
-                conformer1.get_structure(os.path.join(path, file1))
-                for atom in self.get_terminal_group_atoms(conformer1.bond_partners):
-                    del conformer1.coords[atom]
-            else:
-                conformer1.read_xyz(os.path.join(path, file1))
-            for file2 in conformers[index + 1:]:
-                if ignore == "methyl":
-                    conformer2.get_structure(os.path.join(path, file2))
-                    for atom in self.get_methyl_group_atoms(conformer2.bond_partners):
-                        del conformer2.coords[atom]
-                elif ignore == "all": 
-                    conformer2.get_structure(os.path.join(path, file2))
-                    for atom in self.get_terminal_group_atoms(conformer2.bond_partners):
-                        del conformer2.coords[atom]
-                else:
-                    conformer2.read_xyz(os.path.join(path, file2))
-                if self.rmsd(conformer1.coords, conformer2.coords, rmsd_threshold) <= rmsd_threshold:
-                    os.remove(os.path.join(path, file1))
-                    counter -= 1
-                    break
-        #print("\n")
-        print("Removal of double structures done.")
-        print(f"Individual conformers in {path}: {counter}")
-   
-        return counter
-    
-
-
-    def get_methyl_group_atoms(self, structure: dict) -> list:
+    def _find_methyl_group_atoms(self, structure: dict) -> list:
         methyl_group_atoms = []
         for atom, bond_partners in structure.items():
             if get_element(atom) == "C":
@@ -311,7 +261,7 @@ class Analyzer:
 
 
 
-    def get_terminal_group_atoms(self, structure: dict) -> list:
+    def _find_terminal_group_atoms(self, structure: dict) -> list:
         terminal_group_atoms = []
         for atom, bond_partners in structure.items():
             if not get_element(atom) in ["H", "F", "Cl", "Br", "I"]:
@@ -342,7 +292,7 @@ class Analyzer:
         elements2 = [get_element(atom) for atom in coords2.keys()]
         n_atoms = len(elements1)
         cost = np.zeros((n_atoms, n_atoms))
-        kabsch_coords1, kabsch_coords2 = self.kabsch(coords1, coords2)
+        kabsch_coords1, kabsch_coords2 = self._kabsch(coords1, coords2)
         for i in range(n_atoms):
             for j in range(i+1):
                 if elements1[i] == elements2[j]:
@@ -359,13 +309,13 @@ class Analyzer:
 
 
     def rmsd_tight(self, coords1: dict, connectivity1: dict, coords2: dict, connectivity2: dict,) -> float:
-        coords1, coords2 = self.match(coords1, connectivity1, coords2, connectivity2)
-        kabsch_coords1, kabsch_coords2 = self.kabsch(coords1, coords2)
+        coords1, coords2 = self._match(coords1, connectivity1, coords2, connectivity2)
+        kabsch_coords1, kabsch_coords2 = self._kabsch(coords1, coords2)
         return self.calc_rmsd(kabsch_coords1, kabsch_coords2)
 
 
 
-    def kabsch(self, coords1: Union[dict, list, np.array], coords2: Union[dict, list, np.array]) -> tuple:
+    def _kabsch(self, coords1: Union[dict, list, np.array], coords2: Union[dict, list, np.array]) -> tuple:
         if type(coords1) == dict:
             coords1 = list(coords1.values())
             coords1 = np.array(coords1)
@@ -420,15 +370,15 @@ class Analyzer:
 
     # No. 1 are reference coordinates and structure
     # No. 2 coordinates will be reordered to match No. 1
-    def match(self, coords1: dict, structure1: dict, coords2: dict, structure2: dict) -> tuple:
+    def _match(self, coords1: dict, structure1: dict, coords2: dict, structure2: dict) -> tuple:
         # initialization
         pairs = {}
         matched_coords1 = []
         matched_coords2 = []
         list1 = list(coords1.keys())
         list2 = list(coords2.keys())
-        spheres1 = {atom: self.spheres(structure1, atom) for atom in list1}
-        spheres2 = {atom: self.spheres(structure2, atom) for atom in list2}
+        spheres1 = {atom: self._spheres(structure1, atom) for atom in list1}
+        spheres2 = {atom: self._spheres(structure2, atom) for atom in list2}
 
         # find pairs of atoms from No. 1 and 2 that are equivalent in terms of element and coordination spheres
         # for atoms where this is already unique store the respective coordinates
@@ -493,7 +443,7 @@ class Analyzer:
 
 
 
-    def spheres(self, structure: dict, start: str) -> list:
+    def _spheres(self, structure: dict, start: str) -> list:
         atoms = Queue()
         for atom in structure[start]:
             atoms.put(atom)
