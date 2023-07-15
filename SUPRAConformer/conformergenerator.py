@@ -101,6 +101,10 @@ class ConformerGenerator:
             valence2 = valences[get_element(bond.atom2)]
             if valence1 == 1 or valence2 == 1:
                 continue
+            new_torsion = Torsion()
+            new_torsion.atom1 = bond.atom1
+            new_torsion.atom2 = bond.atom2
+            new_torsion.bond_order = bond.bond_order
             bond_partners1 = sorted(bond_partners[bond.atom1], key=lambda x: valences[get_element(x)], reverse=True)
             sum1 = sum([valences[get_element(atom)] for atom in bond_partners1[1:]])
             bond_partners2 = sorted(bond_partners[bond.atom2], key=lambda x: valences[get_element(x)], reverse=True)
@@ -109,40 +113,20 @@ class ConformerGenerator:
                 if get_element(bond.atom1) == "C" and \
                   [get_element(atom) for atom in bond_partners1[1:]] == ["H", "H", "H"]:
                     #self.methyl_torsions.append(bond)
-                    new_torsion = Torsion()
-                    new_torsion.atom1 = bond.atom1
-                    new_torsion.atom2 = bond.atom2
-                    new_torsion.bond_order = bond.bond_order
                     self.methyl_torsions.append(new_torsion)
                 else:
                     #self.terminal_torsions.append(bond)
-                    new_torsion = Torsion()
-                    new_torsion.atom1 = bond.atom1
-                    new_torsion.atom2 = bond.atom2
-                    new_torsion.bond_order = bond.bond_order
                     self.terminal_torsions.append(new_torsion)
             elif sum2 == valence2-1:
                 if get_element(bond.atom2) == "C" and \
                   [get_element(atom) for atom in bond_partners2[1:]] == ["H", "H", "H"]:
                     #self.methyl_torsions.append(bond)
-                    new_torsion = Torsion()
-                    new_torsion.atom1 = bond.atom1
-                    new_torsion.atom2 = bond.atom2
-                    new_torsion.bond_order = bond.bond_order
                     self.methyl_torsions.append(new_torsion)
                 else:
                     #self.terminal_torsions.append(bond)
-                    new_torsion = Torsion()
-                    new_torsion.atom1 = bond.atom1
-                    new_torsion.atom2 = bond.atom2
-                    new_torsion.bond_order = bond.bond_order
                     self.terminal_torsions.append(new_torsion)
             else:
                 #self.central_torsions.append(bond)
-                new_torsion = Torsion()
-                new_torsion.atom1 = bond.atom1
-                new_torsion.atom2 = bond.atom2
-                new_torsion.bond_order = bond.bond_order
                 self.central_torsions.append(new_torsion)
 
 
