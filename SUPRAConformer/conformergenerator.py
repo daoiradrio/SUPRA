@@ -76,7 +76,7 @@ class ConformerGenerator:
         print("Performing generation of conformer structures...")
         number_conformers = 0
         for increment in self.angle_increments:
-            self.angles = [n * increment for n in range(int(np.round(360 / increment)))]
+            #self.angles = [n * increment for n in range(int(np.round(360 / increment)))]
             self._find_rot_sym_of_torsions(structure, increment)
             number_conformers = self._combinations(
                 bond_partners=structure.bond_partners, new_coords=structure.coords, counter=number_conformers
