@@ -687,8 +687,7 @@ class ConformerGenerator:
     # calculates all possible conformer structures and generates an output file for every conformer structure without
     # internal clash
     # the output file is an input file for a geometry optimization with ORCA
-    def _combinations(self, bond_partners: dict, new_coords: dict, counter: int, index: int = 0,
-    temp: list = []) -> int:
+    def _combinations(self, bond_partners: dict, new_coords: dict, counter: int, index: int = 0) -> int:
         # base case, new torsion angle for every angle has been calculated
         if index == len(self.torsions):
             # sofern keine strukturinternen Clashes hinzufügen zur Liste erfolgreich erzeugter Konformerstrukturen
@@ -698,9 +697,6 @@ class ConformerGenerator:
                 #self.optimizer.UFF_structure_optimization(new_coords, counter)
                 self.optimizer.MMFF_structure_optimization(new_coords, counter)
                 #self.optimizer.optimize_structure_uff(new_coords, counter)
-                #for angle in temp:
-                #    print(angle, end=" ")
-                #print(f": {counter}")
                 return counter+1
             else:
                 return counter
@@ -720,7 +716,7 @@ class ConformerGenerator:
                     new_coord = R.apply(new_coord)
                     new_coords_copy[atom] = new_coord + axis_vec1
                 # rekursiver Aufruf für nächste Bindung
-                counter = self._combinations(bond_partners, new_coords_copy, counter, index+1, temp+[angle])
+                counter = self._combinations(bond_partners, new_coords_copy, counter, index+1)
             return counter
 
 

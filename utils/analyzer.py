@@ -133,8 +133,7 @@ class Analyzer:
         conformers = os.listdir(path)
         #m = len(conformers)/50
         #n = 1
-        counter = len(conformers)
-        delete_files = [0 for _ in range(counter)]
+        delete_files = [0 for _ in range(len(conformers))]
 
         #print(f"{'_'*50}")
         #iprint("|", end="", flush=True)
@@ -186,11 +185,15 @@ class Analyzer:
         #    out_dir = os.path.join(raw_path, "SUPRA_Output")
         #    os.system(f"mkdir {out_dir}")
 
+        counter = len(conformers)
+        #counter = 0
         for i, delete in enumerate(delete_files):
             if delete:
                 os.remove(os.path.join(path, conformers[i]))
-                #os.system(f"cp {os.path.join(path, conformers[i])} {os.path.join(out_dir, conformers[i])}")
                 counter -= 1
+            #if not delete:
+            #    os.system(f"cp {os.path.join(path, conformers[i])} {os.path.join(out_dir, conformers[i])}")
+            #    counter += 1
 
         #print("\n")
         
