@@ -679,7 +679,7 @@ class ConformerGenerator:
                 if neighbor != last_atom:
                     if not atom_in_torsions(self.torsions, neighbor):
                         torsion_atoms.append(neighbor)
-                        self._get_torsion_group(connectivity, neighbor, atom, status, torsion_atoms)
+                        self._find_torsion_group(connectivity, neighbor, atom, status, torsion_atoms)
         return
 
 

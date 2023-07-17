@@ -134,7 +134,7 @@ class Analyzer:
         #m = len(conformers)/50
         #n = 1
         counter = len(conformers)
-        delete_files = [0 for i in range(counter)]
+        delete_files = [0 for _ in range(counter)]
 
         #print(f"{'_'*50}")
         #iprint("|", end="", flush=True)
