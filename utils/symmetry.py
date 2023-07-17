@@ -9,7 +9,7 @@ from utils.helper import get_element
 class Symmetry:
 
     def __init__(self):
-        self.possible_orders = [
+        self.possible_rot_orders = [
             6, # corresponds to angle increment  60°
             4, # corresponds to angle increment  90°
             3, # corresponds to angle increment 120°
