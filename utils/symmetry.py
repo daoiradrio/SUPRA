@@ -59,9 +59,10 @@ class Symmetry:
         return True
     
 
+
     def rot_order_along_bond(self, mol: Structure, rot_atoms: list, from_coords: np.array, to_coords: np.array) -> int:
         rot_axis = RotationAxis(from_coords, to_coords)
-        for order in self.possible_orders:
+        for order in self.possible_rot_orders:
             if (self.rot_sym_along_bond(mol, rot_axis, rot_atoms, order)):
                 return order
         return 1
