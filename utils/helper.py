@@ -24,10 +24,12 @@ covalence_radii_triple = {
 }
 
 
+
 # maximum valences of chain atoms for regulation of loop cycles in building self.structure (Structure-class)
 valences = {
     "C": 4, "N": 3, "O": 2, "H": 1, "B": 3, "F": 1, "Cl": 1, "Br": 1, "I": 1
 }
+
 
 
 atomic_masses_symbols = {
@@ -35,16 +37,19 @@ atomic_masses_symbols = {
     "Li": 6.941, "Be": 9.01218, "B": 10.81, "C": 12.011, "N": 14.0067, "O": 15.9994, "F": 18.998403, "Ne": 0.179,
 }
 
+
 atomic_masses_numbers = {
     1: 1.00797, 2: 4.00260,
     3: 6.941, 4: 9.01218, 5: 10.81, 6: 12.011, 7: 14.0067, 8: 15.9994, 9: 18.998403, 10: 0.179,
 }
 
 
+
 # combinations of angle increments
 increment_combinations = {
     30: [30, 45], 45: [45, 60], 60: [60, 90], 90: [90, 120], 120: [120, 180], 180: [180]
 }
+
 
 
 #WBB-LÄNGEN FÜR VERSCHIEDENE ELEMENTE EINPFLEGEN (SERIÖSE QUELLE SUCHEN)
@@ -65,6 +70,7 @@ def rotation(coord_rotation_atom: np.array, coord_axis_atom1: np.array, coord_ax
     return coord_rotation_atom
 
 
+
 # translating of an atom labels in element symbols
 def get_element(label: str) -> str:
     # if letter on second index: two letter element symbol, return first two chars of label
@@ -75,6 +81,7 @@ def get_element(label: str) -> str:
         return label[0]
 
 
+
 def get_number(label: str) -> int:
     if label[-2].isdigit():
         return int(label[-2] + label[-1])
@@ -82,11 +89,13 @@ def get_number(label: str) -> int:
         return int(label[-1])
 
 
+
 def atom_in_torsions(torsions: list, label: str) -> bool:
     for torsion in torsions:
         if (label == torsion.atom1 or label == torsion.atom2):
             return True
     return False
+
 
 
 def is_hb_don(label: str) -> bool:
@@ -97,11 +106,13 @@ def is_hb_don(label: str) -> bool:
     return flag
 
 
+
 def is_hb_acc(label: str) -> bool:
     flag = False
     if get_element(label) == "H":
         flag = True
     return flag
+
 
 
 def geometric_center(coords: dict) -> np.array:
@@ -111,6 +122,7 @@ def geometric_center(coords: dict) -> np.array:
     n = len(coords)
     center = center / n
     return center
+
 
 
 def mass_center(coords: dict) -> np.array:
@@ -123,6 +135,7 @@ def mass_center(coords: dict) -> np.array:
         sum_m += m
     com *= (1/m)
     return com
+
 
 
 def inertia_tensor(coords: dict) -> np.array:

@@ -24,6 +24,7 @@ class ConformerGenerator:
         self.opt_struc_name = "opt_struc.xyz"
         self.analyzer = None
         self.optimizer = None
+        self.symmetry = None
         self.torsions = []
         self.central_torsions = []
         self.terminal_torsions = []
@@ -42,6 +43,7 @@ class ConformerGenerator:
     ) -> None:
         self.optimizer = Optimizer()
         self.analyzer = Analyzer()
+        self.symmetry = Symmetry()
         self._find_torsions(structure.bonds, structure.bond_partners)
         self._find_cycles(structure.bond_partners)
         ###
@@ -77,7 +79,8 @@ class ConformerGenerator:
         number_conformers = 0
         for increment in self.angle_increments:
             #self.angles = [n * increment for n in range(int(np.round(360 / increment)))]
-            self._find_rot_sym_of_torsions(structure, increment)
+            #self._find_rot_sym_of_torsions(structure, increment)
+            self.symmetry.find_rot_sym_of_torsions(structure, self.torsions, increment)
             number_conformers = self._combinations(
                 bond_partners=structure.bond_partners, new_coords=structure.coords, counter=number_conformers
             )

@@ -2,7 +2,7 @@ import numpy as np
 
 from SUPRAConformer.structure import Structure
 from utils.rotationaxis import RotationAxis
-from utils.helper import get_element
+from utils.helper import get_element, get_number, atom_in_torsions
 
 
 
@@ -18,25 +18,247 @@ class Symmetry:
 
 
 
-    def check_rot_sym_of_torsions(self, mol: Structure, torsions: list) -> None:
-        for atom1, atom2 in torsions:
+    def find_rot_sym_of_torsions(self, mol: Structure, torsions: list, angle_increment: int) -> None:
+        torsion_done = [0 for _ in torsions]
+
+        for i, torsion in enumerate(torsions):
+            atom1 = torsion.atom1
+            atom2 = torsion.atom2
+            torsion.rot_angles = [0]
             # rotational symmetry left side of torsion bond
             status = {atom: "UNKNOWN" for atom in mol.coords.keys()}
-            left_torsion_atoms = []
-            self._get_torsion_group(torsions, mol.bond_partners, atom1, atom2, status, left_torsion_atoms)
-            left_rot_sym = self.rot_order_along_bond(mol, left_torsion_atoms, mol.coords[atom1], mol.coords[atom2])
+            self._find_torsion_group(mol.bond_partners, torsions, atom1, atom2, status, torsion.sym_rot_atoms1)
+            torsion.sym_rot_atoms1 = sorted(torsion.sym_rot_atoms1, key=lambda label: get_number(label))
+            torsion.rot_sym1 = self.rot_order_along_bond(mol, torsion.sym_rot_atoms1, mol.coords[atom1], mol.coords[atom2])
             # rotational symmetry right side of torsion bond
             status = {atom: "UNKNOWN" for atom in mol.coords.keys()}
-            right_torsion_atoms = []
-            self._get_torsion_group(torsions, mol.bond_partners, atom2, atom1, status, right_torsion_atoms)
-            right_rot_sym = self.rot_order_along_bond(mol, right_torsion_atoms, mol.coords[atom1], mol.coords[atom2])
+            self._find_torsion_group(mol.bond_partners, torsions, atom2, atom1, status, torsion.sym_rot_atoms2)
+            torsion.sym_rot_atoms2 = sorted(torsion.sym_rot_atoms2, key=lambda label: get_number(label))
+            torsion.rot_sym2 = self.rot_order_along_bond(mol, torsion.sym_rot_atoms2, mol.coords[atom1], mol.coords[atom2])
+            # assign rotation angles if already possible
+            if (torsion.rot_sym1 > 1)                                                                         and \
+               (max(360/torsion.rot_sym1, angle_increment) % min(360/torsion.rot_sym1, angle_increment) == 0) and \
+               (torsion.sym_rot_atoms1 == torsion.rot_atoms1):
+                # IN DER PRAXIS (WENN NICHT INKREMENT 60 VERWENDET WIRD) KANN SICH DIESE ABFRAGE VERMUTLICH GESPART WERDEN
+                if (max(360/torsion.rot_sym2, angle_increment) % min(360/torsion.rot_sym2, angle_increment) == 0) and \
+                   (torsion.sym_rot_atoms2 == torsion.rot_atoms2)                                                 and \
+                   (torsion.rot_sym1 < torsion.rot_sym2):
+                    # case 3
+                    j = 1
+                    while (j*angle_increment < 360/torsion.rot_sym2):
+                        torsion.rot_angles.append(j*angle_increment)
+                        j += 1
+                    torsion_done[i] = 1
+                    continue
+                else:
+                    # case 2
+                    j = 1
+                    while (j*angle_increment < 360/torsion.rot_sym1):
+                        torsion.rot_angles.append(j*angle_increment)
+                        j += 1
+                    torsion_done[i] = 1
+                    continue
+            elif (torsion.rot_sym2 > 1)                                                                         and \
+                 (max(360/torsion.rot_sym2, angle_increment) % min(360/torsion.rot_sym2, angle_increment) == 0) and \
+                 (torsion.sym_rot_atoms2 == torsion.rot_atoms2):
+                # case 3
+                j = 1
+                while (j*angle_increment < 360/torsion.rot_sym2):
+                    torsion.rot_angles.append(j*angle_increment)
+                    j += 1
+                torsion_done[i] = 1
+                continue
+            elif (torsion.rot_sym1 == 1 or max(360/torsion.rot_sym1, angle_increment) % min(360/torsion.rot_sym1, angle_increment) != 0) and \
+                 (torsion.rot_sym2 == 1 or max(360/torsion.rot_sym2, angle_increment) % min(360/torsion.rot_sym2, angle_increment) != 0):
+                # case 1
+                for j in range(1, 360//angle_increment):
+                    torsion.rot_angles.append(j*angle_increment)
+                torsion_done[i] = 1
+                continue
+            """
+            if (torsion.rot_sym1 == 1 or max(360/torsion.rot_sym1, angle_increment) % min(360/torsion.rot_sym1, angle_increment) != 0):
+                if (torsion.rot_sym2 == 1 or max(360/torsion.rot_sym2, angle_increment) % min(360/torsion.rot_sym2, angle_increment) != 0):
+                    for j in range(1, 360//angle_increment):
+                        torsion.rot_angles.append(j*angle_increment)
+                    torsion_done[i] = 1
+                    continue
+            if (torsion.sym_rot_atoms1 == torsion.rot_atoms1):
+                if (torsion.rot_sym1 > 1):
+                    if (max(360/torsion.rot_sym1, angle_increment) % min(360/torsion.rot_sym1, angle_increment) == 0):
+                        j = 1
+                        while (j*angle_increment < 360/torsion.rot_sym1):
+                            torsion.rot_angles.append(j*angle_increment)
+                            j += 1
+                        torsion_done[i] = 1
+                        torsion_restricted[i] = 1
+                        continue
+            if (torsion.sym_rot_atoms2 == torsion.rot_atoms2):
+                if (torsion.rot_sym2 > 1):
+                    if (max(360/torsion.rot_sym2, angle_increment) % min(360/torsion.rot_sym2, angle_increment) == 0):
+                        j = 1
+                        while (j*angle_increment < 360/torsion.rot_sym2):
+                            torsion.rot_angles.append(j*angle_increment)
+                            j += 1
+                        torsion_done[i] = 1
+                        torsion_restricted[i] = 1
+                        continue
+            """
+        
+        for i, torsion1 in enumerate(torsions):
+            if (torsion_done[i]):
+                continue
+            for j, torsion2 in enumerate(torsions[i+1:], start=i+1):
+                if (torsion1.rot_sym1 > 1):
+                    if (max(360/torsion1.rot_sym1, angle_increment) % min(360/torsion1.rot_sym1, angle_increment) == 0):
+                        if (torsion1.sym_rot_atoms1 == torsion2.sym_rot_atoms1 or torsion1.sym_rot_atoms1 == torsion2.sym_rot_atoms2):
+                            if torsion_done[j]:
+                                for k in range(1, 360//angle_increment):
+                                    torsion1.rot_angles.append(k*angle_increment)
+                                """
+                                if torsion_restricted[j]:
+                                    for k in range(1, 360//angle_increment):
+                                        torsion1.rot_angles.append(k*angle_increment)
+                                else:
+                                    k = 1
+                                    while (k*angle_increment < 360/torsion1.rot_sym1):
+                                        torsion1.rot_angles.append(k*angle_increment)
+                                        k += 1
+                                    torsion_restricted[i] = 1
+                                """
+                            else:
+                                if len(torsion1.torsion_atoms) > len(torsion2.torsion_atoms):
+                                    k = 1
+                                    while (k*angle_increment < 360/torsion1.rot_sym1):
+                                        torsion1.rot_angles.append(k*angle_increment)
+                                        k += 1
+                                    for k in range(1, 360//angle_increment):
+                                        torsion2.rot_angles.append(k*angle_increment)
+                                else:
+                                    k = 1
+                                    while (k*angle_increment < 360/torsion1.rot_sym1):
+                                        torsion2.rot_angles.append(k*angle_increment)
+                                        k += 1
+                                    for k in range(1, 360//angle_increment):
+                                        torsion1.rot_angles.append(k*angle_increment)
+                            torsion_done[i] = 1
+                            torsion_done[j] = 1
+                            continue
+                if (torsion1.rot_sym2 > 1):
+                    if (max(360/torsion1.rot_sym2, angle_increment) % min(360/torsion1.rot_sym2, angle_increment) == 0):
+                        if (torsion1.sym_rot_atoms2 == torsion2.sym_rot_atoms1 or torsion1.sym_rot_atoms2 == torsion2.sym_rot_atoms2):
+                            if torsion_done[j]:
+                                for k in range(1, 360//angle_increment):
+                                        torsion1.rot_angles.append(k*angle_increment)
+                                """
+                                if torsion_restricted[j]:
+                                    for k in range(1, 360//angle_increment):
+                                        torsion1.rot_angles.append(k*angle_increment)
+                                else:
+                                    k = 1
+                                    while (k*angle_increment < 360/torsion1.rot_sym2):
+                                        torsion1.rot_angles.append(k*angle_increment)
+                                        k += 1
+                                    torsion_restricted[i] = 1
+                                """
+                            else:
+                                if len(torsion1.torsion_atoms) > len(torsion2.torsion_atoms):
+                                    k = 1
+                                    while (k*angle_increment < 360/torsion1.rot_sym2):
+                                        torsion1.rot_angles.append(k*angle_increment)
+                                        k += 1
+                                    for k in range(1, 360//angle_increment):
+                                        torsion2.rot_angles.append(k*angle_increment)
+                                else:
+                                    k = 1
+                                    while (k*angle_increment < 360/torsion1.rot_sym2):
+                                        torsion2.rot_angles.append(k*angle_increment)
+                                        k += 1
+                                    for k in range(1, 360//angle_increment):
+                                        torsion1.rot_angles.append(k*angle_increment)
+                            torsion_done[i] = 1
+                            torsion_done[j] = 1
+                            continue
 
-            print(f"{atom1} {atom2}")
-            print(f"{left_torsion_atoms}")
-            print(f"Side of {atom1}: {left_rot_sym}")
-            print(f"{right_torsion_atoms}")
-            print(f"Side of {atom2}: {right_rot_sym}")
+        """
+        for i, torsion1 in enumerate(self.torsions):
+            if (torsion_done[i]):
+                continue
+            if (torsion1.rot_sym1 == 1 or max(360/torsion1.rot_sym1, angle_increment) % min(360/torsion1.rot_sym1, angle_increment) != 0):
+                if (torsion1.rot_sym2 == 1 or max(360/torsion1.rot_sym2, angle_increment) % min(360/torsion1.rot_sym2, angle_increment) != 0):
+                    for j in range(1, 360//angle_increment):
+                        torsion1.rot_angles.append(j*angle_increment)
+                    torsion_done[i] = 1
+                    continue
+            if (torsion1.sym_rot_atoms1 == torsion1.rot_atoms1):
+                if (torsion1.rot_sym1 > 1):
+                    if (max(360/torsion.rot_sym1, angle_increment) % min(360/torsion.rot_sym1, angle_increment) == 0):
+                        j = 1
+                        while (j*angle_increment < 360/torsion1.rot_sym1):
+                            torsion1.rot_angles.append(j*angle_increment)
+                            j += 1
+                        torsion_done[i] = 1
+                        continue
+            if (torsion1.sym_rot_atoms2 == torsion1.rot_atoms2):
+                if (torsion1.rot_sym2 > 1):
+                    if (max(360/torsion.rot_sym2, angle_increment) % min(360/torsion.rot_sym2, angle_increment) == 0):
+                        j = 1
+                        while (j*angle_increment < 360/torsion1.rot_sym2):
+                            torsion1.rot_angles.append(j*angle_increment)
+                            j += 1
+                        torsion_done[i] = 1
+                        continue
+            for j, torsion2 in enumerate(self.torsions[i+1:], start=i+1):
+                if (torsion_done[j]):
+                    continue
+                if (torsion1.rot_sym1 > 1):
+                    if (max(360/torsion.rot_sym1, angle_increment) % min(360/torsion.rot_sym1, angle_increment) == 0):
+                        if (torsion1.sym_rot_atoms1 == torsion2.sym_rot_atoms1 or torsion1.sym_rot_atoms1 == torsion2.sym_rot_atoms2):
+                            k = 1
+                            while (k*angle_increment < 360/torsion1.rot_sym1):
+                                torsion2.rot_angles.append(k*angle_increment)
+                                k += 1
+                            torsion_done[j] = 1
+                            for k in range(1, 360//angle_increment):
+                                torsion1.rot_angles.append(k*angle_increment)
+                            torsion_done[i] = 1
+                            continue
+                if (torsion1.rot_sym2 > 1):
+                    if (max(360/torsion.rot_sym2, angle_increment) % min(360/torsion.rot_sym2, angle_increment) == 0):
+                        if (torsion1.sym_rot_atoms2 == torsion2.sym_rot_atoms1 or torsion1.sym_rot_atoms2 == torsion2.sym_rot_atoms2):
+                            k = 1
+                            while (k*angle_increment < 360/torsion1.rot_sym2):
+                                torsion2.rot_angles.append(k*angle_increment)
+                                k += 1
+                            torsion_done[j] = 1
+                            for k in range(1, 360//angle_increment):
+                                torsion1.rot_angles.append(k*angle_increment)
+                            torsion_done[i] = 1
+                            continue
+        """
+        """
+        print()
+        print(f"Inkrement: {angle_increment}")
+        for i, torsion in enumerate(self.torsions):
+            print(f"{torsion.atom1} {torsion.atom2}")
+            for angle in torsion.rot_angles:
+                print(angle, end=" ")
             print()
+        print()
+        """
+    
+
+
+    def _find_torsion_group(self, connectivity: dict, torsions: list, atom: str, last_atom: str, status: dict, torsion_atoms: list) -> None:
+        if status[atom] == "SEEN":
+            return
+        else:
+            status[atom] = "SEEN"
+            for neighbor in connectivity[atom]:
+                if neighbor != last_atom:
+                    if not atom_in_torsions(torsions, neighbor):
+                        torsion_atoms.append(neighbor)
+                        self._find_torsion_group(connectivity, torsions, neighbor, atom, status, torsion_atoms)
+        return
 
     
 
