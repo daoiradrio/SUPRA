@@ -18,7 +18,7 @@ def main():
     parser.add_argument("-ignore", type=str, required=False, choices=["all", "methyl"], default=None)
     parser.add_argument("-path1", type=str, required=False)
     parser.add_argument("-path2", type=str, required=False)
-    parser.add_argument("-mode", type=str, required=False, choices=["loose", "normal", "tight"], default="normal")
+    parser.add_argument("-matching", type=str, required=False, choices=["loose", "normal", "tight"], default="normal")
     args = parser.parse_args()
     
     if args.path:
@@ -32,12 +32,12 @@ def main():
         structure1 = Structure(args.path1)
         structure2 = Structure(args.path2)
         print()
-        if args.mode == "loose":
+        if args.matching == "loose":
             kabsch_coords1, kabsch_coords2 = analyzer.kabsch(structure1.coords, structure2.coords)
             rmsd = analyzer.calc_rmsd(kabsch_coords1, kabsch_coords2)
-        elif args.mode == "normal":
+        elif args.matching == "normal":
             rmsd = analyzer.rmsd(structure1.coords, structure2.coords)
-        elif args.mode == "tight":
+        elif args.matching == "tight":
             rmsd = analyzer.rmsd_tight(structure1.coords, structure1.bond_partners, structure2.coords, structure2.bond_partners)
         print(f"Path of molecule 1: {args.path1}")
         print(f"Path of molecule 2: {args.path2}")

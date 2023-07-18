@@ -18,7 +18,7 @@ class Analyzer:
 
 
 
-    def compare_structure_sets(self, path1: str, path2: str, rmsd_threshold: float=0.1, ignore: str=None, mode: str="normal") -> None:
+    def compare_structure_sets(self, path1: str, path2: str, rmsd_threshold: float=0.1, ignore: str=None, matching: str="normal") -> None:
         conformer1 = Structure()
         conformer2 = Structure()
 
@@ -60,11 +60,11 @@ class Analyzer:
                         del conformer2.coords[atom]
                 else:
                     conformer2.read_xyz(os.path.join(path2, file2))
-                if mode == "loose":
+                if matching == "loose":
                     rmsd = self.calc_rmsd(conformer1.coords, conformer2.coords)
-                elif mode == "normal":
+                elif matching == "normal":
                     rmsd = self.rmsd(conformer1.coords, conformer2.coords)
-                elif mode == "tight":
+                elif matching == "tight":
                     if not ignore:
                         conformer1.get_connectivity()
                         conformer2.get_connectivity()
@@ -126,7 +126,7 @@ class Analyzer:
 
 
 
-    def remove_doubles(self, path: str, rmsd_threshold: float=0.1, ignore: str=None, use_energy: bool = False, mode: str="normal") -> int:
+    def remove_doubles(self, path: str, rmsd_threshold: float=0.1, ignore: str=None, use_energy: bool = False, matching: str="normal") -> int:
         conformer1 = Structure()
         conformer2 = Structure()
         path = os.path.abspath(path)
@@ -162,11 +162,11 @@ class Analyzer:
                         del conformer2.coords[atom]
                 else:
                     conformer2.read_xyz(os.path.join(path, file2), read_energy=use_energy)
-                if mode == "loose":
+                if matching == "loose":
                     rmsd = self.calc_rmsd(conformer1.coords, conformer2.coords)
-                elif mode == "normal":
+                elif matching == "normal":
                     rmsd = self.rmsd(conformer1.coords, conformer2.coords)
-                elif mode == "tight":
+                elif matching == "tight":
                     if not ignore:
                         conformer1.get_connectivity()
                         conformer2.get_connectivity()
