@@ -36,11 +36,11 @@ def main():
         print()
         if args.matching == "loose":
             kabsch_coords1, kabsch_coords2 = analyzer.kabsch(structure1.coords, structure2.coords)
-            rmsd = analyzer.calc_rmsd(kabsch_coords1, kabsch_coords2)
+            rmsd = analyzer._calc_rmsd(kabsch_coords1, kabsch_coords2)
         elif args.matching == "normal":
-            rmsd = analyzer.rmsd(structure1.coords, structure2.coords)
+            rmsd = analyzer._rmsd(structure1.coords, structure2.coords)
         elif args.matching == "tight":
-            rmsd = analyzer.rmsd_tight(structure1.coords, structure1.bond_partners, structure2.coords, structure2.bond_partners)
+            rmsd = analyzer._rmsd_tight(structure1.coords, structure1.bond_partners, structure2.coords, structure2.bond_partners)
         print(f"Path of molecule 1: {args.path1}")
         print(f"Path of molecule 2: {args.path2}")
         print()

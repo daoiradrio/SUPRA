@@ -18,7 +18,7 @@ class Analyzer:
 
 
 
-    def count_conformers(self, path: str) -> int:
+    def _count_conformers(self, path: str) -> int:
         path = os.path.abspath(path)
         conformers = os.listdir(path)
         return len(conformers)
@@ -47,35 +47,35 @@ class Analyzer:
             #    print("=", end="", flush=True)
             if ignore == "methyl":
                 conformer1.get_structure(os.path.join(path1, file1))
-                for atom in self.get_methyl_group_atoms(conformer1.bond_partners):
+                for atom in self._find_methyl_group_atoms(conformer1.bond_partners):
                     print(atom)
                     del conformer1.coords[atom]
             elif ignore == "all":
                 conformer1.get_structure(os.path.join(path1, file1))
-                for atom in self.get_terminal_group_atoms(conformer1.bond_partners):
+                for atom in self._find_terminal_group_atoms(conformer1.bond_partners):
                     del conformer1.coords[atom]
             else:
                 conformer1.read_xyz(os.path.join(path1, file1))
             for file2 in conformers2:
                 if ignore == "methyl":
                     conformer2.get_structure(os.path.join(path2, file2))
-                    for atom in self.get_methyl_group_atoms(conformer2.bond_partners):
+                    for atom in self._find_methyl_group_atoms(conformer2.bond_partners):
                         del conformer2.coords[atom]
                 elif ignore == "all":
                     conformer2.get_structure(os.path.join(path2, file2))
-                    for atom in self.get_terminal_group_atoms(conformer2.bond_partners):
+                    for atom in self._find_terminal_group_atoms(conformer2.bond_partners):
                         del conformer2.coords[atom]
                 else:
                     conformer2.read_xyz(os.path.join(path2, file2))
                 if matching == "loose":
-                    rmsd = self.calc_rmsd(conformer1.coords, conformer2.coords)
+                    rmsd = self._calc_rmsd(conformer1.coords, conformer2.coords)
                 elif matching == "normal":
-                    rmsd = self.rmsd(conformer1.coords, conformer2.coords)
+                    rmsd = self._rmsd(conformer1.coords, conformer2.coords)
                 elif matching == "tight":
                     if not ignore:
                         conformer1.get_connectivity()
                         conformer2.get_connectivity()
-                    rmsd = self.rmsd_tight(conformer1.coords, conformer1.bond_partners, conformer2.coords, conformer2.bond_partners)
+                    rmsd = self._rmsd_tight(conformer1.coords, conformer1.bond_partners, conformer2.coords, conformer2.bond_partners)
                 if rmsd <= rmsd_threshold:
                     counter += 1
                     break
@@ -169,14 +169,14 @@ class Analyzer:
                 else:
                     conformer2.read_xyz(os.path.join(path, file2), read_energy=use_energy)
                 if matching == "loose":
-                    rmsd = self.calc_rmsd(conformer1.coords, conformer2.coords)
+                    rmsd = self._calc_rmsd(conformer1.coords, conformer2.coords)
                 elif matching == "normal":
-                    rmsd = self.rmsd(conformer1.coords, conformer2.coords)
+                    rmsd = self._rmsd(conformer1.coords, conformer2.coords)
                 elif matching == "tight":
                     if not ignore:
                         conformer1.get_connectivity()
                         conformer2.get_connectivity()
-                    rmsd = self.rmsd_tight(conformer1.coords, conformer1.bond_partners, conformer2.coords, conformer2.bond_partners)
+                    rmsd = self._rmsd_tight(conformer1.coords, conformer1.bond_partners, conformer2.coords, conformer2.bond_partners)
                 if rmsd <= rmsd_threshold:
                     if (conformer1.energy and conformer2.energy):
                         if conformer1.energy < conformer2.energy:
@@ -294,7 +294,7 @@ class Analyzer:
     
 
 
-    def rmsd(self, coords1: dict, coords2: dict) -> float:
+    def _rmsd(self, coords1: dict, coords2: dict) -> float:
         if len(coords1.keys()) != len(coords2.keys()):
             return 1000.0
         elements1 = [get_element(atom) for atom in coords1.keys()]
@@ -313,14 +313,14 @@ class Analyzer:
                 cost[i][j] = cost_value
                 cost[j][i] = cost_value
         row, col = linear_sum_assignment(cost)
-        return self.calc_rmsd(kabsch_coords1[row], kabsch_coords2[col])
+        return self._calc_rmsd(kabsch_coords1[row], kabsch_coords2[col])
     
 
 
-    def rmsd_tight(self, coords1: dict, connectivity1: dict, coords2: dict, connectivity2: dict,) -> float:
+    def _rmsd_tight(self, coords1: dict, connectivity1: dict, coords2: dict, connectivity2: dict,) -> float:
         coords1, coords2 = self._match(coords1, connectivity1, coords2, connectivity2)
         kabsch_coords1, kabsch_coords2 = self._kabsch(coords1, coords2)
-        return self.calc_rmsd(kabsch_coords1, kabsch_coords2)
+        return self._calc_rmsd(kabsch_coords1, kabsch_coords2)
 
 
 
@@ -362,7 +362,7 @@ class Analyzer:
     
 
 
-    def calc_rmsd(self, coords1: Union[dict, list, np.array], coords2: Union[dict, list, np.array]) -> float:
+    def _calc_rmsd(self, coords1: Union[dict, list, np.array], coords2: Union[dict, list, np.array]) -> float:
         if type(coords1) == dict:
             coords1 = list(coords1.values())
         if type(coords2) is dict:
