@@ -238,7 +238,7 @@ class Symmetry:
         """
         print()
         print(f"Inkrement: {angle_increment}")
-        for i, torsion in enumerate(self.torsions):
+        for torsion in torsions:
             print(f"{torsion.atom1} {torsion.atom2}")
             for angle in torsion.rot_angles:
                 print(angle, end=" ")
