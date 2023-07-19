@@ -18,6 +18,13 @@ class Analyzer:
 
 
 
+    def count_conformers(self, path: str) -> int:
+        path = os.path.abspath(path)
+        conformers = os.listdir(path)
+        return len(conformers)
+
+
+
     def compare_structure_sets(self, path1: str, path2: str, rmsd_threshold: float=0.1, ignore: str=None, matching: str="normal") -> None:
         conformer1 = Structure()
         conformer2 = Structure()
@@ -70,9 +77,8 @@ class Analyzer:
                         conformer2.get_connectivity()
                     rmsd = self.rmsd_tight(conformer1.coords, conformer1.bond_partners, conformer2.coords, conformer2.bond_partners)
                 if rmsd <= rmsd_threshold:
-                    print(f"{file1} {file2}")
                     counter += 1
-                    #break
+                    break
         #print("]")
         print("Comparing structures done.")
         print()

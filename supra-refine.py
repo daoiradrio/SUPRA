@@ -29,8 +29,8 @@ def main():
     print("Refining structure optimization done.")
 
     print("Performing removal of duplicate structures...")
-    conformers = analyzer.remove_doubles(path=args.path, use_energy=False, mode="normal")
-    conformers = analyzer.remove_doubles(path=args.path, use_energy=False, mode="tight")
+    conformers = analyzer.remove_doubles(path=args.path, use_energy=False, matching="normal")
+    conformers = analyzer.remove_doubles(path=args.path, use_energy=False, matching="tight")
     print("Removal of double structures done.")
     print(f"Individual generated conformers: {conformers}")
     
