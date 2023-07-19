@@ -1,7 +1,7 @@
 import os
 
 import numpy as np
-import multiprocessing as mp
+#import multiprocessing as mp
 
 from utils.helper import get_element, valences
 from SUPRAConformer.structure import Structure
@@ -25,7 +25,7 @@ class Analyzer:
 
 
 
-    def compare_structure_sets(self, path1: str, path2: str, rmsd_threshold: float=0.1, ignore: str=None, matching: str="normal") -> None:
+    def compare_structure_sets(self, path1: str, path2: str, rmsd_threshold: float=0.1, ignore: str=None, matching: str="normal") -> list:
         conformer1 = Structure()
         conformer2 = Structure()
 
@@ -39,8 +39,6 @@ class Analyzer:
 
         counter = 0
         #m = round(len(conformers1)/50)
-        print()
-        print("Comparing structures...")
         #print("[", end="", flush="True")
         for file1 in conformers1:
             #if (i % m) == 0:
@@ -80,17 +78,8 @@ class Analyzer:
                     counter += 1
                     break
         #print("]")
-        print("Comparing structures done.")
-        print()
-        print(f"Path 1: {path1}")
-        print(f"Path 2: {path2}")
-        print()
-        print(f"Number of structures in Path 1: {len(conformers1)}")
-        print(f"Number of structures in Path 2: {len(conformers2)}")
-        print(f"Number of structures of Path 1 in Path 2: {counter}")
-        print()
 
-        return
+        return [len(conformers1), len(conformers2), counter]
 
 
 
