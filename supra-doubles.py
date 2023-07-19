@@ -50,7 +50,13 @@ def main():
         else:
             print()
             print("Comparing structures...")
-            n_conformers1, n_conformers2, counter = analyzer.compare_structure_sets(path1=args.path1, path2=args.path2, rmsd_threshold=args.rmsd, ignore=args.ignore, matching=args.matching)
+            n_conformers1, n_conformers2, overlap = analyzer.compare_structure_sets(
+                path1=args.path1,
+                path2=args.path2,
+                rmsd_threshold=args.rmsd,
+                ignore=args.ignore,
+                matching=args.matching
+            )
             print("Comparing structures done.")
             print()
             print(f"Path 1: {args.path1}")
@@ -58,7 +64,7 @@ def main():
             print()
             print(f"Number of structures in Path 1: {n_conformers1}")
             print(f"Number of structures in Path 2: {n_conformers2}")
-            print(f"Number of structures of Path 1 in Path 2: {counter}")
+            print(f"Number of structures of Path 1 in Path 2: {overlap}")
             print()
 
 
