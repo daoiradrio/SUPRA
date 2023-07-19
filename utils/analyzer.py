@@ -405,6 +405,7 @@ class Analyzer:
             if len(eq) > 1:
                 pairs[atom1] = eq
             # if an atom pair is already unique store the respective coordinates
+            # HIER ENTSTEHEN PROBLEME WENN GARKEINE POTENTIELL ÄQUIVALENTEN ATOME GEFUNDEN (len(eq) == 0)!
             else:
                 matched_coords1.append(coords1[atom1])
                 matched_coords2.append(coords2[eq[0]])
@@ -418,8 +419,8 @@ class Analyzer:
             # every row stands for a reference atom from No. 1, every column contains the distance of the
             # yet unmatched atom to the respective reference atom
             for i, comp_atom in enumerate(matched_coords1):
-                v11 = np.array(coords1[atom])
-                v12 = np.array(comp_atom)
+                v11 = coords1[atom]
+                v12 = comp_atom
                 d1[i] = np.linalg.norm(v11 - v12)
                 # store reference distances Pos.(atom No. 2)-Pos.(matched atom i from No. 2) in matrix d2 which is
                 # of shape (number of already matched coordinates)x(number of candidate atoms) which means
