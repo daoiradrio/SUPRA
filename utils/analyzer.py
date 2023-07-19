@@ -42,7 +42,7 @@ class Analyzer:
         print()
         print("Comparing structures...")
         #print("[", end="", flush="True")
-        for i, file1 in enumerate(conformers1):
+        for file1 in conformers1:
             #if (i % m) == 0:
             #    print("=", end="", flush=True)
             if ignore == "methyl":

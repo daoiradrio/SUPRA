@@ -23,7 +23,7 @@ def main():
     
     if args.path:
         print()
-        conformers_before = analyzer.count_conformers(path=args.path)
+        conformers_before = analyzer._count_conformers(path=args.path)
         print(f"Number of conformers in {args.path}: {conformers_before}")
         print("Performing removal of duplicate structures...")
         conformers_after = analyzer.remove_doubles(path=args.path, rmsd_threshold=args.rmsd, ignore=args.ignore, matching=args.matching)
