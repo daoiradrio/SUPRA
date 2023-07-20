@@ -41,7 +41,6 @@ class ConformerGenerator:
         ignore_peptide: bool = False
     ) -> None:
         self.optimizer = Optimizer()
-        self.analyzer = Analyzer()
         self.symmetry = Symmetry()
         self._find_torsions(structure.bonds, structure.bond_partners)
         self._find_cycles(structure.bond_partners)
@@ -78,7 +77,7 @@ class ConformerGenerator:
         number_conformers = 0
         for increment in self.angle_increments:
             #self.angles = [n * increment for n in range(int(np.round(360 / increment)))]
-            self.symmetry._find_rot_sym_of_torsions(structure, self.torsions, increment)
+            self.symmetry.find_rot_sym_of_torsions(structure, self.torsions, increment)
             number_conformers = self._combinations(
                 bond_partners=structure.bond_partners, new_coords=structure.coords, counter=number_conformers
             )

@@ -18,7 +18,7 @@ class Symmetry:
 
 
 
-    def _find_rot_sym_of_torsions(self, mol: Structure, torsions: list, angle_increment: int) -> None:
+    def find_rot_sym_of_torsions(self, mol: Structure, torsions: list, angle_increment: int) -> None:
         torsion_done = [0 for _ in torsions]
 
         for i, torsion in enumerate(torsions):
