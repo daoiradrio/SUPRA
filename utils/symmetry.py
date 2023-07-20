@@ -9,7 +9,7 @@ from utils.helper import get_element, get_number, atom_in_torsions
 class Symmetry:
 
     def __init__(self):
-        self.possible_rot_orders = [
+        self._possible_rot_orders = [
             6, # corresponds to angle increment  60°
             4, # corresponds to angle increment  90°
             3, # corresponds to angle increment 120°
@@ -18,7 +18,7 @@ class Symmetry:
 
 
 
-    def find_rot_sym_of_torsions(self, mol: Structure, torsions: list, angle_increment: int) -> None:
+    def _find_rot_sym_of_torsions(self, mol: Structure, torsions: list, angle_increment: int) -> None:
         torsion_done = [0 for _ in torsions]
 
         for i, torsion in enumerate(torsions):
@@ -262,11 +262,11 @@ class Symmetry:
 
     
 
-    def rot_sym_along_bond(self, mol: Structure, rot_axis: RotationAxis, rot_atoms: list, order: int) -> bool:
+    def rot_sym_along_bond(self, mol: Structure, rot_axis: RotationAxis, rot_atoms: list, rot_order: int) -> bool:
         for atom_i in rot_atoms:
             coords_i = mol.coords[atom_i]
             best_distance = 1.0
-            symmetric_coords = rot_axis.rotate(coords_i, 360.0/float(order))
+            symmetric_coords = rot_axis.rotate(coords_i, 360.0/float(rot_order))
             for atom_j in rot_atoms:
                 if (atom_i == atom_j):
                     continue
@@ -284,7 +284,7 @@ class Symmetry:
 
     def rot_order_along_bond(self, mol: Structure, rot_atoms: list, from_coords: np.array, to_coords: np.array) -> int:
         rot_axis = RotationAxis(from_coords, to_coords)
-        for order in self.possible_rot_orders:
-            if (self.rot_sym_along_bond(mol, rot_axis, rot_atoms, order)):
+        for rot_order in self._possible_rot_orders:
+            if (self.rot_sym_along_bond(mol, rot_axis, rot_atoms, rot_order)):
                 return order
         return 1
