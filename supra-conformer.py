@@ -22,7 +22,7 @@ def main():
         "-ignore",
         type=str,
         required=False,
-        choices=["methyl", "all", "peptide"],
+        choices=["methyl", "terminal", "peptide"],
         default=[],
         nargs="*"
     )

@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation
 from SUPRAConformer.structure import Structure
 from utils.optimizer import Optimizer
-from utils.analyzer import Analyzer
 from utils.symmetry import Symmetry
 from utils.torsion import Torsion
 from utils.helper import covalence_radii_single, covalence_radii_double, get_element, \

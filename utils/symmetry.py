@@ -286,5 +286,5 @@ class Symmetry:
         rot_axis = RotationAxis(from_coords, to_coords)
         for rot_order in self._possible_rot_orders:
             if (self.rot_sym_along_bond(mol, rot_axis, rot_atoms, rot_order)):
-                return order
+                return rot_order
         return 1

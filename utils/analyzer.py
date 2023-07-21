@@ -29,8 +29,8 @@ class Analyzer:
         conformer1 = Structure()
         conformer2 = Structure()
 
-        path1 = os.path.abspath(path1)
-        path2 = os.path.abspath(path2)
+        #path1 = os.path.abspath(path1)
+        #path2 = os.path.abspath(path2)
         conformers1 = os.listdir(path1)
         conformers2 = os.listdir(path2)
         if len(conformers1) > len(conformers2):
@@ -79,7 +79,7 @@ class Analyzer:
                     break
         #print("]")
 
-        return [len(conformers1), len(conformers2), counter]
+        return [path1, len(conformers1), path2, len(conformers2), counter]
 
 
 
@@ -395,9 +395,11 @@ class Analyzer:
                 pairs[atom1] = eq
             # if an atom pair is already unique store the respective coordinates
             # HIER ENTSTEHEN PROBLEME WENN GARKEINE POTENTIELL ÄQUIVALENTEN ATOME GEFUNDEN (len(eq) == 0)!
-            else:
+            elif len(eq) == 1:
                 matched_coords1.append(coords1[atom1])
                 matched_coords2.append(coords2[eq[0]])
+            else:
+                return list(coords1.values()), list(coords2.values())
 
         # find correct atom pairs from No. 1 and No. 2 via matching of distances to other atoms
         for atom, eq_atoms in pairs.items():
