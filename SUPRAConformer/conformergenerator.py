@@ -9,7 +9,7 @@ from scipy.spatial.transform import Rotation
 from SUPRAConformer.structure import Structure
 from utils.optimizer import Optimizer
 from utils.symmetry import Symmetry
-from utils.torsion import Torsion
+from utils.rotatablebond import RotatableBond
 from utils.helper import covalence_radii_single, covalence_radii_double, get_element, \
                          increment_combinations, valences, atom_in_torsions, get_number
 
@@ -100,7 +100,7 @@ class ConformerGenerator:
             valence2 = valences[get_element(bond.atom2)]
             if valence1 == 1 or valence2 == 1:
                 continue
-            new_torsion = Torsion()
+            new_torsion = RotatableBond()
             new_torsion.atom1 = bond.atom1
             new_torsion.atom2 = bond.atom2
             new_torsion.bond_order = bond.bond_order

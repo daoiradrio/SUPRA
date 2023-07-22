@@ -2,7 +2,7 @@ from utils.bond import Bond
 
 
 
-class Torsion(Bond):
+class RotatableBond(Bond):
 
     def __init__(self) -> None:
         super(Bond, self).__init__()
