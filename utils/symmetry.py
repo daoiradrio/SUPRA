@@ -24,7 +24,7 @@ class Symmetry:
         for i, torsion in enumerate(torsions):
             atom1 = torsion.atom1
             atom2 = torsion.atom2
-            torsion.rot_angles = [0]
+            torsion.rot_angles = [0] # WARUM NICHT EINFACH AUF [] SETZEN UND ALLE SCHLEIFEN BEI 0 STARTEN LASSEN??
             # rotational symmetry left side of torsion bond
             status = {atom: "UNKNOWN" for atom in mol.coords.keys()}
             self._find_torsion_group(mol.bond_partners, torsions, atom1, atom2, status, torsion.sym_rot_atoms1)
