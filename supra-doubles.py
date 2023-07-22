@@ -15,7 +15,7 @@ def main():
 
     parser.add_argument("-path", type=str, required=False)
     parser.add_argument("-rmsd", type=float, required=False, default=0.1)
-    parser.add_argument("-ignore", type=str, required=False, choices=["all", "methyl"], default=None)
+    parser.add_argument("-ignore", type=str, required=False, choices=["terminal", "methyl"], default=None)
     parser.add_argument("-path1", type=str, required=False)
     parser.add_argument("-path2", type=str, required=False)
     parser.add_argument("-matching", type=str, required=False, choices=["loose", "normal", "tight"], default="normal")

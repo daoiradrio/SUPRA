@@ -48,7 +48,7 @@ class Analyzer:
                 for atom in self._find_methyl_group_atoms(conformer1.bond_partners):
                     print(atom)
                     del conformer1.coords[atom]
-            elif ignore == "all":
+            elif ignore == "terminal":
                 conformer1.get_structure(os.path.join(path1, file1))
                 for atom in self._find_terminal_group_atoms(conformer1.bond_partners):
                     del conformer1.coords[atom]
@@ -59,7 +59,7 @@ class Analyzer:
                     conformer2.get_structure(os.path.join(path2, file2))
                     for atom in self._find_methyl_group_atoms(conformer2.bond_partners):
                         del conformer2.coords[atom]
-                elif ignore == "all":
+                elif ignore == "terminal":
                     conformer2.get_structure(os.path.join(path2, file2))
                     for atom in self._find_terminal_group_atoms(conformer2.bond_partners):
                         del conformer2.coords[atom]
@@ -140,7 +140,7 @@ class Analyzer:
                 conformer1.get_structure(os.path.join(path, file1), read_energy=use_energy)
                 for atom in self._find_methyl_group_atoms(conformer1.bond_partners):
                     del conformer1.coords[atom]
-            elif ignore == "all":
+            elif ignore == "terminal":
                 conformer1.get_structure(os.path.join(path, file1), read_energy=use_energy)
                 for atom in self._find_terminal_group_atoms(conformer1.bond_partners):
                     del conformer1.coords[atom]
@@ -151,7 +151,7 @@ class Analyzer:
                     conformer2.get_structure(os.path.join(path, file2), read_energy=use_energy)
                     for atom in self._find_methyl_group_atoms(conformer2.bond_partners):
                         del conformer2.coords[atom]
-                elif ignore == "all": 
+                elif ignore == "terminal": 
                     conformer2.get_structure(os.path.join(path, file2), read_energy=use_energy)
                     for atom in self._find_terminal_group_atoms(conformer2.bond_partners):
                         del conformer2.coords[atom]
