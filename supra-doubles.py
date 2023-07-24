@@ -19,53 +19,58 @@ def main():
     parser.add_argument("-path1", type=str, required=False)
     parser.add_argument("-path2", type=str, required=False)
     parser.add_argument("-matching", type=str, required=False, choices=["loose", "normal", "tight"], default="normal")
+    parser.add_argument("-ensemble", type=str, required=False, choices=["file", "dir"], default=None)
     args = parser.parse_args()
     
     if args.path:
         print()
-        conformers_before = analyzer._count_conformers(path=args.path)
-        print(f"Number of conformers in {args.path}: {conformers_before}")
         print("Performing removal of duplicate structures...")
-        conformers_after = analyzer.remove_doubles(path=args.path, rmsd_threshold=args.rmsd, ignore=args.ignore, matching=args.matching)
+        if os.path.isfile(args.path):
+            conformers_before = analyzer._count_conformers_file(path=args.path)
+            print(f"Number of conformers in {args.path}: {conformers_before}")
+            print("Performing removal of duplicate structures...")
+            conformers_after = analyzer.remove_doubles_ensemble_file(
+                ensemble_file=args.path,
+                rmsd_threshold=args.rmsd,
+                ignore=args.ignore,
+                matching=args.matching
+            )
+        else:
+            conformers_before = analyzer._count_conformers_dir(path=args.path)
+            print(f"Number of conformers in {args.path}: {conformers_before}")
+            print("Performing removal of duplicate structures...")
+            conformers_after = analyzer.remove_doubles(path=args.path, rmsd_threshold=args.rmsd, ignore=args.ignore, matching=args.matching)
         print("Removal of double structures done.")
         print(f"Individual conformers in {args.path}: {conformers_after}")
         print()
-    else:
+    elif args.path1 and args.path2:
+        print()
+        print("Comparing structures...")
         if os.path.isfile(args.path1) and os.path.isfile(args.path2):
-            structure1 = Structure(args.path1)
-            structure2 = Structure(args.path2)
-            if args.matching == "loose":
-                kabsch_coords1, kabsch_coords2 = analyzer.kabsch(structure1.coords, structure2.coords)
-                rmsd = analyzer._calc_rmsd(kabsch_coords1, kabsch_coords2)
-            elif args.matching == "normal":
-                rmsd = analyzer._rmsd(structure1.coords, structure2.coords)
-            elif args.matching == "tight":
-                rmsd = analyzer._rmsd_tight(structure1.coords, structure1.bond_partners, structure2.coords, structure2.bond_partners)
-            print()
-            print(f"Path of molecule 1: {args.path1}")
-            print(f"Path of molecule 2: {args.path2}")
-            print()
-            print(f"RMSD: {rmsd:.4f}")
-            print()
-        else:
-            print()
-            print("Comparing structures...")
-            path1, n_conformers1, path2, n_conformers2, overlap = analyzer.compare_structure_sets(
+            path1, n_conformers1, path2, n_conformers2, overlap = analyzer.compare_ensemble_files(
                 path1=args.path1,
                 path2=args.path2,
                 rmsd_threshold=args.rmsd,
                 ignore=args.ignore,
                 matching=args.matching
             )
-            print("Comparing structures done.")
-            print()
-            print(f"Path 1: {path1}")
-            print(f"Path 2: {path2}")
-            print()
-            print(f"Number of structures in Path 1: {n_conformers1}")
-            print(f"Number of structures in Path 2: {n_conformers2}")
-            print(f"Number of structures of Path 1 in Path 2: {overlap}")
-            print()
+        else:
+            path1, n_conformers1, path2, n_conformers2, overlap = analyzer.compare_ensemble_dirs(
+                path1=args.path1,
+                path2=args.path2,
+                rmsd_threshold=args.rmsd,
+                ignore=args.ignore,
+                matching=args.matching
+            )
+        print("Comparing structures done.")
+        print()
+        print(f"Path 1: {path1}")
+        print(f"Path 2: {path2}")
+        print()
+        print(f"Number of structures in Path 1: {n_conformers1}")
+        print(f"Number of structures in Path 2: {n_conformers2}")
+        print(f"Number of structures of Path 1 in Path 2: {overlap}")
+        print()
 
 
 

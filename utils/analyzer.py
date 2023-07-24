@@ -18,14 +18,29 @@ class Analyzer:
 
 
 
-    def _count_conformers(self, path: str) -> int:
+    def _count_conformers_dir(self, path: str) -> int:
         path = os.path.abspath(path)
         conformers = os.listdir(path)
         return len(conformers)
+    
+
+
+    def _count_conformers_file(self, path: str) -> int:
+        with open(path, "r") as infile:
+            n_atoms = int(infile.readline().split()[0])
+            conformer_counter = 0
+            line_iter = 0
+            infile.seek(0)
+            for line in infile:
+                if (line_iter >= n_atoms+2):
+                    line_iter = 0
+                    conformer_counter += 1
+                line_iter += 1
+        return conformer_counter
 
 
 
-    def compare_structure_sets(self, path1: str, path2: str, rmsd_threshold: float=0.1, ignore: str=None, matching: str="normal") -> list:
+    def compare_ensemble_dirs(self, path1: str, path2: str, rmsd_threshold: float=0.1, ignore: str=None, matching: str="normal") -> list:
         conformer1 = Structure()
         conformer2 = Structure()
 
@@ -80,6 +95,71 @@ class Analyzer:
         #print("]")
 
         return [path1, len(conformers1), path2, len(conformers2), counter]
+
+
+
+    def compare_ensemble_files(self, input_path1: str, input_path2: str, rmsd_threshold: float=0.1, ignore: str=None, matching: str="normal") -> list:
+        ensemble_file1 = os.path.abspath(input_path1)
+        ensemble_file2 = os.path.abspath(input_path2)
+        dir_ensemble_file1 = os.path.dirname(ensemble_file1)
+        dir_ensemble_file2 = os.path.dirname(ensemble_file2)
+        dir_ensemble_file1 = os.path.join(dir_ensemble_file1, "conformers1")
+        dir_ensemble_file2 = os.path.join(dir_ensemble_file2, "conformers2")
+
+        os.makedirs(dir_ensemble_file1)
+        os.makedirs(dir_ensemble_file2)
+
+        struc_filename = "conformer"
+
+        with open(ensemble_file1, "r") as infile:
+            n_atoms = int(infile.readline().split()[0])
+            file_counter = 0
+            line_iter = 0
+            infile.seek(0)
+            new_struc = os.path.join(dir_ensemble_file1, f"{struc_filename}{file_counter}.xyz")
+            new_struc_file = open(new_struc, "w")
+            for line in infile:
+                if (line_iter >= n_atoms+2):
+                    new_struc_file.close()
+                    line_iter = 0
+                    file_counter += 1
+                    new_struc = os.path.join(dir_ensemble_file1, f"{struc_filename}{file_counter}.xyz")
+                    new_struc_file = open(new_struc, "w")
+                print(line, end="", file=new_struc_file)
+                line_iter += 1
+            new_struc_file.close()
+        
+        with open(ensemble_file2, "r") as infile:
+            n_atoms = int(infile.readline().split()[0])
+            file_counter = 0
+            line_iter = 0
+            infile.seek(0)
+            new_struc = os.path.join(dir_ensemble_file2, f"{struc_filename}{file_counter}.xyz")
+            new_struc_file = open(new_struc, "w")
+            for line in infile:
+                if (line_iter >= n_atoms+2):
+                    new_struc_file.close()
+                    line_iter = 0
+                    file_counter += 1
+                    new_struc = os.path.join(dir_ensemble_file2, f"{struc_filename}{file_counter}.xyz")
+                    new_struc_file = open(new_struc, "w")
+                print(line, end="", file=new_struc_file)
+                line_iter += 1
+            new_struc_file.close()
+        
+        path_less, n_conformers_less, path_more, n_conformers_more, overlap = self.compare_ensemble_dirs(
+                path1=dir_ensemble_file1,
+                path2=dir_ensemble_file2,
+                rmsd_threshold=rmsd_threshold,
+                ignore=ignore,
+                matching=matching
+        )
+
+        if path_more == dir_ensemble_file1 and path_less == dir_ensemble_file2:
+            input_path1, input_path2 = input_path2, input_path1
+               
+        return [input_path1, n_conformers_less, input_path2, n_conformers_more, overlap]
+
 
 
 
@@ -196,7 +276,7 @@ class Analyzer:
     
 
 
-    def remove_doubles_ensemble_file(self, ensemble_file: str, rmsd_threshold: float=0.1, ignore: str=None, use_energy: bool = False, mode: str="normal"):
+    def remove_doubles_ensemble_file(self, ensemble_file: str, rmsd_threshold: float=0.1, ignore: str=None, use_energy: bool = False, matching: str="normal") -> int:
         ensemble_file = os.path.abspath(ensemble_file)
         dir_ensemble_file = os.path.dirname(ensemble_file)
         workdir = os.path.join(dir_ensemble_file, "conformers")
@@ -222,7 +302,7 @@ class Analyzer:
                 line_iter += 1
             new_struc_file.close()
         
-        self.remove_doubles(workdir, rmsd_threshold, ignore, use_energy, mode)
+        n_conformers = self.remove_doubles(workdir, rmsd_threshold, ignore, use_energy, matching)
         
         with open(os.path.join(dir_ensemble_file, "SUPRA_output_ensemble.xyz"), "w") as outfile:
             conformers = os.listdir(workdir)
@@ -231,6 +311,8 @@ class Analyzer:
                     print(infile.read(), end="", file=outfile)
         
         os.system(f"rm -rf {workdir}")
+
+        return n_conformers
 
 
 
