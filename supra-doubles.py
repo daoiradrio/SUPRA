@@ -5,7 +5,6 @@
 import os
 import argparse
 from utils.analyzer import Analyzer
-from SUPRAConformer.structure import Structure
 
 
 
@@ -19,15 +18,13 @@ def main():
     parser.add_argument("-path1", type=str, required=False)
     parser.add_argument("-path2", type=str, required=False)
     parser.add_argument("-matching", type=str, required=False, choices=["loose", "normal", "tight"], default="normal")
-    parser.add_argument("-ensemble", type=str, required=False, choices=["file", "dir"], default=None)
     args = parser.parse_args()
     
     if args.path:
-        print()
-        print("Performing removal of duplicate structures...")
         if os.path.isfile(args.path):
             conformers_before = analyzer._count_conformers_file(path=args.path)
-            print(f"Number of conformers in {args.path}: {conformers_before}")
+            print()
+            print(f"Number of structures in {args.path}: {conformers_before}")
             print("Performing removal of duplicate structures...")
             conformers_after = analyzer.remove_doubles_ensemble_file(
                 ensemble_file=args.path,
@@ -37,7 +34,8 @@ def main():
             )
         else:
             conformers_before = analyzer._count_conformers_dir(path=args.path)
-            print(f"Number of conformers in {args.path}: {conformers_before}")
+            print()
+            print(f"Number of structures in {args.path}: {conformers_before}")
             print("Performing removal of duplicate structures...")
             conformers_after = analyzer.remove_doubles(path=args.path, rmsd_threshold=args.rmsd, ignore=args.ignore, matching=args.matching)
         print("Removal of double structures done.")
@@ -70,6 +68,11 @@ def main():
         print(f"Number of structures in Path 1: {n_conformers1}")
         print(f"Number of structures in Path 2: {n_conformers2}")
         print(f"Number of structures of Path 1 in Path 2: {overlap}")
+        print()
+    else:
+        print()
+        print("INVALID INPUT PATH(S)")
+        print("SUPRA ABORTING.")
         print()
 
 

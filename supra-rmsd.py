@@ -15,7 +15,6 @@ def main():
 
     parser.add_argument("-path1", type=str, required=True)
     parser.add_argument("-path2", type=str, required=True)
-    parser.add_argument("-rmsd", type=float, required=False, default=0.1)
     parser.add_argument("-ignore", type=str, required=False, choices=["terminal", "methyl"], default=None)
     parser.add_argument("-matching", type=str, required=False, choices=["loose", "normal", "tight"], default="normal")
     args = parser.parse_args()
@@ -42,7 +41,7 @@ def main():
         print("INVALID INPUT FILE(S):")
         print(f"Input path 1: {args.path1}")
         print(f"Input path 2: {args.path2}")
-        print("ABORT SUPRA.")
+        print("SUPRA ABORTING.")
         print()
 
 

@@ -72,6 +72,7 @@ class ConformerGenerator:
         #"""
         ###
         self._generation_setup(structure.bond_partners)
+        print()
         print("Performing generation of conformer structures...")
         number_conformers = 0
         for increment in self.angle_increments:
