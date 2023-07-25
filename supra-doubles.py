@@ -26,7 +26,7 @@ def main():
             print()
             print(f"Number of structures in {args.path}: {conformers_before}")
             print("Performing removal of duplicate structures...")
-            conformers_after = analyzer.remove_doubles_ensemble_file(
+            conformers_after = analyzer.remove_doubles_file(
                 ensemble_file=args.path,
                 rmsd_threshold=args.rmsd,
                 ignore=args.ignore,
@@ -37,7 +37,7 @@ def main():
             print()
             print(f"Number of structures in {args.path}: {conformers_before}")
             print("Performing removal of duplicate structures...")
-            conformers_after = analyzer.remove_doubles(path=args.path, rmsd_threshold=args.rmsd, ignore=args.ignore, matching=args.matching)
+            conformers_after = analyzer.remove_doubles_dir(path=args.path, rmsd_threshold=args.rmsd, ignore=args.ignore, matching=args.matching)
         print("Removal of double structures done.")
         print(f"Individual conformers in {args.path}: {conformers_after}")
         print()
@@ -45,7 +45,7 @@ def main():
         print()
         print("Comparing structures...")
         if os.path.isfile(args.path1) and os.path.isfile(args.path2):
-            path1, n_conformers1, path2, n_conformers2, overlap = analyzer.compare_ensemble_files(
+            path1, n_conformers1, path2, n_conformers2, overlap = analyzer.compare_ensembles_files(
                 path1=args.path1,
                 path2=args.path2,
                 rmsd_threshold=args.rmsd,
@@ -53,7 +53,7 @@ def main():
                 matching=args.matching
             )
         else:
-            path1, n_conformers1, path2, n_conformers2, overlap = analyzer.compare_ensemble_dirs(
+            path1, n_conformers1, path2, n_conformers2, overlap = analyzer.compare_ensembles_dirs(
                 path1=args.path1,
                 path2=args.path2,
                 rmsd_threshold=args.rmsd,

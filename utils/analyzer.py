@@ -40,7 +40,7 @@ class Analyzer:
 
 
 
-    def compare_ensemble_dirs(self, path1: str, path2: str, rmsd_threshold: float=0.1, ignore: str=None, matching: str="normal") -> list:
+    def compare_ensembles_dirs(self, path1: str, path2: str, rmsd_threshold: float=0.1, ignore: str=None, matching: str="normal") -> list:
         conformer1 = Structure()
         conformer2 = Structure()
 
@@ -98,7 +98,7 @@ class Analyzer:
 
 
 
-    def compare_ensemble_files(self, input_path1: str, input_path2: str, rmsd_threshold: float=0.1, ignore: str=None, matching: str="normal") -> list:
+    def compare_ensembles_files(self, input_path1: str, input_path2: str, rmsd_threshold: float=0.1, ignore: str=None, matching: str="normal") -> list:
         ensemble_file1 = os.path.abspath(input_path1)
         ensemble_file2 = os.path.abspath(input_path2)
         dir_ensemble_file1 = os.path.dirname(ensemble_file1)
@@ -201,7 +201,7 @@ class Analyzer:
 
 
 
-    def remove_doubles(self, path: str, rmsd_threshold: float=0.1, ignore: str=None, use_energy: bool = False, matching: str="normal") -> int:
+    def remove_doubles_dir(self, path: str, rmsd_threshold: float=0.1, ignore: str=None, use_energy: bool = False, matching: str="normal") -> int:
         conformer1 = Structure()
         conformer2 = Structure()
         path = os.path.abspath(path)
@@ -276,7 +276,7 @@ class Analyzer:
     
 
 
-    def remove_doubles_ensemble_file(self, ensemble_file: str, rmsd_threshold: float=0.1, ignore: str=None, use_energy: bool = False, matching: str="normal") -> int:
+    def remove_doubles_file(self, ensemble_file: str, rmsd_threshold: float=0.1, ignore: str=None, use_energy: bool = False, matching: str="normal") -> int:
         ensemble_file = os.path.abspath(ensemble_file)
         dir_ensemble_file = os.path.dirname(ensemble_file)
         workdir = os.path.join(dir_ensemble_file, "conformers")

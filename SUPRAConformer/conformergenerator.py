@@ -21,7 +21,6 @@ class ConformerGenerator:
         self.output_folder_name = "SUPRA_Output"
         self.workdir_name = "optdir"
         self.opt_struc_name = "opt_struc.xyz"
-        self.analyzer = None
         self.optimizer = None
         self.symmetry = None
         self.torsions = []
@@ -78,7 +77,7 @@ class ConformerGenerator:
         for increment in self.angle_increments:
             #self.angles = [n * increment for n in range(int(np.round(360 / increment)))]
             self.symmetry.find_rot_sym_of_torsions(structure, self.torsions, increment)
-            number_conformers = self._combinations(
+            number_conformers = self._generation(
                 bond_partners=structure.bond_partners, new_coords=structure.coords, counter=number_conformers
             )
         print("Generation of conformer structures done.")
@@ -433,7 +432,7 @@ class ConformerGenerator:
     # calculates all possible conformer structures and generates an output file for every conformer structure without
     # internal clash
     # the output file is an input file for a geometry optimization with ORCA
-    def _combinations(self, bond_partners: dict, new_coords: dict, counter: int, index: int = 0) -> int:
+    def _generation(self, bond_partners: dict, new_coords: dict, counter: int, index: int = 0) -> int:
         # base case, new torsion angle for every angle has been calculated
         if index == len(self.torsions):
             # sofern keine strukturinternen Clashes hinzufügen zur Liste erfolgreich erzeugter Konformerstrukturen
