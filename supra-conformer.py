@@ -55,8 +55,8 @@ def main():
     #"""
     if n_conformers:
         print("Performing removal of duplicate structures...")
-        conformers = analyzer.remove_doubles(path=os.path.join(os.getcwd(), "SUPRA_Output/"), use_energy=True, matching="normal")
-        conformers = analyzer.remove_doubles(path=os.path.join(os.getcwd(), "SUPRA_Output/"), use_energy=True, matching="tight")
+        conformers = analyzer.remove_doubles_dir(path=os.path.join(os.getcwd(), "SUPRA_Output/"), use_energy=True, matching="normal")
+        conformers = analyzer.remove_doubles_dir(path=os.path.join(os.getcwd(), "SUPRA_Output/"), use_energy=True, matching="tight")
         print("Removal of duplicate structures done.")
         print(f"Number of generated conformer structures: {conformers}")
     else:

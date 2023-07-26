@@ -461,7 +461,7 @@ class ConformerGenerator:
                     new_coord = R.apply(new_coord)
                     new_coords_copy[atom] = new_coord + axis_vec1
                 # rekursiver Aufruf für nächste Bindung
-                counter = self._combinations(bond_partners, new_coords_copy, counter, index+1)
+                counter = self._generation(bond_partners, new_coords_copy, counter, index+1)
             return counter
 
 

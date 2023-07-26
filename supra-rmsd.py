@@ -24,7 +24,7 @@ def main():
         structure1 = Structure(args.path1)
         structure2 = Structure(args.path2)
         if args.matching == "loose":
-            kabsch_coords1, kabsch_coords2 = analyzer.kabsch(structure1.coords, structure2.coords)
+            kabsch_coords1, kabsch_coords2 = analyzer._kabsch(structure1.coords, structure2.coords)
             rmsd = analyzer._calc_rmsd(kabsch_coords1, kabsch_coords2)
         elif args.matching == "normal":
             rmsd = analyzer._rmsd(structure1.coords, structure2.coords)
