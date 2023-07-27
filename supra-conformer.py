@@ -52,7 +52,7 @@ def main():
         ignore_terminal=ignore_terminal,
         ignore_peptide=ignore_peptide
     )
-    #"""
+    """
     if n_conformers:
         print("Performing removal of duplicate structures...")
         conformers = analyzer.remove_doubles_dir(path=os.path.join(os.getcwd(), "SUPRA_Output/"), use_energy=True, matching="normal")
@@ -61,7 +61,7 @@ def main():
         print(f"Number of generated conformer structures: {conformers}")
     else:
         print("No conformer structures have been generated.")
-    #"""
+    """
     print()
 
 

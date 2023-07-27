@@ -37,6 +37,60 @@ class Analyzer:
                     conformer_counter += 1
                 line_iter += 1
         return conformer_counter
+    
+
+
+    def check_for_duplicates(
+        self, xyz_file: str, path: str, rmsd_threshold: float=0.1, ignore: str=None, matching: str="normal"
+    ) -> bool:
+        conformer1 = Structure()
+        conformer2 = Structure()
+        conformers = os.listdir(path)
+
+        if ignore == "methyl":
+            conformer1.get_structure(xyz_file)
+            for atom in self._find_methyl_group_atoms(conformer1.bond_partners):
+                del conformer1.coords[atom]
+        elif ignore == "terminal":
+            conformer1.get_structure(xyz_file)
+            for atom in self._find_terminal_group_atoms(conformer1.bond_partners):
+                del conformer1.coords[atom]
+        else:
+            conformer1.read_xyz(xyz_file)
+
+        for other_file in conformers:
+            other_file = os.path.join(path, other_file)
+            if other_file == xyz_file:
+                continue
+            if ignore == "methyl":
+                conformer2.get_structure(other_file)
+                for atom in self._find_methyl_group_atoms(conformer1.bond_partners):
+                    del conformer1.coords[atom]
+            elif ignore == "terminal":
+                conformer2.get_structure(other_file)
+                for atom in self._find_terminal_group_atoms(conformer2.bond_partners):
+                    del conformer2.coords[atom]
+            else:
+                conformer2.read_xyz(other_file)
+            if matching == "loose":
+                rmsd = self._calc_rmsd(conformer1.coords, conformer2.coords)
+            elif matching == "normal":
+                rmsd = self._rmsd(conformer1.coords, conformer2.coords)
+            elif matching == "tight":
+                if not ignore:
+                    conformer1.get_connectivity()
+                    conformer2.get_connectivity()
+                rmsd = self._rmsd_tight(
+                    conformer1.coords,
+                    conformer1.bond_partners,
+                    conformer2.coords,
+                    conformer2.bond_partners
+                )
+            if rmsd <= rmsd_threshold:
+                return True
+        
+        return False
+                
 
 
 
@@ -61,7 +115,6 @@ class Analyzer:
             if ignore == "methyl":
                 conformer1.get_structure(os.path.join(path1, file1))
                 for atom in self._find_methyl_group_atoms(conformer1.bond_partners):
-                    print(atom)
                     del conformer1.coords[atom]
             elif ignore == "terminal":
                 conformer1.get_structure(os.path.join(path1, file1))

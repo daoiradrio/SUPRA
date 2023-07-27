@@ -55,19 +55,22 @@ class Optimizer:
 
 
 
-    def MMFF_structure_optimization(self, coords: dict, n: int = None):
+    def MMFF_structure_optimization(self, coords: dict, n: int = None, destination: str = None):
         xyz_string = f"{len(coords.keys())}\n\n"
         for atom, (x, y, z) in coords.items():
             xyz_string = xyz_string + f"{get_element(atom)}\t{x}\t{y}\t{z}\n"
+        
+        if destination:
+            opt_struc_file = destination
+        else:
+            opt_struc_file = os.path.join(os.getcwd(), f"conformer{n}.xyz")
 
         mol = Chem.MolFromXYZBlock(xyz_string)
         mol = Chem.Mol(mol)
         rdDetermineBonds.DetermineBonds(mol)
-
         res = MMFFOptimizeMoleculeConfs(mol, maxIters=1000)
         energy = res[0][1]
 
-        opt_struc_file = os.path.join(os.getcwd(), f"conformer{n}.xyz")
         with open(opt_struc_file, "w") as outfile:
             print(len(coords.keys()), file=outfile)
             print(f"MMFF-Energy = {energy}", file=outfile)
@@ -77,19 +80,22 @@ class Optimizer:
     
 
 
-    def UFF_structure_optimization(self, coords: dict, n: int = None):
+    def UFF_structure_optimization(self, coords: dict, n: int = None, destination: str = None):
         xyz_string = f"{len(coords.keys())}\n\n"
         for atom, (x, y, z) in coords.items():
             xyz_string = xyz_string + f"{get_element(atom)}\t{x}\t{y}\t{z}\n"
+        
+        if destination:
+            opt_struc_file = destination
+        else:
+            opt_struc_file = os.path.join(os.getcwd(), f"conformer{n}.xyz")
 
         mol = Chem.MolFromXYZBlock(xyz_string)
         mol = Chem.Mol(mol)
         rdDetermineBonds.DetermineBonds(mol)
-
         res = UFFOptimizeMoleculeConfs(mol, maxIters=1000)
         energy = res[0][1]
 
-        opt_struc_file = os.path.join(os.getcwd(), f"conformer{n}.xyz")
         with open(opt_struc_file, "w") as outfile:
             print(len(coords.keys()), file=outfile)
             print(f"UFF-Energy = {energy}", file=outfile)

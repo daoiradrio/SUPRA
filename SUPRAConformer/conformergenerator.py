@@ -9,6 +9,7 @@ from scipy.spatial.transform import Rotation
 from SUPRAConformer.structure import Structure
 from utils.optimizer import Optimizer
 from utils.symmetry import Symmetry
+from utils.analyzer import Analyzer
 from utils.rotatablebond import RotatableBond
 from utils.helper import covalence_radii_single, covalence_radii_double, get_element, \
                          increment_combinations, valences, atom_in_torsions, get_number
@@ -19,10 +20,9 @@ class ConformerGenerator:
 
     def __init__(self):
         self.output_folder_name = "SUPRA_Output"
-        self.workdir_name = "optdir"
-        self.opt_struc_name = "opt_struc.xyz"
         self.optimizer = None
         self.symmetry = None
+        self.analyzer = None
         self.torsions = []
         self.central_torsions = []
         self.terminal_torsions = []
@@ -40,6 +40,7 @@ class ConformerGenerator:
     ) -> None:
         self.optimizer = Optimizer()
         self.symmetry = Symmetry()
+        self.analyzer = Analyzer()
         self._find_torsions(structure.bonds, structure.bond_partners)
         self._find_cycles(structure.bond_partners)
         ###
@@ -71,23 +72,25 @@ class ConformerGenerator:
         #"""
         ###
         self._generation_setup(structure.bond_partners)
+        if not os.path.exists(self.output_folder_name):
+            os.makedirs(self.output_folder_name)
         print()
         print("Performing generation of conformer structures...")
         number_conformers = 0
         for increment in self.angle_increments:
             #self.angles = [n * increment for n in range(int(np.round(360 / increment)))]
             self.symmetry.find_rot_sym_of_torsions(structure, self.torsions, increment)
-            number_conformers = self._generation(
+            number_conformers = self._new_generation(
                 bond_partners=structure.bond_partners, new_coords=structure.coords, counter=number_conformers
             )
         print("Generation of conformer structures done.")
-        if number_conformers:
-            if not os.path.exists(self.output_folder_name):
-                os.makedirs(self.output_folder_name)
-            self.output_folder_name = os.path.abspath(self.output_folder_name)
-            #for i in range(number_conformers):
-            #    os.system(f"mv conformer{i}.xyz {self.output_folder_name}")
-            os.system(f"mv conformer*.xyz {self.output_folder_name}")
+        #if number_conformers:
+        #    self.output_folder_name = os.path.abspath(self.output_folder_name)
+        #    #for i in range(number_conformers):
+        #    #    os.system(f"mv conformer{i}.xyz {self.output_folder_name}")
+        #    os.system(f"mv conformer*.xyz {self.output_folder_name}")
+        #else:
+        #    os.system(f"rm {self.output_folder_name}")
         return number_conformers
     
 
@@ -462,6 +465,60 @@ class ConformerGenerator:
                     new_coords_copy[atom] = new_coord + axis_vec1
                 # rekursiver Aufruf für nächste Bindung
                 counter = self._generation(bond_partners, new_coords_copy, counter, index+1)
+            return counter
+    
+
+
+    def _new_generation(self, bond_partners: dict, new_coords: dict, counter: int, index: int = 0) -> int:
+        # base case, new torsion angle for every angle has been calculated
+        if index == len(self.torsions):
+            # sofern keine strukturinternen Clashes hinzufügen zur Liste erfolgreich erzeugter Konformerstrukturen
+            # check new structure for internal clashes
+            if not self._clashes(bond_partners, new_coords):
+                #self.output_coords(new_coords, counter)
+                #self.optimizer.UFF_structure_optimization(new_coords, counter)
+                new_struc_file = os.path.join(self.output_folder_name, f"conformer{counter}.xyz")
+                self.optimizer.MMFF_structure_optimization(
+                    new_coords,
+                    counter,
+                    new_struc_file
+                )
+                #self.optimizer.optimize_structure_uff(new_coords, counter)
+                if self.analyzer.check_for_duplicates(
+                    new_struc_file,
+                    self.output_folder_name,
+                    matching="normal"
+                ):
+                    os.remove(new_struc_file)
+                    return counter
+                elif self.analyzer.check_for_duplicates(
+                    new_struc_file,
+                    self.output_folder_name,
+                    matching="tight"
+                ):
+                    os.remove(new_struc_file)
+                    return counter
+                else:
+                    return counter+1
+            else:
+                return counter
+        # es wurden noch nicht alle Torsionswinkel berechnet, Bindung index in torsions ist an der Reihe
+        else:
+            # Punkte initialisieren, welche die Rotationsachse definieren
+            axis_vec1 = new_coords[self.torsions[index].atom1]
+            axis_vec2 = new_coords[self.torsions[index].atom2]
+            axis = (axis_vec2 - axis_vec1) / np.linalg.norm(axis_vec2 - axis_vec1)
+            # jeden möglichen Torsionswinkel für Bindung durchgehen
+            #for angle in self.angles:
+            for angle in self.torsions[index].rot_angles:
+                R = Rotation.from_rotvec(np.deg2rad(angle) * axis)
+                new_coords_copy = new_coords.copy()
+                for atom in self.torsions[index].torsion_atoms:
+                    new_coord = new_coords[atom] - axis_vec1
+                    new_coord = R.apply(new_coord)
+                    new_coords_copy[atom] = new_coord + axis_vec1
+                # rekursiver Aufruf für nächste Bindung
+                counter = self._new_generation(bond_partners, new_coords_copy, counter, index+1)
             return counter
 
 
