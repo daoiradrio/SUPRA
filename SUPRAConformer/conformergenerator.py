@@ -82,7 +82,6 @@ class ConformerGenerator:
         if not number_conformers:
             os.system(f"rm {self.output_folder_name}")
             print("No conformers have been generated.")
-        print()
         return number_conformers
 
 
