@@ -28,6 +28,61 @@ class ConformerGenerator:
         self.terminal_torsions = []
         self.methyl_torsions = []
         self.angle_increments = []
+    
+
+
+    def new_generate_conformers(
+        self,
+        structure: Structure,
+        increment: int = 120,
+        ignore_methyl: bool = False,
+        ignore_terminal: bool = False,
+        ignore_peptide: bool = False
+    ) -> None:
+        self.optimizer = Optimizer()
+        self.symmetry = Symmetry()
+        self.analyzer = Analyzer()
+        self._find_torsions(structure.bonds, structure.bond_partners)
+        self._find_cycles(structure.bond_partners)
+        if ignore_peptide:
+            self._find_peptidebonds(structure.coords, structure.bond_partners)
+        self.torsions = self.central_torsions
+        if not ignore_methyl:
+            self.torsions = self.torsions + self.methyl_torsions
+        if not ignore_terminal:
+            self.torsions = self.torsions + self.terminal_torsions
+        self.angle_increments = increment_combinations[increment]
+        possible_number_of_conformers = 0
+        for angle in self.angle_increments:
+            possible_number_of_conformers += int(np.power((360 / angle), len(self.torsions)))
+        confirm = False
+        while not confirm:
+            user_input = input(
+                f"Up to {possible_number_of_conformers} structures will be generated. Start calculation (1) or exit SUPRA (2)?: "
+            )
+            if user_input == "1":
+                confirm = True
+            elif user_input == "2":
+                return
+            else:
+                print("Invalid input.")
+        self._generation_setup(structure.bond_partners)
+        if not os.path.exists(self.output_folder_name):
+            os.makedirs(self.output_folder_name)
+        print()
+        print("Performing generation of conformer structures...")
+        number_conformers = 0
+        for increment in self.angle_increments:
+            self.symmetry.find_rot_sym_of_torsions(structure, self.torsions, increment)
+            number_conformers = self._new_generation(
+                bond_partners=structure.bond_partners, new_coords=structure.coords, counter=number_conformers
+            )
+        print("Generation of conformer structures done.")
+        if not number_conformers:
+            os.system(f"rm {self.output_folder_name}")
+            print("No conformers have been generated.")
+        print()
+        return number_conformers
 
 
     def generate_conformers(
@@ -72,8 +127,6 @@ class ConformerGenerator:
         #"""
         ###
         self._generation_setup(structure.bond_partners)
-        if not os.path.exists(self.output_folder_name):
-            os.makedirs(self.output_folder_name)
         print()
         print("Performing generation of conformer structures...")
         number_conformers = 0
@@ -84,13 +137,11 @@ class ConformerGenerator:
                 bond_partners=structure.bond_partners, new_coords=structure.coords, counter=number_conformers
             )
         print("Generation of conformer structures done.")
-        #if number_conformers:
-        #    self.output_folder_name = os.path.abspath(self.output_folder_name)
-        #    #for i in range(number_conformers):
-        #    #    os.system(f"mv conformer{i}.xyz {self.output_folder_name}")
-        #    os.system(f"mv conformer*.xyz {self.output_folder_name}")
-        #else:
-        #    os.system(f"rm {self.output_folder_name}")
+        if number_conformers:
+            if not os.path.exists(self.output_folder_name):
+                os.makedirs(self.output_folder_name)
+            self.output_folder_name = os.path.abspath(self.output_folder_name)
+            os.system(f"mv conformer*.xyz {self.output_folder_name}")
         return number_conformers
     
 

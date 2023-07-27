@@ -8,6 +8,8 @@ from SUPRAConformer.structure import Structure
 from SUPRAConformer.conformergenerator import ConformerGenerator
 from utils.analyzer import Analyzer
 
+from time import time
+
 
 
 def main():
@@ -43,8 +45,19 @@ def main():
 
     mol.get_structure(os.path.abspath(args.path))
 
-    print()
+    start = time()
+    n_conformers = generator.new_generate_conformers(
+        structure=mol,
+        increment=args.increment,
+        ignore_methyl=ignore_methyl,
+        ignore_terminal=ignore_terminal,
+        ignore_peptide=ignore_peptide
+    )
+    stop = time()
+    print(f"Benötigte Zeit: {stop-start}")
 
+    """
+    start = time()
     n_conformers = generator.generate_conformers(
         structure=mol,
         increment=args.increment,
@@ -52,7 +65,6 @@ def main():
         ignore_terminal=ignore_terminal,
         ignore_peptide=ignore_peptide
     )
-    """
     if n_conformers:
         print("Performing removal of duplicate structures...")
         conformers = analyzer.remove_doubles_dir(path=os.path.join(os.getcwd(), "SUPRA_Output/"), use_energy=True, matching="normal")
@@ -61,6 +73,8 @@ def main():
         print(f"Number of generated conformer structures: {conformers}")
     else:
         print("No conformer structures have been generated.")
+    stop = time()
+    print(f"Benötigte Zeit: {stop-start}")
     """
     print()
 
