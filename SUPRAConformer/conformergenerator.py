@@ -127,6 +127,8 @@ class ConformerGenerator:
         #"""
         ###
         self._generation_setup(structure.bond_partners)
+        if not os.path.exists(self.output_folder_name):
+            os.makedirs(self.output_folder_name)
         print()
         print("Performing generation of conformer structures...")
         number_conformers = 0
@@ -137,11 +139,13 @@ class ConformerGenerator:
                 bond_partners=structure.bond_partners, new_coords=structure.coords, counter=number_conformers
             )
         print("Generation of conformer structures done.")
-        if number_conformers:
-            if not os.path.exists(self.output_folder_name):
-                os.makedirs(self.output_folder_name)
-            self.output_folder_name = os.path.abspath(self.output_folder_name)
-            os.system(f"mv conformer*.xyz {self.output_folder_name}")
+        if not number_conformers:
+            os.system(f"rm -rf {self.output_folder_name}")
+        #if number_conformers:
+        #    if not os.path.exists(self.output_folder_name):
+        #        os.makedirs(self.output_folder_name)
+        #    self.output_folder_name = os.path.abspath(self.output_folder_name)
+        #    os.system(f"mv conformer*.xyz {self.output_folder_name}")
         return number_conformers
     
 
