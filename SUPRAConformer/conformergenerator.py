@@ -113,6 +113,7 @@ class ConformerGenerator:
         possible_number_of_conformers = 0
         for angle in self.angle_increments:
             possible_number_of_conformers += int(np.power((360 / angle), len(self.torsions)))
+        print()
         confirm = False
         while not confirm:
             user_input = input(

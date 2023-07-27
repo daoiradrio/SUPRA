@@ -45,7 +45,7 @@ def main():
 
     mol.get_structure(os.path.abspath(args.path))
 
-    """
+    #"""
     start = time()
     n_conformers = generator.new_generate_conformers(
         structure=mol,
@@ -56,9 +56,9 @@ def main():
     )
     stop = time()
     print(f"Benötigte Zeit: {stop-start}")
-    """
-
     #"""
+
+    """
     start = time()
     n_conformers = generator.generate_conformers(
         structure=mol,
@@ -77,7 +77,7 @@ def main():
         print("No conformer structures have been generated.")
     stop = time()
     print(f"Benötigte Zeit: {stop-start}")
-    #"""
+    """
     print()
 
 
