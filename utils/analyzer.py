@@ -53,30 +53,30 @@ class Analyzer:
         conformers = os.listdir(path)
 
         if ignore == "methyl":
-            conformer1.get_structure(xyz_file, use_energy=use_energy)
+            conformer1.get_structure(xyz_file, read_energy=use_energy)
             for atom in self._find_methyl_group_atoms(conformer1.bond_partners):
                 del conformer1.coords[atom]
         elif ignore == "terminal":
-            conformer1.get_structure(xyz_file, use_energy=use_energy)
+            conformer1.get_structure(xyz_file, read_energy=use_energy)
             for atom in self._find_terminal_group_atoms(conformer1.bond_partners):
                 del conformer1.coords[atom]
         else:
-            conformer1.read_xyz(xyz_file, use_energy=use_energy)
+            conformer1.read_xyz(xyz_file, read_energy=use_energy)
 
         for other_file in conformers:
             other_file = os.path.join(path, other_file)
             if other_file == xyz_file:
                 continue
             if ignore == "methyl":
-                conformer2.get_structure(other_file, use_energy=use_energy)
+                conformer2.get_structure(other_file, read_energy=use_energy)
                 for atom in self._find_methyl_group_atoms(conformer1.bond_partners):
                     del conformer1.coords[atom]
             elif ignore == "terminal":
-                conformer2.get_structure(other_file, use_energy=use_energy)
+                conformer2.get_structure(other_file, read_energy=use_energy)
                 for atom in self._find_terminal_group_atoms(conformer2.bond_partners):
                     del conformer2.coords[atom]
             else:
-                conformer2.read_xyz(other_file, use_energy=use_energy)
+                conformer2.read_xyz(other_file, read_energy=use_energy)
             if matching == "loose":
                 rmsd = self._calc_rmsd(conformer1.coords, conformer2.coords)
             elif matching == "normal":
