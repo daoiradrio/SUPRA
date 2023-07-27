@@ -97,8 +97,8 @@ class Analyzer:
                             return xyz_file
                         else:
                             return other_file
-                    else:
-                        return xyz_file
+                else:
+                    return xyz_file
         
         return None
                 
