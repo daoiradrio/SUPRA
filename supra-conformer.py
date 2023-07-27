@@ -54,6 +54,13 @@ def main():
         ignore_terminal=ignore_terminal,
         ignore_peptide=ignore_peptide
     )
+    if n_conformers:
+        conformers = analyzer.remove_doubles_dir(
+                        path=os.path.join(os.getcwd(),
+                        "SUPRA_Output/"),
+                        use_energy=True,
+                        matching="tight"
+                    )
     stop = time()
     print(f"Benötigte Zeit: {stop-start}")
     #"""

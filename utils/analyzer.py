@@ -41,37 +41,42 @@ class Analyzer:
 
 
     def check_for_duplicates(
-        self, xyz_file: str, path: str, rmsd_threshold: float=0.1, ignore: str=None, matching: str="normal"
-    ) -> bool:
+        self, xyz_file: str,
+        path: str,
+        rmsd_threshold: float=0.1,
+        matching: str="normal",
+        use_energy: bool = False,
+        ignore: str=None,
+    ) -> str:
         conformer1 = Structure()
         conformer2 = Structure()
         conformers = os.listdir(path)
 
         if ignore == "methyl":
-            conformer1.get_structure(xyz_file)
+            conformer1.get_structure(xyz_file, use_energy=use_energy)
             for atom in self._find_methyl_group_atoms(conformer1.bond_partners):
                 del conformer1.coords[atom]
         elif ignore == "terminal":
-            conformer1.get_structure(xyz_file)
+            conformer1.get_structure(xyz_file, use_energy=use_energy)
             for atom in self._find_terminal_group_atoms(conformer1.bond_partners):
                 del conformer1.coords[atom]
         else:
-            conformer1.read_xyz(xyz_file)
+            conformer1.read_xyz(xyz_file, use_energy=use_energy)
 
         for other_file in conformers:
             other_file = os.path.join(path, other_file)
             if other_file == xyz_file:
                 continue
             if ignore == "methyl":
-                conformer2.get_structure(other_file)
+                conformer2.get_structure(other_file, use_energy=use_energy)
                 for atom in self._find_methyl_group_atoms(conformer1.bond_partners):
                     del conformer1.coords[atom]
             elif ignore == "terminal":
-                conformer2.get_structure(other_file)
+                conformer2.get_structure(other_file, use_energy=use_energy)
                 for atom in self._find_terminal_group_atoms(conformer2.bond_partners):
                     del conformer2.coords[atom]
             else:
-                conformer2.read_xyz(other_file)
+                conformer2.read_xyz(other_file, use_energy=use_energy)
             if matching == "loose":
                 rmsd = self._calc_rmsd(conformer1.coords, conformer2.coords)
             elif matching == "normal":
@@ -87,9 +92,15 @@ class Analyzer:
                     conformer2.bond_partners
                 )
             if rmsd <= rmsd_threshold:
-                return True
+                if (conformer1.energy and conformer2.energy):
+                        if conformer1.energy < conformer2.energy:
+                            return xyz_file
+                        else:
+                            return other_file
+                    else:
+                        return xyz_file
         
-        return False
+        return None
                 
 
 

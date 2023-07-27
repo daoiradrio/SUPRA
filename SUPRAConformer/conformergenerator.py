@@ -55,6 +55,7 @@ class ConformerGenerator:
         possible_number_of_conformers = 0
         for angle in self.angle_increments:
             possible_number_of_conformers += int(np.power((360 / angle), len(self.torsions)))
+        print()
         confirm = False
         while not confirm:
             user_input = input(
@@ -540,19 +541,13 @@ class ConformerGenerator:
                     new_struc_file
                 )
                 #self.optimizer.optimize_structure_uff(new_coords, counter)
-                if self.analyzer.check_for_duplicates(
+                duplicate = self.analyzer.check_for_duplicates(
                     new_struc_file,
                     self.output_folder_name,
                     matching="normal"
-                ):
-                    os.remove(new_struc_file)
-                    return counter
-                elif self.analyzer.check_for_duplicates(
-                    new_struc_file,
-                    self.output_folder_name,
-                    matching="tight"
-                ):
-                    os.remove(new_struc_file)
+                )
+                if duplicate:
+                    os.remove(duplicate)
                     return counter
                 else:
                     return counter+1
