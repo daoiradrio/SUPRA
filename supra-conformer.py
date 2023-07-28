@@ -7,6 +7,8 @@ import argparse
 from SUPRAConformer.structure import Structure
 from SUPRAConformer.conformergenerator import ConformerGenerator
 
+from time import time
+
 
 
 def main():
@@ -39,6 +41,7 @@ def main():
 
     mol.get_structure(os.path.abspath(args.path))
 
+    start = time()
     n_conformers = generator.new_generate_conformers(
         structure=mol,
         increment=args.increment,
@@ -46,6 +49,8 @@ def main():
         ignore_terminal=ignore_terminal,
         ignore_peptide=ignore_peptide
     )
+    stop = time()
+    print(f"Benötigte Zeit: {stop-start}")
 
 
 
