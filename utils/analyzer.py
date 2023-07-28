@@ -32,7 +32,7 @@ class Analyzer:
             line_iter = 0
             infile.seek(0)
             for line in infile:
-                if (line_iter >= n_atoms+2):
+                if (line_iter >= n_atoms+1):
                     line_iter = 0
                     conformer_counter += 1
                 line_iter += 1
@@ -366,7 +366,7 @@ class Analyzer:
                 line_iter += 1
             new_struc_file.close()
         
-        n_conformers = self.remove_doubles(workdir, rmsd_threshold, ignore, use_energy, matching)
+        n_conformers = self.remove_doubles_dir(workdir, rmsd_threshold, ignore, use_energy, matching)
         
         with open(os.path.join(dir_ensemble_file, "SUPRA_output_ensemble.xyz"), "w") as outfile:
             conformers = os.listdir(workdir)

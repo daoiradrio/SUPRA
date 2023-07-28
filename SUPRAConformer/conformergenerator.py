@@ -39,6 +39,7 @@ class ConformerGenerator:
         ignore_terminal: bool = False,
         ignore_peptide: bool = False
     ) -> None:
+        print()
         self.optimizer = Optimizer()
         self.symmetry = Symmetry()
         self.analyzer = Analyzer()
@@ -55,7 +56,6 @@ class ConformerGenerator:
         possible_number_of_conformers = 0
         for angle in self.angle_increments:
             possible_number_of_conformers += int(np.power((360 / angle), len(self.torsions)))
-        print()
         confirm = False
         while not confirm:
             user_input = input(
@@ -70,7 +70,6 @@ class ConformerGenerator:
         self._generation_setup(structure.bond_partners)
         if not os.path.exists(self.output_folder_name):
             os.makedirs(self.output_folder_name)
-        print()
         print("Performing generation of conformer structures...")
         number_conformers = 0
         for increment in self.angle_increments:
@@ -79,9 +78,12 @@ class ConformerGenerator:
                 bond_partners=structure.bond_partners, new_coords=structure.coords, counter=number_conformers
             )
         print("Generation of conformer structures done.")
-        if not number_conformers:
+        if number_conformers:
+            print(f"Number of generated conformer structures: {number_conformers}")
+        else:
             os.system(f"rm {self.output_folder_name}")
             print("No conformers have been generated.")
+        print()
         return number_conformers
 
 
@@ -136,7 +138,7 @@ class ConformerGenerator:
         for increment in self.angle_increments:
             #self.angles = [n * increment for n in range(int(np.round(360 / increment)))]
             self.symmetry.find_rot_sym_of_torsions(structure, self.torsions, increment)
-            number_conformers = self._new_generation(
+            number_conformers = self._generation(
                 bond_partners=structure.bond_partners, new_coords=structure.coords, counter=number_conformers
             )
         print("Generation of conformer structures done.")
@@ -499,7 +501,11 @@ class ConformerGenerator:
             if not self._clashes(bond_partners, new_coords):
                 #self.output_coords(new_coords, counter)
                 #self.optimizer.UFF_structure_optimization(new_coords, counter)
-                self.optimizer.MMFF_structure_optimization(new_coords, counter)
+                self.optimizer.MMFF_structure_optimization(
+                    new_coords,
+                    counter,
+                    os.path.join(self.output_folder_name, f"conformer{counter}.xyz")
+                )
                 #self.optimizer.optimize_structure_uff(new_coords, counter)
                 return counter+1
             else:
@@ -548,8 +554,15 @@ class ConformerGenerator:
                 if duplicate:
                     os.remove(duplicate)
                     return counter
-                else:
-                    return counter+1
+                duplicate = self.analyzer.check_for_duplicates(
+                    new_struc_file,
+                    self.output_folder_name,
+                    matching="tight"
+                )
+                if duplicate:
+                    os.remove(duplicate)
+                    return counter
+                return counter+1
             else:
                 return counter
         # es wurden noch nicht alle Torsionswinkel berechnet, Bindung index in torsions ist an der Reihe
