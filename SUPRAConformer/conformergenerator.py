@@ -168,6 +168,9 @@ class ConformerGenerator:
 
 
     def _find_torsions(self, bonds: list, bond_partners: dict) -> None:
+        self.central_torsions = []
+        self.terminal_torsions = []
+        self.methyl_torsions = []
         for bond in bonds:
             if bond.bond_order != 1:
                 continue
