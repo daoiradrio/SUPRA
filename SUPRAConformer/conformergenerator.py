@@ -40,19 +40,25 @@ class ConformerGenerator:
         ignore_peptide: bool = False
     ) -> None:
         print()
+
         self.optimizer = Optimizer()
         self.symmetry = Symmetry()
         self.analyzer = Analyzer()
+
         self._find_torsions(structure.bonds, structure.bond_partners)
         self._find_cycles(structure.bond_partners)
+
         if ignore_peptide:
             self._find_peptidebonds(structure.coords, structure.bond_partners)
+
         self.torsions = self.central_torsions
         if not ignore_methyl:
             self.torsions = self.torsions + self.methyl_torsions
         if not ignore_terminal:
             self.torsions = self.torsions + self.terminal_torsions
+
         self.angle_increments = increment_combinations[increment]
+
         possible_number_of_conformers = 0
         for angle in self.angle_increments:
             possible_number_of_conformers += int(np.power((360 / angle), len(self.torsions)))
@@ -67,23 +73,31 @@ class ConformerGenerator:
                 return
             else:
                 print("Invalid input.")
+
         self._generation_setup(structure.bond_partners)
+
         if not os.path.exists(self.output_folder_name):
             os.makedirs(self.output_folder_name)
+
         print("Performing generation of conformer structures...")
+
         number_conformers = 0
         for increment in self.angle_increments:
             self.symmetry.find_rot_sym_of_torsions(structure, self.torsions, increment)
             number_conformers = self._new_generation(
                 bond_partners=structure.bond_partners, new_coords=structure.coords, counter=number_conformers
             )
+
         print("Generation of conformer structures done.")
+
         if number_conformers:
             print(f"Number of generated conformer structures: {number_conformers}")
         else:
             os.system(f"rm {self.output_folder_name}")
             print("No conformers have been generated.")
+        
         print()
+
         return number_conformers
 
 
