@@ -512,7 +512,7 @@ class ConformerGenerator:
         if index == len(self.torsions):
             # sofern keine strukturinternen Clashes hinzufügen zur Liste erfolgreich erzeugter Konformerstrukturen
             # check new structure for internal clashes
-            if not self._clashes(bond_partners, new_coords):
+            if not self._find_clashes(bond_partners, new_coords):
                 #self.output_coords(new_coords, counter)
                 #self.optimizer.UFF_structure_optimization(new_coords, counter)
                 self.optimizer.MMFF_structure_optimization(
@@ -550,7 +550,7 @@ class ConformerGenerator:
         if index == len(self.torsions):
             # sofern keine strukturinternen Clashes hinzufügen zur Liste erfolgreich erzeugter Konformerstrukturen
             # check new structure for internal clashes
-            if not self._clashes(bond_partners, new_coords):
+            if not self._find_clashes(bond_partners, new_coords):
                 #self.output_coords(new_coords, counter)
                 #self.optimizer.UFF_structure_optimization(new_coords, counter)
                 new_struc_file = os.path.join(self.output_folder_name, f"conformer{counter}.xyz")
@@ -600,7 +600,7 @@ class ConformerGenerator:
 
 
 
-    def _clashes(self, bond_partners: dict, coords: dict) -> bool:
+    def _find_clashes(self, bond_partners: dict, coords: dict) -> bool:
         for atom1, coords1 in coords.items():
             element1 = get_element(atom1)
             for atom2, coords2 in coords.items():

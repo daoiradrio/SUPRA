@@ -7,8 +7,8 @@ from rdkit import Chem
 from rdkit.Chem import rdDetermineBonds
 from rdkit.Chem.rdForceFieldHelpers import MMFFOptimizeMoleculeConfs, UFFOptimizeMoleculeConfs
 
-from pyscf import gto, scf
-from pyscf.geomopt.geometric_solver import optimize
+#from pyscf import gto, scf
+#from pyscf.geomopt.geometric_solver import optimize
 #from pyscf.geomopt.berny_solver import optimize
 
 
@@ -21,37 +21,6 @@ class Optimizer:
         self.temp_file_name = "temp.xyz"
         self.work_struc_name = "struc.xyz"
         self.opt_struc_name = "opt_struc.xyz"
-
-    
-
-    def qc_refine_structures(self, path: str):
-        abspath = os.path.abspath(path)
-        structures = os.listdir(abspath)
-        for structure in structures:
-            struc_path = os.path.join(abspath, structure)
-            self.qc_structure_optimization(struc_path)
-
-    
-
-    def qc_structure_optimization(self, path: str):
-        path = os.path.abspath(path)
-        dirname = os.path.dirname(path)
-        filename = os.path.basename(path)
-        workdir = os.path.join(dirname, self.workdir_name)
-        
-        os.system(f"mkdir {workdir} ; mv {path} {workdir}")
-
-        mol = gto.M(atom=os.path.join(workdir, filename))
-        mf = scf.RHF(mol)
-        opt_mol = optimize(mf, maxsteps=1000)
-
-        with open(path, "w") as outfile:
-            print(opt_mol.natm, end="\n\n", file=outfile)
-            for i in range(opt_mol.natm):
-                x, y, z = opt_mol.atom_coord(i)
-                print(f"{opt_mol.atom_pure_symbol(i)}\t{x}\t{y}\t{z}", file=outfile)
-
-        os.system(f"rm -rf {workdir}")
 
 
 
@@ -215,3 +184,36 @@ class Optimizer:
                 n=i
             )
         print("Refining optimizations done.")
+
+
+
+    """
+    def qc_refine_structures(self, path: str):
+        abspath = os.path.abspath(path)
+        structures = os.listdir(abspath)
+        for structure in structures:
+            struc_path = os.path.join(abspath, structure)
+            self.qc_structure_optimization(struc_path)
+
+    
+
+    def qc_structure_optimization(self, path: str):
+        path = os.path.abspath(path)
+        dirname = os.path.dirname(path)
+        filename = os.path.basename(path)
+        workdir = os.path.join(dirname, self.workdir_name)
+        
+        os.system(f"mkdir {workdir} ; mv {path} {workdir}")
+
+        mol = gto.M(atom=os.path.join(workdir, filename))
+        mf = scf.RHF(mol)
+        opt_mol = optimize(mf, maxsteps=1000)
+
+        with open(path, "w") as outfile:
+            print(opt_mol.natm, end="\n\n", file=outfile)
+            for i in range(opt_mol.natm):
+                x, y, z = opt_mol.atom_coord(i)
+                print(f"{opt_mol.atom_pure_symbol(i)}\t{x}\t{y}\t{z}", file=outfile)
+
+        os.system(f"rm -rf {workdir}")
+    """

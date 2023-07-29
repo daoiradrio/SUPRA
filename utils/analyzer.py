@@ -41,7 +41,8 @@ class Analyzer:
 
 
     def check_for_duplicates(
-        self, xyz_file: str,
+        self, 
+        xyz_file: str,
         path: str,
         rmsd_threshold: float=0.1,
         matching: str="normal",
