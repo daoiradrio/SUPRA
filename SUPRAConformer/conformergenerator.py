@@ -638,11 +638,8 @@ class ConformerGenerator:
 
 
 
-    def output_coords(self, coords: dict, counter: int) -> None:
-        output_folder = "SUPRA_Output/"
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
-        with open(f"{output_folder}conformer{counter}.xyz", "w") as outfile:
+    def output_coords(self, coords: dict, path: str) -> None:
+        with open(path, "w") as outfile:
             print(len(list(coords.keys())), file=outfile, end="\n\n")
             for atom, (x, y, z) in coords.items():
                 element = get_element(atom)
