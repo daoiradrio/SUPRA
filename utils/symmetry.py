@@ -268,8 +268,8 @@ class Symmetry:
             best_distance = 1.0
             symmetric_coords = rot_axis.rotate(coords_i, 360.0/float(rot_order))
             for atom_j in rot_atoms:
-                if (atom_i == atom_j):
-                    continue
+                #if (atom_i == atom_j):
+                #    continue
                 if (get_element(atom_i) != get_element(atom_j)):
                     continue
                 coords_j = mol.coords[atom_j]
