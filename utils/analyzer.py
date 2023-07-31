@@ -587,7 +587,7 @@ class Analyzer:
                 if eq in candidates:
                     candidates.remove(eq)
 
-        return matched_coords1, matched_coords2
+        return np.array(matched_coords1), np.array(matched_coords2)
 
 
 
