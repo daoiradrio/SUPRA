@@ -75,7 +75,7 @@ def rotation(coord_rotation_atom: np.array, coord_axis_atom1: np.array, coord_ax
 def get_element(label: str) -> str:
     # if letter on second index: two letter element symbol, return first two chars of label
     if label[1].isalpha():
-        return (label[0] + label[1])
+        return (label[:2])
     # if no letter on second index: one letter element symbol, return first char of label
     else:
         return label[0]
@@ -83,10 +83,10 @@ def get_element(label: str) -> str:
 
 
 def get_number(label: str) -> int:
-    if label[-2].isdigit():
-        return int(label[-2] + label[-1])
+    if label[1].isalpha():
+        return int(label[2:])
     else:
-        return int(label[-1])
+        return int(label[1:])
 
 
 
