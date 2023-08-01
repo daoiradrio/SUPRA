@@ -3,11 +3,12 @@ import os
 import numpy as np
 #import multiprocessing as mp
 
-from utils.helper import get_element, valences
+from utils.helper import get_element, valences, own_hungarian
 from SUPRAConformer.structure import Structure
 from typing import Union
 from queue import Queue
 from scipy.optimize import linear_sum_assignment
+from scipy.spatial.transform import Rotation
 
 
 
@@ -439,7 +440,7 @@ class Analyzer:
         cost = np.zeros((n_atoms, n_atoms))
         kabsch_coords1, kabsch_coords2 = self._kabsch(coords1, coords2)
         for i in range(n_atoms):
-            for j in range(i+1):
+            for j in range(n_atoms):
                 if elements1[i] == elements2[j]:
                     element_term = 0.0
                 else:
@@ -447,9 +448,81 @@ class Analyzer:
                 diff_vec = kabsch_coords1[i] - kabsch_coords2[j]
                 cost_value = np.dot(diff_vec, diff_vec) + element_term
                 cost[i][j] = cost_value
-                cost[j][i] = cost_value
         row, col = linear_sum_assignment(cost)
         return self._calc_rmsd(kabsch_coords1[row], kabsch_coords2[col])
+    
+
+
+    def SCHK(self, coords1: dict, coords2: dict) -> tuple:
+        if len(coords1.keys()) != len(coords2.keys()):
+            return 1000.0
+
+        elements1 = [get_element(atom) for atom in coords1.keys()]
+        elements2 = [get_element(atom) for atom in coords2.keys()]
+
+        coords1 = np.array(list(coords1.values()))
+        coords2 = np.array(list(coords2.values()))
+
+        n_atoms = len(elements1)
+
+        cost = np.zeros((n_atoms, n_atoms))
+
+        last_rmsd = 1000000.0
+        current_rmsd = -1.0
+        delta = abs(current_rmsd - last_rmsd)
+        threshold = 0.1
+        max_iter = 10
+        iter = 0
+
+        for i in range(n_atoms):
+            for j in range(n_atoms):
+                if elements1[i] == elements2[j]:
+                    element_term = 0.0
+                else:
+                    element_term = 1000.0
+                diff_vec = coords1[i] - coords2[j]
+                cost_value = np.dot(diff_vec, diff_vec) + element_term
+                cost[i][j] = cost_value
+        row, col = linear_sum_assignment(cost)
+        print(row)
+        print(col)
+        print()
+        print(coords2)
+        print()
+        coords1 = coords1[row]
+        coords2 = coords2[col]
+        print(coords2)
+        print()
+        print(coords1)
+        print()
+        current_rmsd = self._calc_rmsd(coords1, coords2)
+
+        while (delta > threshold and iter < max_iter):
+            print(current_rmsd)
+            iter += 1
+            last_rmsd = current_rmsd
+            #kabsch_coords1, kabsch_coords2 = self._kabsch(coords1, coords2)
+            kabsch_coords1 = coords1
+            kabsch_coords2 = coords2
+            R = Rotation.align_vectors(coords1, coords2)[0]
+            kabsch_coords2[:] = R.apply(kabsch_coords2[:])
+            for i in range(n_atoms):
+                for j in range(n_atoms):
+                    if elements1[i] == elements2[j]:
+                        element_term = 0.0
+                    else:
+                        element_term = 1000.0
+                    diff_vec = kabsch_coords1[i] - kabsch_coords2[j]
+                    cost_value = np.dot(diff_vec, diff_vec) + element_term
+                    cost[i][j] = cost_value
+            row, col = linear_sum_assignment(cost)
+            kabsch_coords1 = kabsch_coords1[row]
+            kabsch_coords2 = kabsch_coords2[col]
+            current_rmsd = self._calc_rmsd(kabsch_coords1, kabsch_coords2)
+            delta = abs(current_rmsd - last_rmsd)
+        print(current_rmsd)
+        
+        return kabsch_coords1, kabsch_coords2
     
 
 

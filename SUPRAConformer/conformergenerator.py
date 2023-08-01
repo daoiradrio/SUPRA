@@ -3,7 +3,7 @@ import queue
 import threading
 
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 from scipy.spatial.transform import Rotation
 from SUPRAConformer.structure import Structure
@@ -563,6 +563,7 @@ class ConformerGenerator:
                     new_struc_file
                 )
                 #self.optimizer.optimize_structure_uff(new_coords, counter)
+                """
                 duplicate = self.analyzer.check_for_duplicates(
                     new_struc_file,
                     self.output_folder_name,
@@ -571,6 +572,7 @@ class ConformerGenerator:
                 if duplicate:
                     os.remove(duplicate)
                     return counter
+                """
                 """
                 duplicate = self.analyzer.check_for_duplicates(
                     new_struc_file,

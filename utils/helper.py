@@ -151,3 +151,18 @@ def inertia_tensor(coords: dict) -> np.array:
                 if i == j:
                     I[i][j] += (m * np.dot(r, r))
     return I
+
+
+
+def own_hungarian(cost_matrix: np.array) -> list:
+    print()
+    print(cost_matrix)
+    print()
+    assignment = [i for i, _ in enumerate(cost_matrix)]
+    for i, row in enumerate(cost_matrix):
+        min_val = 1000000.0
+        for j, val in enumerate(row):
+            if val < min_val:
+                min_val = val
+                assignment[i] = j
+    return assignment
