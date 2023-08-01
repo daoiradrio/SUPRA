@@ -3,7 +3,7 @@ import queue
 import threading
 
 import numpy as np
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 from scipy.spatial.transform import Rotation
 from SUPRAConformer.structure import Structure
