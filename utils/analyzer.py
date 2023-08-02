@@ -8,7 +8,8 @@ from SUPRAConformer.structure import Structure
 from typing import Union
 from queue import Queue
 from scipy.optimize import linear_sum_assignment
-from scipy.spatial.transform import Rotation
+
+from utils.symmetry import Symmetry
 
 
 
@@ -439,17 +440,21 @@ class Analyzer:
     
 
 
-    def SCHK(self, coords1: dict, coords2: dict) -> tuple:
-        if len(coords1.keys()) != len(coords2.keys()):
+    def SCHK(self, mol1: Structure, mol2: Structure) -> tuple:
+        if len(mol1.number_of_atoms != mol2.number_of_atoms):
             return 1000.0
+        
+        # atoms = ...
 
-        elements1 = [get_element(atom) for atom in coords1.keys()]
-        elements2 = [get_element(atom) for atom in coords2.keys()]
+        elements1 = [get_element(atom) for atom in mol1.coords.keys()]
+        elements2 = [get_element(atom) for atom in mol2.coords.keys()]
 
-        new_coords1 = np.array(list(coords1.values()))
-        new_coords2 = np.array(list(coords2.values()))
+        new_coords1 = np.array(list(mol1.coords.values()))
+        new_coords2 = np.array(list(mol2.coords.values()))
 
-        new_coords1, new_coords2 = self._rmsd_hungarian(
+        #for bond in mol1.bonds:
+
+        new_coords1, elements1, new_coords2, elements2 = self._rmsd_hungarian(
             new_coords1, elements1, new_coords2, elements2
         )
 
@@ -461,14 +466,17 @@ class Analyzer:
         iter = 0
 
         while (delta > threshold and iter < max_iter):
+            print(current_rmsd)
             iter += 1
             last_rmsd = current_rmsd
-            kabsch_coords1, kabsch_coords2 = self._kabsch(coords1, coords2)
-            # ...
-            current_rmsd = self._calc_rmsd(kabsch_coords1, kabsch_coords2)
+            kabsch_coords1, kabsch_coords2 = self._kabsch(new_coords1, new_coords2)
+            new_coords1, elements1, new_coords2, elements2 = self._rmsd_hungarian(
+                kabsch_coords1, elements1, kabsch_coords2, elements2
+            )
+            current_rmsd = self._calc_rmsd(new_coords1, new_coords2)
             delta = abs(current_rmsd - last_rmsd)
         
-        return kabsch_coords1, kabsch_coords2
+        return new_coords1, new_coords2
     
 
 

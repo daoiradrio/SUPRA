@@ -563,7 +563,7 @@ class ConformerGenerator:
                     new_struc_file
                 )
                 #self.optimizer.optimize_structure_uff(new_coords, counter)
-                """
+                #"""
                 duplicate = self.analyzer.check_for_duplicates(
                     new_struc_file,
                     self.output_folder_name,
@@ -582,7 +582,7 @@ class ConformerGenerator:
                 if duplicate:
                     os.remove(duplicate)
                     return counter
-                """
+                #"""
                 return counter+1
             else:
                 return counter
