@@ -154,15 +154,10 @@ def inertia_tensor(coords: dict) -> np.array:
 
 
 
-def own_hungarian(cost_matrix: np.array) -> list:
-    print()
-    print(cost_matrix)
-    print()
-    assignment = [i for i, _ in enumerate(cost_matrix)]
-    for i, row in enumerate(cost_matrix):
-        min_val = 1000000.0
-        for j, val in enumerate(row):
-            if val < min_val:
-                min_val = val
-                assignment[i] = j
-    return assignment
+def coords_dict_to_array(coords: dict) -> np.array:
+    return np.array(list(coords.values()))
+
+
+
+def get_coords_and_elements(coords: dict) -> tuple:
+    return np.array(list(coords.values())), [get_element(atom) for atom in coords.keys()]

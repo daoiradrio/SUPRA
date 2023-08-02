@@ -11,8 +11,8 @@ from utils.optimizer import Optimizer
 from utils.symmetry import Symmetry
 from utils.analyzer import Analyzer
 from utils.rotatablebond import RotatableBond
-from utils.helper import covalence_radii_single, covalence_radii_double, get_element, \
-                         increment_combinations, valences, atom_in_torsions, get_number
+from utils.helper import covalence_radii_single, covalence_radii_double, \
+                         get_element, increment_combinations, valences
 
 
 
