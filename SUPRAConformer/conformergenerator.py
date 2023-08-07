@@ -70,6 +70,8 @@ class ConformerGenerator:
             if user_input == "1":
                 confirm = True
             elif user_input == "2":
+                print("No conformers have been generated.")
+                print()
                 return
             else:
                 print("Invalid input.")
@@ -555,13 +557,17 @@ class ConformerGenerator:
             # check new structure for internal clashes
             if not self._find_clashes(bond_partners, new_coords):
                 #self.output_coords(new_coords, counter)
-                #self.optimizer.UFF_structure_optimization(new_coords, counter)
                 new_struc_file = os.path.join(self.output_folder_name, f"conformer{counter}.xyz")
                 self.optimizer.MMFF_structure_optimization(
                     new_coords,
                     counter,
                     new_struc_file
                 )
+                #self.optimizer.UFF_structure_optimization(
+                #    new_coords,
+                #    counter,
+                #    new_struc_file
+                #)
                 #self.optimizer.optimize_structure_uff(new_coords, counter)
                 #"""
                 duplicate = self.analyzer.check_for_duplicates(

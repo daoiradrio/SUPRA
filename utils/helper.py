@@ -14,20 +14,20 @@ covalence_radii = {
     "F": [0.64], "Cl": [0.99], "Br": [1.14], "I": [1.33]
 }
 covalence_radii_single = {
-    "C": 0.75, "N": 0.71, "O": 0.66, "H": 0.32, "B": 0.85, "F": 0.64, "Cl": 0.99, "Br": 1.14, "I": 1.33
+    "C": 0.75, "N": 0.71, "O": 0.66, "H": 0.32, "B": 0.85, "F": 0.64, "Cl": 0.99, "Br": 1.14, "I": 1.33, "S": 1.03
 }
 covalence_radii_double = {
-    "C": 0.67, "N": 0.60, "O": 0.57, "B": 0.78
+    "C": 0.67, "N": 0.60, "O": 0.57, "B": 0.78, "S": 0.94
 }
 covalence_radii_triple = {
-    "C": 0.60, "N": 0.54, "O": 0.53, "B": 0.73
+    "C": 0.60, "N": 0.54, "O": 0.53, "B": 0.73, "S": 0.95
 }
 
 
 
 # maximum valences of chain atoms for regulation of loop cycles in building self.structure (Structure-class)
 valences = {
-    "C": 4, "N": 3, "O": 2, "H": 1, "B": 3, "F": 1, "Cl": 1, "Br": 1, "I": 1
+    "C": 4, "N": 3, "O": 2, "H": 1, "B": 3, "F": 1, "Cl": 1, "Br": 1, "I": 1, "S": 4
 }
 
 
