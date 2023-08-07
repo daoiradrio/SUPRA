@@ -23,9 +23,10 @@ def get_boltzmann_factors(energies: list):
 
 
 
-path = "/home/dario/SUPRA/data"
+path = "/home/dario/SUPRA/tmp"
 molset = "Tyrosin_all_groups_90"
-folder = os.path.join(path, molset)
+#folder = os.path.join(path, molset)
+folder = path
 
 conformer_files = os.listdir(os.path.join(folder, "ensemble"))
 ir_files = os.listdir(os.path.join(folder, "ir"))
