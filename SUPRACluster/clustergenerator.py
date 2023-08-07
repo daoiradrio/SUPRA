@@ -4,6 +4,7 @@ import numpy as np
 
 from copy import deepcopy
 from utils.helper import is_hb_don, is_hb_acc, rotation, get_element, get_number
+from utils.bond import Bond
 from SUPRACluster.clusterstructure import ClusterStructure
 
 
@@ -12,6 +13,8 @@ class ClusterGenerator:
 
     def __init__(self):
         self.monomer = None
+        self.torsions = []
+        #self.bendings = []
 
 
 
@@ -40,7 +43,7 @@ class ClusterGenerator:
 
 
 
-    def _add_monomer(self, cluster1: ClusterStructure, atom1: str, cluster2: ClusterStructure, atom2: str):
+    def _add_monomer(self, cluster1: ClusterStructure, atom1: str, cluster2: ClusterStructure, atom2: str) -> ClusterStructure:
         if is_hb_don(atom1):
             if not is_hb_acc(atom2):
                 print("ERROR")
@@ -58,11 +61,11 @@ class ClusterGenerator:
             dock_cluster = cluster1
             dock_atom = atom1
         label_shift = len(dock_cluster.coords.keys())
-        pos = dock_cluster.get_acc_vec(dock_atom)
+        pos = dock_cluster.hydrogen_bond_acceptors[dock_atom].vec
         coords_shift = pos - docking_cluster.coords[docking_atom]
         v1 = dock_cluster.coords[dock_atom] - pos
         v1 = v1 / np.linalg.norm(v1)
-        v2 = docking_cluster.get_don_vec(docking_atom) + coords_shift - pos
+        v2 = docking_cluster.hydrogen_bond_donators[docking_atom].vec + coords_shift - pos
         v2 = v2 / np.linalg.norm(v2)
         angle = np.arccos(np.dot(v1, v2))
         norm_vec = np.cross(v2, v1) + pos
@@ -72,6 +75,14 @@ class ClusterGenerator:
             new_coords = rotation(new_coords, pos, norm_vec, angle)
             new_coords = rotation(new_coords, pos, dock_cluster.coords[dock_atom], np.deg2rad(180.0))
             dock_cluster.coords[new_label] = new_coords
+        new_hydrogen_bond = Bond(dock_atom, docking_atom, 1)
+        dock_cluster.bonds.append(new_hydrogen_bond)
+        with open("tmp.xyz", "w") as outfile:
+            print(len(list(dock_cluster.coords.keys())), file=outfile, end="\n\n")
+            for atom, (x, y, z) in dock_cluster.coords.items():
+                element = get_element(atom)
+                print(f"{element}\t{x:18.15f}\t{y:18.15f}\t{z:18.15f}", file=outfile)
+        return dock_cluster
 
 
 
