@@ -396,10 +396,33 @@ class ConformerGenerator:
                 # store label
                 central_labels.append(atom1)
         for bond in bonds:
-            atom1, atom2 = bond
+            atom1 = bond.atom1
+            atom2 = bond.atom2
             x1, y1, z1 = coords[atom1]
             x2, y2, z2 = coords[atom2]
             bond_coords = [[x1, x2], [y1, y2], [z1, z2]]
+
+            flag = False
+            for torsion in self.terminal_torsions:
+                if (atom1 == torsion.atom1 and atom2 == torsion.atom2) or \
+                   (atom1 == torsion.atom2 and atom2 == torsion.atom1):
+                    terminal_torsions.append(bond_coords)
+                    flag = True
+            if not flag:
+                for torsion in self.central_torsions:
+                    if (atom1 == torsion.atom1 and atom2 == torsion.atom2) or \
+                       (atom1 == torsion.atom2 and atom2 == torsion.atom1):
+                        central_torsions.append(bond_coords)
+                        flag = True
+            if not flag:
+                if get_element(atom1) in ["H", "F", "Cl", "Br", "I"] or \
+                   get_element(atom2) in ["H", "F", "Cl", "Br", "I"]:
+                   no_torsions_terminal.append(bond_coords)
+                   flag = True
+            if not flag:
+                no_torsions_central.append(bond_coords)
+
+            """
             if bond in self.terminal_torsions:
                 terminal_torsions.append(bond_coords)
             elif bond in self.central_torsions:
@@ -409,6 +432,8 @@ class ConformerGenerator:
                 no_torsions_terminal.append(bond_coords)
             else:
                 no_torsions_central.append(bond_coords)
+            """
+
         # create new empty 3D plot
         ax = plt.axes(projection="3d")
         # hide axis, just molecule structure should be shown
