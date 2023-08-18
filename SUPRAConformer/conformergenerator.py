@@ -14,6 +14,8 @@ from utils.rotatablebond import RotatableBond
 from utils.helper import covalence_radii_single, covalence_radii_double, \
                          get_element, increment_combinations, valences
 
+from time import time
+
 
 
 class ConformerGenerator:
@@ -28,6 +30,8 @@ class ConformerGenerator:
         self.terminal_torsions = []
         self.methyl_torsions = []
         self.angle_increments = []
+        self.generation_time = 0.0
+        self.optimization_time = 0.0
     
 
 
@@ -52,7 +56,7 @@ class ConformerGenerator:
             self._find_peptidebonds(structure.coords, structure.bond_partners)
 
         self.torsions = self.central_torsions
-        if not ignore_methyl:
+        if not ignore_methyl and not ignore_terminal:
             self.torsions = self.torsions + self.methyl_torsions
         if not ignore_terminal:
             self.torsions = self.torsions + self.terminal_torsions
@@ -86,9 +90,12 @@ class ConformerGenerator:
         number_conformers = 0
         for increment in self.angle_increments:
             self.symmetry.find_rot_sym_of_torsions(structure, self.torsions, increment)
+            start = time()
             number_conformers = self._new_generation(
                 bond_partners=structure.bond_partners, new_coords=structure.coords, counter=number_conformers
             )
+            end = time()
+            self.generation_time += (end - start)
 
         print("Generation of conformer structures done.")
 
@@ -583,17 +590,23 @@ class ConformerGenerator:
             if not self._find_clashes(bond_partners, new_coords):
                 #self.output_coords(new_coords, counter)
                 new_struc_file = os.path.join(self.output_folder_name, f"conformer{counter}.xyz")
-                self.optimizer.MMFF_structure_optimization(
-                    new_coords,
-                    counter,
-                    new_struc_file
-                )
+                #start = time()
+                #self.optimizer.MMFF_structure_optimization(
+                #    new_coords,
+                #    counter,
+                #    new_struc_file
+                #)
+                #end = time()
+                #self.optimization_time += (end - start)
                 #self.optimizer.UFF_structure_optimization(
                 #    new_coords,
                 #    counter,
                 #    new_struc_file
                 #)
-                #self.optimizer.optimize_structure_uff(new_coords, counter)
+                start = time()
+                self.optimizer.optimize_structure_uff(new_coords, counter, new_struc_file)
+                end = time()
+                self.optimization_time += (end - start)
                 #"""
                 duplicate = self.analyzer.check_for_duplicates(
                     new_struc_file,

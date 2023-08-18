@@ -47,6 +47,13 @@ def main():
         ignore_peptide=ignore_peptide
     )
 
+    print()
+    print(f"Total time generating conformers: {generator.generation_time}")
+    print(f"Time optimizing structures: {generator.optimization_time}")
+    print(f"Time Kabsch alignment: {generator.analyzer.kabsch_time}")
+    print(f"Time matching: {generator.analyzer.matching_time}")
+    print()
+
 
 
 if __name__ == "__main__":

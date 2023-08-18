@@ -9,14 +9,15 @@ from typing import Union
 from queue import Queue
 from scipy.optimize import linear_sum_assignment
 
-from utils.symmetry import Symmetry
+from time import time
 
 
 
 class Analyzer:
 
     def __init__(self):
-        pass
+        self.kabsch_time = 0.0
+        self.matching_time = 0.0
 
 
 
@@ -105,7 +106,6 @@ class Analyzer:
         
         return None
                 
-
 
 
     def compare_ensembles_dirs(self, path1: str, path2: str, rmsd_threshold: float=0.1, ignore: str=None, matching: str="normal") -> list:
@@ -483,8 +483,14 @@ class Analyzer:
     def _rmsd_tight(self, coords1: dict, connectivity1: dict, coords2: dict, connectivity2: dict,) -> float:
         if len(coords1.keys()) != len(coords2.keys()):
             return 1000.0
+        start = time()
         coords1, coords2 = self._match(coords1, connectivity1, coords2, connectivity2)
+        end = time()
+        self.matching_time += (end - start)
+        start = time()
         kabsch_coords1, kabsch_coords2 = self._kabsch(coords1, coords2)
+        end = time()
+        self.kabsch_time += (end - start)
         return self._calc_rmsd(kabsch_coords1, kabsch_coords2)
 
 
@@ -543,11 +549,15 @@ class Analyzer:
 
 
     def _hungarian_match(self, coords1: dict, coords2: dict) -> tuple:
+        start_matching = time()
         elements1 = [get_element(atom) for atom in coords1.keys()]
         elements2 = [get_element(atom) for atom in coords2.keys()]
         n_atoms = len(elements1)
         cost = np.zeros((n_atoms, n_atoms))
+        start_kabsch = time()
         kabsch_coords1, kabsch_coords2 = self._kabsch(coords1, coords2)
+        end_kabsch = time()
+        self.kabsch_time += (end_kabsch - start_kabsch)
         for i in range(n_atoms):
             for j in range(n_atoms):
                 if elements1[i] == elements2[j]:
@@ -558,6 +568,8 @@ class Analyzer:
                 cost_value = np.dot(diff_vec, diff_vec) + element_term
                 cost[i][j] = cost_value
         row, col = linear_sum_assignment(cost)
+        end_matching = time()
+        self.matching_time += (end_matching - start_matching)
         return kabsch_coords1[row], kabsch_coords2[col]
     
 

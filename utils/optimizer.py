@@ -75,7 +75,7 @@ class Optimizer:
 
 
     #"""
-    def optimize_structure_uff(self, coords: dict, n: int=None):
+    def optimize_structure_uff(self, coords: dict, n: int=None, destination: str = None):
         workdir = os.path.join(os.getcwd(), f"{self.workdir_name}{n}")
         workdir = os.path.abspath(workdir)
         os.makedirs(workdir)
@@ -141,7 +141,7 @@ class Optimizer:
                         print(line, file=outfile, end="")
         
         os.system(
-            f"mv {opt_struc} conformer{n}.xyz ; \
+            f"mv {opt_struc} {destination} ; \
               rm -r {workdir}"
         )
     #"""
