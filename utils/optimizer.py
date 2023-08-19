@@ -24,7 +24,7 @@ class Optimizer:
 
 
 
-    def MMFF_structure_optimization(self, coords: dict, n: int = None, destination: str = None):
+    def MMFF_structure_optimization(self, coords: dict, n: int = None, destination: str = None) -> int:
         xyz_string = f"{len(coords.keys())}\n\n"
         for atom, (x, y, z) in coords.items():
             xyz_string = xyz_string + f"{get_element(atom)}\t{x}\t{y}\t{z}\n"
@@ -36,7 +36,10 @@ class Optimizer:
 
         mol = Chem.MolFromXYZBlock(xyz_string)
         mol = Chem.Mol(mol)
-        rdDetermineBonds.DetermineBonds(mol)
+        try:
+            rdDetermineBonds.DetermineBonds(mol)
+        except:
+            return 0
         res = MMFFOptimizeMoleculeConfs(mol, maxIters=1000)
         energy = res[0][1]
 
@@ -46,6 +49,8 @@ class Optimizer:
             for i, atom in enumerate(mol.GetAtoms()):
                 pos = mol.GetConformer().GetAtomPosition(i)
                 print(f"{atom.GetSymbol()}\t{pos.x}\t{pos.y}\t{pos.z}", file=outfile)
+        
+        return 1
     
 
 

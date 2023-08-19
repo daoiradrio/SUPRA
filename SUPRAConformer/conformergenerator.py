@@ -591,13 +591,15 @@ class ConformerGenerator:
                 #self.output_coords(new_coords, counter)
                 new_struc_file = os.path.join(self.output_folder_name, f"conformer{counter}.xyz")
                 start = time()
-                self.optimizer.MMFF_structure_optimization(
+                res = self.optimizer.MMFF_structure_optimization(
                     new_coords,
                     counter,
                     new_struc_file
                 )
                 end = time()
                 self.optimization_time += (end - start)
+                if not res:
+                    return counter
                 #self.optimizer.UFF_structure_optimization(
                 #    new_coords,
                 #    counter,
