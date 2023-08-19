@@ -620,10 +620,11 @@ class Analyzer:
             if len(eq) > 1:
                 pairs[atom1] = eq
             # if an atom pair is already unique store the respective coordinates
-            # HIER ENTSTEHEN PROBLEME WENN GARKEINE POTENTIELL ÄQUIVALENTEN ATOME GEFUNDEN (len(eq) == 0)!
             elif len(eq) == 1:
                 matched_coords1.append(coords1[atom1])
                 matched_coords2.append(coords2[eq[0]])
+            # security option for cases where no potentially equivalent atom is found,
+            # return coordinates with unchanged ordering in this case
             else:
                 return list(coords1.values()), list(coords2.values())
 
