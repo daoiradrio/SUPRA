@@ -4,7 +4,7 @@ import subprocess
 from utils.helper import get_element
 
 from rdkit import Chem
-from rdkit.Chem import rdDetermineBonds, rdDetermineConnectivity
+from rdkit.Chem import rdDetermineBonds
 from rdkit.Chem.rdForceFieldHelpers import MMFFOptimizeMoleculeConfs, UFFOptimizeMoleculeConfs
 
 #from pyscf import gto, scf
