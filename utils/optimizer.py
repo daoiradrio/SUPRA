@@ -4,7 +4,7 @@ import subprocess
 from utils.helper import get_element
 
 from rdkit import Chem
-from rdkit.Chem import rdDetermineBonds
+from rdkit.Chem import rdDetermineBonds, rdDetermineConnectivity
 from rdkit.Chem.rdForceFieldHelpers import MMFFOptimizeMoleculeConfs, UFFOptimizeMoleculeConfs
 
 #from pyscf import gto, scf
@@ -36,8 +36,8 @@ class Optimizer:
 
         mol = Chem.MolFromXYZBlock(xyz_string)
         mol = Chem.Mol(mol)
-        return_value = rdDetermineBonds.DetermineBonds(mol)
-        print(return_value)
+        #rdDetermineBonds.DetermineBonds(mol)
+        rdDetermineBonds.DetermineConnectivity(mol)
         res = MMFFOptimizeMoleculeConfs(mol, maxIters=1000)
         energy = res[0][1]
 
