@@ -36,7 +36,8 @@ class Optimizer:
 
         mol = Chem.MolFromXYZBlock(xyz_string)
         mol = Chem.Mol(mol)
-        rdDetermineBonds.DetermineBonds(mol)
+        return_value = rdDetermineBonds.DetermineBonds(mol)
+        print(return_value)
         res = MMFFOptimizeMoleculeConfs(mol, maxIters=1000)
         energy = res[0][1]
 
