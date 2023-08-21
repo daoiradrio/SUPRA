@@ -332,7 +332,7 @@ class Analyzer:
         #counter = 0
         for i, delete in enumerate(delete_files):
             if delete:
-                os.remove(os.path.join(path, conformers[i]))
+                #os.remove(os.path.join(path, conformers[i]))
                 counter -= 1
             #if not delete:
             #    os.system(f"cp {os.path.join(path, conformers[i])} {os.path.join(out_dir, conformers[i])}")
