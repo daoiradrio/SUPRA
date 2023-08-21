@@ -180,7 +180,6 @@ class Optimizer:
 
     def xtb_refine_structures(self, path_to_strucs: str, chrg: int=None):
         strucs_list = os.listdir(path_to_strucs)
-        print("Performing refining optimizations...")
         for i, struc in enumerate(strucs_list):
             self.xtb_structure_optimization(
                 struc_folder=path_to_strucs,
@@ -188,7 +187,6 @@ class Optimizer:
                 chrg=chrg, 
                 n=i
             )
-        print("Refining optimizations done.")
 
 
 

@@ -20,8 +20,8 @@ def main():
     args = parser.parse_args()
 
     print()
-
-    print("Performining refining structure optimization...")
+    
+    print("Performing refining structure optimization...")
     if args.code == "pyscf":
         opt.qc_refine_structures(os.path.abspath(args.path))
     elif args.code == "xtb":
@@ -33,7 +33,7 @@ def main():
     conformers = analyzer.remove_doubles_dir(path=args.path, use_energy=False, matching="tight")
     print("Removal of double structures done.")
     print(f"Individual generated conformers: {conformers}")
-    
+
     print()
 
 
