@@ -20,13 +20,13 @@ def main():
     args = parser.parse_args()
 
     print()
-    
-    print("Performing refining structure optimization...")
+
+    print("Performing refining structure optimizations...")
     if args.code == "pyscf":
         opt.qc_refine_structures(os.path.abspath(args.path))
     elif args.code == "xtb":
         opt.xtb_refine_structures(os.path.abspath(args.path), args.chrg)
-    print("Refining structure optimization done.")
+    print("Refining structure optimizations done.")
 
     print("Performing removal of duplicate structures...")
     conformers = analyzer.remove_doubles_dir(path=args.path, use_energy=False, matching="normal")
