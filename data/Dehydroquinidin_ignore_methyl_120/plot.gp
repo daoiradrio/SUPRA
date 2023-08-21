@@ -1,7 +1,8 @@
 #ir_file = "normalized_inverted_sliced_ir.dat"
-vcd_file = "normalized_sliced_vcd.dat"
 #exp_ir_file = "normalized_ir_exp.dat"
-exp_vcd_file = "exp_vcd.dat"
+#sim_ir_file = "sim_ir.dat"
+vcd_file = "normalized_sliced_vcd.dat"
+#exp_vcd_file = "exp_vcd.dat"
 sim_vcd_file = "sim_vcd.dat"
 
 set terminal pngcairo enhanced font "arial,10" fontscale 1.0 size 800, 600
