@@ -314,7 +314,6 @@ class Analyzer:
                         conformer2.get_connectivity()
                     rmsd = self._rmsd_tight(conformer1.coords, conformer1.bond_partners, conformer2.coords, conformer2.bond_partners)
                 if rmsd <= rmsd_threshold:
-                    print(f"{file1} {file2}")
                     if (conformer1.energy and conformer2.energy):
                         if conformer1.energy < conformer2.energy:
                             delete_files[j] = 1
