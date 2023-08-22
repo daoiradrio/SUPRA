@@ -1,4 +1,4 @@
-filepath = "/home/dario/SUPRA/data/Dehydroquinidin_ignore_methyl_120/weighted_ir.dat"
+filepath = "/home/baum/SUPRA/data/Dehydroquinidin_ignore_methyl_120/ir/glob_min_ir.dat"
 
 xs = []
 ys = []
@@ -18,6 +18,6 @@ for i, y in enumerate(ys):
     ys[i] = 1 - y / ref
     #ys[i] = y / ref
 
-with open("normalized_ir.dat", "w") as outfile:
+with open("/home/baum/SUPRA/data/Dehydroquinidin_ignore_methyl_120/ir/normalized_glob_min_ir.dat", "w") as outfile:
     for x, y in zip(xs, ys):
         print(f"{x:15.8f}\t{y:15.8f}", file=outfile)

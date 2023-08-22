@@ -23,8 +23,8 @@ def get_boltzmann_factors(energies: list):
 
 
 
-path = "/home/dario/SUPRA/data"
-molset = "Dehydroquinidin_ignore_methyl_120"
+path = "/home/baum/SUPRA/data"
+molset = "Butan-2-ol_all_groups_60"
 folder = os.path.join(path, molset)
 
 conformer_files = os.listdir(os.path.join(folder, "ensemble"))
