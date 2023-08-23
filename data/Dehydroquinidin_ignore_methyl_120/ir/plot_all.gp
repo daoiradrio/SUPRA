@@ -12,7 +12,8 @@ set output "dehydro_ir_spectra.png"
 
 set multiplot layout 3,1
 
-set label 1 "{/Symbol s} = 0.8906" font "arial,10" at 1320,0.05
+set label 1 "{/Symbol s} = 0.8906" font "arial,10" at 1364,0.25
+set label 2 "Scaling factor = 0.975" font "arial,10" at 1300,0.1
 set key at 1220,0.3
 set xlabel "wavenumber [1/cm]"
 set ylabel "intensity" 
@@ -22,7 +23,8 @@ plot \
 ir_file u 1:2 w l lt 7 lw 2 title "computed ensemble", \
 exp_ir_file u 1:2 w l lt 8 lw 2 title "experimental reference"
 
-set label 1 "{/Symbol s} = 0.8185" font "arial, 10" at 1320,0.05
+set label 1 "{/Symbol s} = 0.8185" font "arial, 10" at 1357,0.25
+set label 2 "Scaling factor = 0.97" font "arial,10" at 1300,0.1
 set key at 1220,0.3
 set xlabel "wavenumber [1/cm]"
 set ylabel "intensity"
@@ -32,7 +34,8 @@ plot \
 glob_min_ir_file u 1:2 w l lt 7 lw 2 title "computed global minimum", \
 exp_ir_file u 1:2 w l lt 8 lw 2 title "experimental reference"
 
-set label 1 "{/Symbol s} = 0.9016" font "arial, 10" at 1320,0.05
+set label 1 "{/Symbol s} = 0.9016" font "arial, 10" at 1357,0.25
+set label 2 "Scaling factor = 0.97" font "arial,10" at 1300,0.1
 set key at 1220,0.3
 set xlabel "wavenumber [1/cm]"
 set ylabel "intensity"

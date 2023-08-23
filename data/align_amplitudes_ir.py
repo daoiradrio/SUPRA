@@ -1,11 +1,11 @@
-file1 = "/home/baum/SUPRA/data/Dehydroquinidin_ignore_methyl_120/ir/normalized_scaled_ir.dat"
-file2 = "/home/baum/SUPRA/data/Dehydroquinidin_ignore_methyl_120/ir/normalized_sim_ir.dat"
+file1 = "/home/baum/SUPRA/data/Butan-2-ol_all_groups_60/ir/normalized_glob_min_ir.dat"
+file2 = "/home/baum/SUPRA/data/Butan-2-ol_all_groups_60/ir/normalized_exp_ir.dat"
 
-new_file1 = "/home/baum/SUPRA/data/Dehydroquinidin_ignore_methyl_120/ir/scaled_aligned_ir.dat"
-new_file2 = "/home/baum/SUPRA/data/Dehydroquinidin_ignore_methyl_120/ir/aligned_sim_ir.dat"
+new_file1 = "/home/baum/SUPRA/data/Butan-2-ol_all_groups_60/ir/aligned_glob_min_ir.dat"
+new_file2 = "/home/baum/SUPRA/data/Butan-2-ol_all_groups_60/ir/aligned_exp_ir.dat"
 
-min1 = 0.00000000
-min2 = 0.07153081
+min1 = 0.42554647
+min2 = 0.09990468
 xs1 = []
 ys1 = []
 xs2 = []
