@@ -377,7 +377,7 @@ class Analyzer:
                 with open(os.path.join(workdir, conformer), "r") as infile:
                     print(infile.read(), end="", file=outfile)
         
-        #os.system(f"rm -rf {workdir}")
+        os.system(f"rm -rf {workdir}")
 
         return n_conformers
 
