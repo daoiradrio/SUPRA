@@ -34,9 +34,9 @@ class Optimizer:
         else:
             opt_struc_file = os.path.join(os.getcwd(), f"conformer{n}.xyz")
 
-        mol = Chem.MolFromXYZBlock(xyz_string)
-        mol = Chem.Mol(mol)
         try:
+            mol = Chem.MolFromXYZBlock(xyz_string)
+            mol = Chem.Mol(mol)
             rdDetermineBonds.DetermineBonds(mol)
         except:
             return 0
