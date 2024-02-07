@@ -615,7 +615,6 @@ class Analyzer:
         
         # find correct atom pairs from No. 1 and No. 2 via matching of distances to other atoms
         for atom, eq_atoms in pairs.items():
-            print(atom)
             d1 = np.zeros(shape=(len(matched_coords1), len(eq_atoms)))
             d2 = np.zeros(shape=(len(matched_coords2), len(eq_atoms)))
             # store distances Pos.(atom No. 1)-Pos.(matched atom i from No. 1) in matrix d1 which is
@@ -645,7 +644,6 @@ class Analyzer:
                 if delta < min_delta:
                     min_delta = delta
                     eq = pairs[atom][i]
-            print(eq)
             # store coordinates of atom from No. 1 and coordinates of atom from No. 2 with smallest deviation
             matched_coords1.append(coords1[atom])
             matched_coords2.append(coords2[eq])
