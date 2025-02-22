@@ -1,5 +1,7 @@
 # SUPRA
 
+The purpose of SUPRA is to generate conformers of a given input molecule in the simplest way possible. Rotatable bonds are detected, dihedrals are alternated and each generated structure is optimized with a force field. Finally, duplicate structures that might occur after the optimization step are removed, ultimately with the TightRMSD method.
+
 ## Automatic installation
 1. Clone SUPRA repository
 2. Install miniforge: https://github.com/conda-forge/miniforge
